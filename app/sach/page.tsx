@@ -28,7 +28,7 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
+    <div className="container-page py-12">
       <h1 className="font-serif text-3xl text-ink-900">{heading}</h1>
 
       {books.length === 0 ? (

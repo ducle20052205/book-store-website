@@ -24,7 +24,7 @@ export function CategoryNav({ categories }: { categories: CategoryNode[] }) {
     <div className="relative">
       <nav
         aria-label="Danh mục và điều hướng nhanh"
-        className="mx-auto flex max-w-6xl items-center gap-5 overflow-x-auto whitespace-nowrap px-4 py-1 text-sm"
+        className="container-page scrollbar-hidden flex items-center gap-5 overflow-x-auto whitespace-nowrap py-1 text-sm"
       >
         <button
           type="button"
@@ -71,7 +71,7 @@ export function CategoryNav({ categories }: { categories: CategoryNode[] }) {
             className="fixed inset-0 cursor-default bg-ink-900/20"
           />
           <div id={panelId} className="absolute inset-x-0 top-full border-b border-line bg-surface shadow-sm">
-            <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-6 sm:grid-cols-3 lg:grid-cols-5">
+            <div className="container-page grid grid-cols-2 gap-6 py-6 sm:grid-cols-3 lg:grid-cols-5">
               {categories.map((parent) => (
                 <div key={parent.id}>
                   <Link

@@ -32,6 +32,12 @@ interface BookCoverProps {
  * Bìa sách dùng chung: ảnh thật khi có cover_image_url, hoặc bìa typographic
  * (nền màu ổn định theo hash slug, tên sách serif, tác giả sans) khi không có
  * — theo mục 4.2b của spec brand. Luôn tỷ lệ 2:3, accessible name = tên sách.
+ *
+ * Bìa typographic dùng container query (@container + cqw) để cỡ chữ co theo
+ * độ rộng thật của bìa (không phải viewport) — bìa 2 cột trên mobile vẫn đọc
+ * được mà không tràn. Tên sách neo trên cùng, tác giả theo ngay bên dưới
+ * (không justify-between) để luôn còn khoảng trống phía dưới cho StockLabel
+ * chồng lên mà không đè vào chữ.
  */
 export function BookCover({
   slug,
@@ -55,12 +61,18 @@ export function BookCover({
     <div
       role="img"
       aria-label={title}
-      className={`relative flex aspect-[2/3] flex-col justify-between overflow-hidden rounded-card border border-line p-3 text-white ${colorClassForSlug(slug)} ${className ?? ""}`}
+      className={`@container relative aspect-[2/3] overflow-hidden rounded-card border border-line p-3 text-white ${colorClassForSlug(slug)} ${className ?? ""}`}
     >
-      <p aria-hidden="true" className="line-clamp-4 font-serif text-base font-semibold leading-snug">
+      <p
+        aria-hidden="true"
+        className="line-clamp-4 font-serif font-semibold leading-snug text-[clamp(0.75rem,9cqw,1.125rem)]"
+      >
         {title}
       </p>
-      <p aria-hidden="true" className="line-clamp-2 font-sans text-xs text-white/80">
+      <p
+        aria-hidden="true"
+        className="mt-1.5 line-clamp-2 font-sans text-white/80 text-[clamp(0.625rem,6cqw,0.8125rem)]"
+      >
         {author}
       </p>
     </div>

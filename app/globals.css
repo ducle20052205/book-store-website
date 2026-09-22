@@ -32,3 +32,20 @@
   --radius-card: 4px;
   --radius-control: 6px;
 }
+
+/* Khung nội dung 1200px dùng chung cho header, nav, nội dung, footer. */
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-[1200px] px-4;
+  }
+
+  /* Ẩn thanh cuộn ngang (mega-menu bar, dải bìa hero ở mobile) nhưng vẫn
+     cuộn được bằng chạm/kéo — cross-browser: Firefox, WebKit/Chromium. */
+  .scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+}

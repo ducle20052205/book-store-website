@@ -19,11 +19,11 @@ export default async function Home() {
     <div>
       <Hero collection={featured} />
 
-      <section className="mx-auto max-w-6xl px-4 py-12">
+      <section className="container-page py-12">
         <HomeTabs newest={newest} bestselling={bestselling} />
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-12">
+      <section className="container-page py-12">
         <div className="flex items-baseline justify-between">
           <h2 className="font-serif text-2xl text-ink-900">Tủ sách tuyển chọn</h2>
           <Link

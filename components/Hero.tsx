@@ -8,12 +8,12 @@ export function Hero({ collection }: { collection: FeaturedCollection | null }) 
 
   return (
     <section className="border-b border-line bg-cham-50">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:flex-row sm:items-center">
+      <div className="container-page flex flex-col gap-8 py-10 md:flex-row md:items-center">
         <div className="flex-1 space-y-4">
           <span className="inline-block rounded-control bg-surface px-2 py-1 text-xs font-medium text-cham-700">
             Tuyển chọn
           </span>
-          <h1 className="font-serif text-3xl font-semibold leading-tight text-ink-900 sm:text-4xl">
+          <h1 className="font-serif text-3xl font-semibold leading-tight text-ink-900 md:text-4xl">
             {collection.title}
           </h1>
           <p className="line-clamp-2 max-w-prose text-ink-600">{collection.description}</p>
@@ -26,9 +26,11 @@ export function Hero({ collection }: { collection: FeaturedCollection | null }) 
         </div>
 
         {collection.books.length > 0 && (
-          <div className="flex flex-1 gap-3 overflow-x-auto pb-1">
-            {collection.books.slice(0, 5).map((book) => (
-              <div key={book.slug} className="w-24 shrink-0 sm:w-28">
+          <div
+            className="scrollbar-hidden grid auto-cols-[6.5rem] grid-flow-col gap-3 overflow-x-auto pb-1 [scroll-snap-type:x_mandatory] md:flex-1 md:auto-cols-fr md:grid-flow-row md:grid-cols-4 md:overflow-visible md:pb-0 md:[scroll-snap-type:none]"
+          >
+            {collection.books.slice(0, 4).map((book) => (
+              <div key={book.slug} className="[scroll-snap-align:start] md:[scroll-snap-align:none]">
                 <BookCover
                   slug={book.slug}
                   title={book.title}

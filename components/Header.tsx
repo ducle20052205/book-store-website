@@ -89,15 +89,15 @@ export async function Header({ cartCount = 0 }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-6xl items-center gap-4 border-b border-line px-4 py-3">
+      <div className="container-page flex flex-wrap items-center gap-4 border-b border-line py-3 md:flex-nowrap">
         <Link
           href="/"
-          className="shrink-0 rounded-control font-serif text-xl font-semibold text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
+          className="order-1 shrink-0 rounded-control font-serif text-xl font-semibold text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
         >
           NA Books
         </Link>
 
-        <form role="search" className="min-w-0 flex-1">
+        <form role="search" className="order-3 w-full md:order-2 md:w-auto md:min-w-0 md:flex-1">
           <label htmlFor="site-search" className="sr-only">
             Tìm tên sách, tác giả
           </label>
@@ -114,7 +114,10 @@ export async function Header({ cartCount = 0 }: HeaderProps) {
           </div>
         </form>
 
-        <nav aria-label="Tài khoản và giỏ hàng" className="flex shrink-0 items-center gap-1">
+        <nav
+          aria-label="Tài khoản và giỏ hàng"
+          className="order-2 ml-auto flex shrink-0 items-center gap-1 md:order-3 md:ml-0"
+        >
           <Link href="/yeu-thich" aria-label="Yêu thích" className={iconLinkClass}>
             <HeartIcon />
             <span className="hidden text-sm sm:inline">Yêu thích</span>

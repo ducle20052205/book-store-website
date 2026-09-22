@@ -26,7 +26,7 @@ export function BookCard({ book }: { book: BookCardBook }) {
           author={book.author}
           coverImageUrl={book.coverImageUrl}
         />
-        <StockLabel stockQuantity={book.stockQuantity} className="absolute left-2 top-2" />
+        <StockLabel stockQuantity={book.stockQuantity} className="absolute bottom-2 left-2" />
       </div>
 
       <div className="mt-2 space-y-1">
