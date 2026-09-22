@@ -4,6 +4,7 @@
 > Làm trên nhánh mới `feat/catalog-detail`, tách từ `main` **sau khi** nhánh `feat/brand-identity` đã được merge.
 > Làm theo 3 đợt (1a → 1b → 1c). Mỗi đợt xong thì commit và báo cáo, chưa làm đợt sau cho đến khi tôi xác nhận.
 > Mọi quy tắc trong `docs/specs/claude-code-brand-update.md` (tokens, component, giọng văn, accessibility) vẫn áp dụng.
+> **Mockup:** giao diện bám theo ảnh trong `docs/mockups/buoc-1/` (catalog desktop/mobile, bộ lọc mobile, chi tiết sách desktop/mobile). Mockup trả lời câu hỏi "trông như thế nào", spec trả lời "hoạt động ra sao". Khi hai bên mâu thuẫn, **spec thắng** — ghi lại chỗ mâu thuẫn trong báo cáo.
 
 **Căn cứ:** SRS mục 5.1 (FR-1.x) và 5.2 (FR-2.x). Những chỗ spec này **khác SRS** đều được đánh dấu **[Thay đổi SRS]**.
 
@@ -180,10 +181,14 @@ Giá trị hợp lệ của `sort`: `newest` | `price_asc` | `price_desc` | `bes
 
 1. Tên sách: serif, 28–32px.
 2. Tác giả: link tới `/sach?q=<tác giả>`.
-3. Khối giá (`Price`) + `StockLabel`. **Không** hiển thị số lượng tồn kho chính xác (FR-2.1).
+3. Khối giá (`Price`) + trạng thái kho. **Không** hiển thị số lượng tồn kho chính xác (FR-2.1).
+   - Còn hàng: nhãn "Còn hàng" màu `success`, kèm icon dấu tích.
+   - Hết hàng: `StockLabel` "Hết hàng".
+   - Trạng thái luôn có chữ, không chỉ dựa vào màu (NFR-6.5).
 4. Bộ chọn số lượng (1 → `min(stock_quantity, 99)`) + nút "Thêm vào giỏ hàng" (nút phụ) + nút "Mua ngay" (nút chính).
    - **Giỏ hàng chưa có (làm ở bước 3):** bấm nút thì hiện toast *"Giỏ hàng đang được hoàn thiện, bạn quay lại sau nhé."* Không để nút "chết" mà không phản hồi gì.
    - Khi hết hàng: vô hiệu hóa cả hai nút (FR-2.2).
+   - **Mobile (< 768px):** hai nút "Thêm vào giỏ" và "Mua ngay" nằm trong một **thanh dính ở đáy màn hình**. Thanh có nền `surface`, viền trên `line`, tôn trọng `env(safe-area-inset-bottom)`. Bộ chọn số lượng vẫn nằm trong nội dung trang, cạnh trạng thái kho. Thêm padding cuối trang bằng chiều cao của thanh, để thanh không che footer. Toast hiện ngay phía trên thanh này.
 5. Bảng "Thông tin sách": Người dịch, Nhà xuất bản, ISBN, Số trang, Kích thước, Ngày phát hành (định dạng dd/mm/yyyy), Danh mục (link `/sach?category=<slug>`). **Ẩn các dòng có giá trị `null`.** Dữ liệu seed hiện để trống nhiều trường, và không được hiển thị "Đang cập nhật" hay "—".
 6. Mô tả sách.
 7. Mục lục: dùng `<details>`/`<summary>`, mặc định đóng. Ẩn hoàn toàn nếu `table_of_contents` là `null`.
@@ -194,9 +199,16 @@ Giá trị hợp lệ của `sort`: `newest` | `price_asc` | `price_desc` | `bes
 - Ẩn khối nếu sách không nằm trong tủ nào.
 - Đây là nơi định vị "tuyển chọn, có lời giải thích" xuất hiện ngay trên trang sản phẩm.
 
-**Sách liên quan (FR-2.3):**
-- Tối đa 4 cuốn cùng `category_id`, loại trừ cuốn đang xem, mới nhất trước.
-- Ẩn khối nếu không có cuốn nào.
+**[Thay đổi SRS — FR-2.3] Sách liên quan:**
+
+1. Lấy tối đa 4 cuốn cùng `category_id` (danh mục con), loại trừ cuốn đang xem, mới nhất trước.
+2. Nếu chưa đủ 4 cuốn, lấy thêm từ các danh mục con khác **cùng danh mục cha**, mới nhất trước, không trùng.
+3. Tiêu đề khối:
+   - Chỉ có sách cùng danh mục con: "Cùng thể loại <tên danh mục con>".
+   - Có lấy thêm từ danh mục cha: "Cùng thể loại <tên danh mục cha>".
+4. Ẩn khối nếu tổng số sách vẫn là 0.
+
+Lý do: mỗi danh mục con hiện chỉ có 1–3 cuốn. Ví dụ "Kỳ ảo – Khoa học viễn tưởng" chỉ có 1 cuốn, nên nếu giữ đúng SRS thì khối này sẽ trống trên nhiều trang.
 
 **Component mới:** `Toast`
 - Dùng `aria-live="polite"`, tự ẩn sau 4 giây, đóng được bằng nút ×.
@@ -230,7 +242,14 @@ Giá trị hợp lệ của `sort`: `newest` | `price_asc` | `price_desc` | `bes
 
 - [ ] **1a:** `unaccent` hoạt động. `search_books` qua đủ 6 case thử ở trên. Policy `events` đã được siết lại. Constraint có thêm `search`.
 - [ ] **1b:** `/sach` lọc, sắp xếp, phân trang đúng. Mọi link ở header, nav, mega-menu, trang chủ đã trỏ đúng. Trạng thái rỗng và loading đều có. Bottom sheet trên mobile dùng được bằng bàn phím.
-- [ ] **1c:** `/sach/[slug]` hiển thị đủ thông tin, ẩn trường `null`. Khối "Có trong tủ sách" và "Sách liên quan" hoạt động. Toast hiện khi bấm nút giỏ hàng. Slug sai trả về 404.
+- [ ] **1c:** `/sach/[slug]` hiển thị đủ thông tin, ẩn trường `null`.
+  - Khối "Có trong tủ sách" hoạt động.
+  - "Sách liên quan" lấy thêm từ danh mục cha khi danh mục con không đủ 4 cuốn. Thử với cuốn Namiya: phải ra 4 cuốn.
+  - Nhãn "Còn hàng" / "Hết hàng" hiển thị đúng.
+  - Thanh mua hàng dính đáy trên mobile.
+  - Toast hiện khi bấm nút giỏ hàng.
+  - Slug sai trả về 404.
+- [ ] Đối chiếu với ảnh trong `docs/mockups/buoc-1/`, liệt kê mọi chỗ lệch.
 - [ ] **Events:** mở 1 trang sách + tìm 1 từ khóa → có đúng 2 dòng trong `events`, `user_id` là null, có `session_id`.
 - [ ] Kiểm tra NFR-6.1 → 6.6 (accessibility) trên cả 2 trang mới.
 - [ ] Commit sau mỗi đợt. Push lên `feat/catalog-detail` (vẫn kiểm tra `.env.local` như lần trước). Báo cáo file đã sửa, file tạo mới, và những gì chưa đạt.
