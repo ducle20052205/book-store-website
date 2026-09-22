@@ -1,12 +1,18 @@
 # Đặc tả Yêu cầu Phần mềm (SRS) – NA Books – 7 Tính năng Core
 
-2026-09-21 · Soạn bởi @Someone
+Phiên bản 1.1 · 22/09/2026 · Soạn bởi Lê Minh Đức
+
+Tài liệu liên quan: docs/specs/claude-code-brand-update.md (nhận diện thương hiệu), docs/specs/buoc-1-catalog-chi-tiet.md (triển khai bước 1), docs/mockups/ (mockup giao diện).
 
 ## 1. Giới thiệu
 
 Tài liệu đặc tả 7 tính năng Core của website bán sách (dự án showcase/portfolio cá nhân, không kinh doanh thật), làm cơ sở triển khai trực tiếp với Claude Code và minh chứng năng lực đặc tả yêu cầu (BA) cho nhà tuyển dụng.
 
 **Phạm vi.** 7 tính năng: Catalog & tìm kiếm/lọc, Trang chi tiết sách, Giỏ hàng, Checkout, Tài khoản người dùng, Lịch sử đơn hàng, Admin Dashboard cơ bản. Hai tính năng sau nằm **ngoài phạm vi** tài liệu này, đặc tả riêng ở buổi khác: Chatbot trợ lý AI (Gemini) và Dashboard thống kê nâng cao.
+
+Ngoài 7 tính năng Core, bản 1.1 bổ sung hai phần nhỏ phục vụ định vị sản phẩm và đo lường: **Tủ sách tuyển chọn** (mục 5.9) và **Ghi log sự kiện hành vi** (mục 5.8). Phần ghi log chỉ thu thập dữ liệu; Dashboard thống kê nâng cao dùng dữ liệu này vẫn nằm ngoài phạm vi tài liệu.
+
+**Định vị.** Nhà sách tuyển chọn cho người đọc 18–30 tuổi; mỗi lựa chọn sách đều kèm lời giải thích của biên tập. Nguyên tắc thiết kế: "Quen ở cấu trúc, riêng ở chất liệu" — bố cục và luồng mua hàng theo quy ước của các website bán sách Việt Nam, khác biệt nằm ở nhận diện, nội dung tuyển chọn và giọng văn.
 
 **Đối tượng đọc.**
 
@@ -23,7 +29,7 @@ Website bán sách độc lập (single-store), không phải marketplace đa ng
 
 | Lớp | Công nghệ |
 | --- | --- |
-| Frontend | Next.js (App Router) + Tailwind CSS |
+| Frontend | Next.js 16 (App Router) + React 19 + Tailwind CSS v4 |
 | Backend | Supabase — Postgres + Auth + Storage + Edge Functions |
 | Automation | Make.com — email xác nhận đơn hàng, báo admin đơn mới |
 | Deploy | Vercel |
@@ -38,7 +44,7 @@ Website bán sách độc lập (single-store), không phải marketplace đa ng
 
 ### Database schema
 
-7 bảng Postgres, đã bật Row Level Security (RLS). So với bản chốt trước, buổi này bổ sung 2 cột: `profiles.email` (đồng bộ từ `auth.users` để Admin liên hệ khách và Make.com lấy địa chỉ gửi mail) và `orders.payment_method` (lưu lựa chọn COD/Chuyển khoản — mục 5.4).
+9 bảng Postgres, tất cả đã bật Row Level Security (RLS). Bản 1.0 có 7 bảng; bản 1.1 bổ sung `collections` và `collection_books` (tủ sách tuyển chọn), cột `categories.sort_order` (thứ tự hiển thị menu), và dùng cột `events.metadata` (jsonb) cho ghi log sự kiện. Chi tiết cột xem `supabase/migrations/`.
 
 ```mermaid
 erDiagram
@@ -50,6 +56,8 @@ erDiagram
     BOOKS ||--o{ CART_ITEMS : "in cart as"
     BOOKS ||--o{ ORDER_ITEMS : "ordered as"
     ORDERS ||--o{ ORDER_ITEMS : contains
+    COLLECTIONS ||--o{ COLLECTION_BOOKS : contains
+    BOOKS ||--o{ COLLECTION_BOOKS : "listed in"
 
     PROFILES {
         uuid id PK
@@ -64,6 +72,7 @@ erDiagram
         string name
         string slug
         uuid parent_id FK
+        int sort_order
     }
     BOOKS {
         uuid id PK
@@ -101,10 +110,25 @@ erDiagram
         uuid user_id FK
         string session_id
         string event_type
+        jsonb metadata
+    }
+    COLLECTIONS {
+        uuid id PK
+        string title
+        string slug
+        string description
+        boolean is_featured
+        int sort_order
+    }
+    COLLECTION_BOOKS {
+        uuid collection_id FK
+        uuid book_id FK
+        int position
+        string curator_note
     }
 ```
 
-Bảng `events` chỉ phục vụ Dashboard thống kê nâng cao (ngoài phạm vi tài liệu này) — không có yêu cầu ghi log nào cho bảng này trong mục 5.
+Bảng `events` nhận log sự kiện hành vi từ các tính năng Core (mục 5.8). Dashboard thống kê nâng cao đọc dữ liệu này và được đặc tả riêng.
 
 ## 3. UML Use Case Diagram
 
@@ -117,7 +141,7 @@ flowchart LR
     G[Khách vãng lai]
     C[Khách hàng]
 
-    UC1([Duyệt, tìm kiếm và lọc sách])
+    UC1([Duyệt, tìm kiếm (tên sách/tác giả) và lọc sách])
     UC2([Xem chi tiết sách])
     UC3([Quản lý giỏ hàng])
     UC4([Đăng ký tài khoản])
@@ -127,6 +151,7 @@ flowchart LR
     UC8([Thanh toán / Đặt hàng])
     UC9([Xem lịch sử đơn hàng])
     UC10([Hủy đơn hàng])
+    UC15([Xem tủ sách tuyển chọn])
 
     G --> UC1
     G --> UC2
@@ -134,6 +159,7 @@ flowchart LR
     G --> UC4
     G --> UC5
     G --> UC6
+    G --> UC15
     C --> UC1
     C --> UC2
     C --> UC3
@@ -142,6 +168,7 @@ flowchart LR
     C --> UC8
     C --> UC9
     C --> UC10
+    C --> UC15
 ```
 
 Ghi chú: UC3 (Quản lý giỏ hàng) khả dụng cho cả hai actor nhưng lưu dữ liệu khác nơi — giỏ của Khách vãng lai ở `localStorage`, giỏ của Khách hàng ở bảng `cart_items` (chi tiết mục 5.3). UC8 chỉ Khách hàng thực hiện được — Khách vãng lai bấm "Thanh toán" bị chuyển hướng sang UC4/UC5 trước.
@@ -171,12 +198,12 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 
 ## 4. User Stories
 
-26 user story, đánh số US-x.x theo 7 tính năng Core, theo mẫu "Là \[role\], tôi muốn \[action\] để \[benefit\]".
+29 user story, đánh số US-x.x theo 7 tính năng Core và phần Tủ sách tuyển chọn, theo mẫu "Là \[role\], tôi muốn \[action\] để \[benefit\]".
 
 ### 4.1 Catalog & Tìm kiếm/Lọc
 
 - **US-1.1** — Là khách vãng lai, tôi muốn xem danh sách sách theo từng trang để duyệt catalog mà không bị quá tải thông tin.
-- **US-1.2** — Là khách vãng lai, tôi muốn tìm sách theo tên để nhanh chóng tìm được cuốn sách đang cần.
+- **US-1.2** — Là khách vãng lai, tôi muốn tìm sách theo tên sách hoặc tác giả, kể cả khi gõ không dấu, để nhanh chóng tìm được cuốn sách đang cần.
 - **US-1.3** — Là khách vãng lai, tôi muốn lọc sách theo danh mục để chỉ xem những sách thuộc thể loại quan tâm.
 - **US-1.4** — Là khách vãng lai, tôi muốn lọc sách theo khoảng giá để tìm sách phù hợp ngân sách.
 - **US-1.5** — Là khách vãng lai, tôi muốn sắp xếp sách (mới nhất/giá/bán chạy) để dễ so sánh và ra quyết định mua.
@@ -186,6 +213,7 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 - **US-2.1** — Là khách vãng lai, tôi muốn xem đầy đủ thông tin một cuốn sách (tác giả, NXB, mô tả, mục lục) để quyết định có mua hay không.
 - **US-2.2** — Là khách vãng lai, tôi muốn biết tình trạng còn hàng/hết hàng để không đặt nhầm sách đã hết.
 - **US-2.3** — Là khách vãng lai, tôi muốn xem sách liên quan/cùng tác giả để khám phá thêm sách phù hợp sở thích.
+- **US-2.4** — Là khách vãng lai, tôi muốn biết cuốn sách đang xem nằm trong tủ sách tuyển chọn nào và vì sao nó được chọn, để có thêm lý do tin tưởng khi quyết định mua.
 
 ### 4.3 Giỏ hàng
 
@@ -220,30 +248,39 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 - **US-7.2** — Là quản trị viên, tôi muốn xem danh sách tất cả đơn hàng để nắm tình hình kinh doanh.
 - **US-7.3** — Là quản trị viên, tôi muốn cập nhật trạng thái đơn hàng để phản ánh đúng tiến trình xử lý.
 
+### 4.8 Tủ sách tuyển chọn
+
+- **US-8.1** — Là khách vãng lai, tôi muốn xem các tủ sách tuyển chọn kèm lời giới thiệu để khám phá sách phù hợp mà không cần biết trước tên sách.
+- **US-8.2** — Là khách vãng lai, tôi muốn đọc lý do từng cuốn được đưa vào tủ sách để chọn cuốn hợp với mình nhất.
+
 ## 5. Functional Requirements
 
-46 yêu cầu chức năng, đánh số FR-x.x theo 7 tính năng Core — đủ chi tiết (tên cột, business logic, RLS) để đưa thẳng cho Claude Code triển khai.
+60 yêu cầu chức năng, đánh số FR-x.x theo 7 tính năng Core và phần Tủ sách tuyển chọn/Ghi log sự kiện — đủ chi tiết (tên cột, business logic, RLS) để đưa thẳng cho Claude Code triển khai.
 
 ### 5.1 Catalog & Tìm kiếm/Lọc
 
 - **FR-1.1** — Hiển thị danh sách sách dạng lưới; mỗi thẻ gồm: ảnh bìa (`cover_image_url`), tên sách, tác giả, giá gốc (`price`), giá giảm (`discount_price` nếu có, gạch ngang giá gốc), trạng thái còn hàng/hết hàng.
 - **FR-1.2** — Phân trang, mặc định 20 sách/trang.
-- **FR-1.3** — Tìm kiếm theo tên sách (cột `title`), không phân biệt hoa/thường, khớp một phần chuỗi (SQL `ILIKE '%từ khóa%'`).
+- **FR-1.3** — Tìm kiếm theo tên sách (`title`) **hoặc** tác giả (`author`), không phân biệt hoa/thường và **không phân biệt dấu tiếng Việt** (dùng extension `unaccent` qua hàm `f_unaccent`), khớp một phần chuỗi. Từ khóa được trim, tối đa 100 ký tự, escape ký tự `%` và `_`.
 - **FR-1.4** — Lọc theo `category_id`. Chọn category cha (`parent_id IS NULL`) → kết quả gồm cả sách thuộc các category con trực tiếp của nó.
 - **FR-1.5** — Lọc theo khoảng giá (min–max), áp dụng trên giá thực tế phải trả: `COALESCE(discount_price, price)`.
 - **FR-1.6** — Sắp xếp theo: (a) Mới nhất (`created_at` giảm dần — mặc định), (b) Giá tăng dần, (c) Giá giảm dần, (d) Bán chạy nhất.
-- **FR-1.7** — "Bán chạy nhất" = `SUM(order_items.quantity)` nhóm theo `book_id`, chỉ tính đơn có `status != 'cancelled'`; sách chưa có đơn xếp cuối danh sách.
+- **FR-1.7** — "Bán chạy nhất" = `SUM(order_items.quantity)` nhóm theo `book_id`, chỉ tính đơn có `status != 'cancelled'`; sách chưa có đơn xếp cuối. Vì RLS không cho khách đọc đơn hàng của người khác, phép tính này chạy trong hàm `search_books` với `SECURITY DEFINER`; hàm chỉ trả về các cột công khai của sách.
 - **FR-1.8** — Các bộ lọc (category, khoảng giá, từ khóa, sắp xếp) kết hợp đồng thời được.
 - **FR-1.9** — `stock_quantity = 0` → hiển thị nhãn "Hết hàng" trên thẻ sách.
 - **FR-1.10** — Không yêu cầu đăng nhập; áp dụng cho Khách vãng lai và Khách hàng.
+- **FR-1.11** — Toàn bộ lọc, sắp xếp và phân trang được gói trong một hàm RPC `search_books(p_q, p_category_slug, p_min, p_max, p_sort, p_page)`. Mọi kiểu sắp xếp có tie-break `created_at desc, id` để phân trang ổn định. Page size cố định 20, không nhận từ client.
+- **FR-1.12** — Trang catalog dùng route `/sach`; mọi bộ lọc nằm trên URL (`q`, `category`, `min`, `max`, `sort`, `page`) để có thể chia sẻ link và nút Back hoạt động đúng.
 
 ### 5.2 Trang chi tiết sách
 
-- **FR-2.1** — Truy cập qua `/books/[slug]`, hiển thị đầy đủ: `title`, `author`, `translator` (nếu có), `publisher`, `description`, `table_of_contents`, `price`, `discount_price` (nếu có), `isbn`, `page_count`, `dimensions`, `publish_date`, `cover_image_url`, tên category, trạng thái còn hàng (không hiển thị số lượng tồn kho chính xác).
+- **FR-2.1** — Truy cập qua `/sach/[slug]`, hiển thị đầy đủ: `title`, `author`, `translator` (nếu có), `publisher`, `description`, `table_of_contents`, `price`, `discount_price` (nếu có), `isbn`, `page_count`, `dimensions`, `publish_date`, `cover_image_url`, tên category, trạng thái còn hàng (không hiển thị số lượng tồn kho chính xác). Các trường có giá trị `null` được ẩn hoàn toàn (không hiển thị "Đang cập nhật"). Trạng thái kho hiển thị bằng chữ: "Còn hàng" hoặc "Hết hàng".
 - **FR-2.2** — `stock_quantity = 0` → vô hiệu hóa nút "Thêm vào giỏ hàng", hiển thị rõ nhãn "Hết hàng".
-- **FR-2.3** — Hiển thị tối đa 4 sách "liên quan" cùng `category_id` (loại trừ sách đang xem), sắp xếp mới nhất trước.
+- **FR-2.3** — Hiển thị tối đa 4 sách liên quan: ưu tiên cùng danh mục con (`category_id`), loại trừ sách đang xem, mới nhất trước. Nếu chưa đủ 4 cuốn, lấy thêm từ các danh mục con khác cùng danh mục cha. Tiêu đề khối ghi tên danh mục thực tế đã dùng. Ẩn khối nếu không có sách nào.
 - **FR-2.4** — Slug không tồn tại → trả về trang 404.
 - **FR-2.5** — Không yêu cầu đăng nhập.
+- **FR-2.6** — Khối "Có trong tủ sách": liệt kê mọi tủ sách chứa cuốn đang xem, mỗi tủ gồm tên (link tới `/tu-sach/[slug]`) và `curator_note` của cuốn đó. Ẩn khối nếu sách không thuộc tủ nào.
+- **FR-2.7** — Trên mobile (< 768px), nút "Thêm vào giỏ" và "Mua ngay" nằm trong thanh dính ở đáy màn hình.
 
 ### 5.3 Giỏ hàng
 
@@ -294,24 +331,41 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 - **FR-7.3** — Trước khi xóa 1 sách, kiểm tra sách có đang xuất hiện trong `order_items` nào không — nếu có, chặn xóa cứng, gợi ý đặt `stock_quantity = 0` thay thế để không phá vỡ dữ liệu lịch sử đơn hàng.
 - **FR-7.4** — Quản lý đơn hàng: Admin xem danh sách toàn bộ đơn (lọc theo status, tìm theo mã đơn/tên khách), xem chi tiết 1 đơn (kèm thông tin khách từ `profiles`), cập nhật status theo luồng `pending → processing → shipped → completed` (hoặc `→ cancelled` ở bất kỳ bước nào trước `completed`).
 - **FR-7.5** — RLS: `books` — `SELECT` public (mọi actor), `INSERT`/`UPDATE`/`DELETE` chỉ `role='admin'`. `orders`/`order_items` — `SELECT`/`UPDATE` toàn quyền chỉ `role='admin'` (kết hợp quyền hạn chế của khách hàng ở FR-6.5).
-- **FR-7.6** — `categories` không có giao diện quản lý trong phạm vi MVP — dữ liệu được seed sẵn (migration/seed script), chỉnh sửa trực tiếp qua Supabase Dashboard nếu cần.
+- **FR-7.6** — `categories` không có giao diện quản lý trong phạm vi MVP — dữ liệu được seed sẵn (migration/seed script), chỉnh sửa trực tiếp qua Supabase Dashboard nếu cần. RLS vẫn cho phép Admin ghi (xem mục 5.10) để sẵn sàng khi có giao diện quản lý sau này.
 
-### 5.8 Tóm tắt RLS theo bảng
+### 5.8 Ghi log sự kiện
+
+- **FR-8.1** — Hệ thống ghi sự kiện hành vi vào bảng `events` qua hàm `track(event_type, metadata)` phía client, theo kiểu fire-and-forget: không chặn giao diện, lỗi không hiển thị cho người dùng.
+- **FR-8.2** — Mỗi sự kiện có `session_id` (UUID ẩn danh lưu trong `localStorage`) và `user_id` (null nếu chưa đăng nhập).
+- **FR-8.3** — Các loại sự kiện hợp lệ: `page_view`, `search`, `add_to_cart`, `checkout_started`, `order_placed` (ràng buộc CHECK ở database).
+- **FR-8.4** — `page_view` được ghi khi mở trang chi tiết sách (`metadata`: `book_id`, `slug`). `search` được ghi khi trang catalog có từ khóa (`metadata`: `q`, `results_count`, `category`, `sort`), kể cả khi không có kết quả. `add_to_cart`, `checkout_started`, `order_placed` được ghi ở các tính năng Giỏ hàng và Checkout.
+- **FR-8.5** — `metadata` không chứa dữ liệu cá nhân (email, tên, địa chỉ, số điện thoại) và tối đa 2KB.
+- **FR-8.6** — RLS: ai cũng được `INSERT`, nhưng chỉ với `user_id` là null hoặc bằng `auth.uid()`. Chỉ Admin được `SELECT`.
+
+### 5.9 Tủ sách tuyển chọn
+
+- **FR-9.1** — Tủ sách gồm tên, slug, lời giới thiệu của biên tập (`description`), thứ tự hiển thị, và danh sách sách có thứ tự (`position`). Mỗi sách trong tủ có lời giải thích riêng (`curator_note`).
+- **FR-9.2** — Tối đa một tủ sách được đánh dấu nổi bật (`is_featured`), ràng buộc bằng unique index. Tủ này hiển thị ở hero trang chủ. Không có tủ nổi bật thì ẩn hero, không báo lỗi.
+- **FR-9.3** — `/tu-sach` liệt kê mọi tủ sách; `/tu-sach/[slug]` hiển thị lời giới thiệu và danh sách sách kèm `curator_note`. Slug không tồn tại thì trả về trang 404.
+- **FR-9.4** — Trong phạm vi MVP, tủ sách không có giao diện quản lý; dữ liệu được seed sẵn và chỉnh qua Supabase Dashboard. RLS: `SELECT` công khai, ghi chỉ Admin.
+
+### 5.10 Tóm tắt RLS theo bảng
 
 | Bảng | Khách vãng lai | Khách hàng | Admin |
 | --- | --- | --- | --- |
 | `profiles` | — | SELECT/UPDATE dòng của mình | SELECT toàn bộ |
-| `categories` | SELECT toàn bộ | SELECT toàn bộ | SELECT toàn bộ (ghi qua Supabase Dashboard) |
+| `categories` | SELECT toàn bộ | SELECT toàn bộ | SELECT/INSERT/UPDATE/DELETE toàn bộ |
 | `books` | SELECT toàn bộ | SELECT toàn bộ | SELECT/INSERT/UPDATE/DELETE toàn bộ |
 | `cart_items` | — (localStorage) | SELECT/INSERT/UPDATE/DELETE dòng của mình | — |
 | `orders` | — | SELECT dòng của mình; UPDATE chỉ khi `pending → cancelled` | SELECT/UPDATE toàn bộ |
 | `order_items` | — | SELECT qua đơn của mình | SELECT toàn bộ |
-
-*(Bảng `events` không đưa vào tóm tắt này — dành cho Dashboard thống kê nâng cao, ngoài phạm vi tài liệu.)*
+| `collections` | SELECT toàn bộ | SELECT toàn bộ | SELECT/INSERT/UPDATE/DELETE toàn bộ |
+| `collection_books` | SELECT toàn bộ | SELECT toàn bộ | SELECT/INSERT/UPDATE/DELETE toàn bộ |
+| `events` | INSERT (`user_id` null) | INSERT (`user_id` = của mình hoặc null) | SELECT toàn bộ |
 
 ## 6. Non-functional Requirements
 
-15 yêu cầu phi chức năng, nhóm theo 5 nhóm chuẩn SRS: hiệu năng, bảo mật, khả năng sử dụng, khả năng bảo trì/mở rộng, tương thích.
+22 yêu cầu phi chức năng, nhóm theo 6 nhóm chuẩn SRS: hiệu năng, bảo mật, khả năng sử dụng, khả năng bảo trì/mở rộng, tương thích, khả năng tiếp cận.
 
 ### 6.1 Hiệu năng
 
@@ -321,7 +375,7 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 
 ### 6.2 Bảo mật
 
-- **NFR-2.1** — Toàn bộ 7 bảng bật Row Level Security; không bảng nào cho phép truy cập ngoài các policy đã định nghĩa (chi tiết theo bảng ở mục 5.8).
+- **NFR-2.1** — Toàn bộ bảng trong schema `public` bật Row Level Security; không bảng nào cho phép truy cập ngoài các policy đã định nghĩa (chi tiết theo bảng ở mục 5.10).
 - **NFR-2.2** — API key (Gemini cho chatbot — cấu hình buổi khác), Supabase service role key, Make.com webhook secret — không expose ra phía client, chỉ dùng trong Edge Functions/server-side code.
 - **NFR-2.3** — Input từ mọi form (đăng ký, checkout, thêm/sửa sách...) validate cả client (UX) lẫn server/database (ràng buộc thật, không tin dữ liệu từ client).
 - **NFR-2.4** — Mật khẩu không lưu dạng plaintext (Supabase Auth mặc định hash bằng bcrypt).
@@ -332,13 +386,30 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 - **NFR-3.1** — Giao diện responsive: mobile (≥375px), tablet, desktop.
 - **NFR-3.2** — Thông báo lỗi (hết hàng, sai mật khẩu, hết hạn phiên...) bằng tiếng Việt, rõ ràng, không lộ mã lỗi kỹ thuật thô.
 - **NFR-3.3** — Thao tác quan trọng (xóa sách, hủy đơn) yêu cầu xác nhận (confirm dialog) trước khi thực hiện.
+- **NFR-3.4** — Mọi chữ hiển thị viết bằng tiếng Việt theo giọng văn thống nhất: NA Books xưng "chúng mình", gọi người dùng là "bạn"; không dùng teen-code, không lạm dụng dấu "!".
 
 ### 6.4 Khả năng bảo trì & mở rộng
 
 - **NFR-4.1** — Code theo cấu trúc chuẩn Next.js App Router: tách components tái sử dụng, business logic (Edge Functions/API routes), truy vấn dữ liệu (Supabase client).
-- **NFR-4.2** — Bảng `events` đã có sẵn trong schema, dành riêng cho Dashboard thống kê nâng cao (ngoài phạm vi tài liệu này) — không có yêu cầu ghi log nào cho bảng này trong 7 tính năng Core ở mục 5.
+- **NFR-4.2** — Mọi thay đổi schema đi qua file migration trong `supabase/migrations/`, không sửa trực tiếp qua Table Editor, để schema trong repo và trong database luôn khớp nhau.
 
 ### 6.5 Tương thích
 
 - **NFR-5.1** — Hỗ trợ trình duyệt hiện đại: Chrome, Firefox, Safari, Edge (2 phiên bản gần nhất).
 - **NFR-5.2** — Tương thích thiết bị di động phổ biến (iOS Safari, Android Chrome).
+
+### 6.6 Khả năng tiếp cận (Accessibility)
+
+- **NFR-6.1** — Độ tương phản chữ đạt WCAG 2.1 AA (≥ 4.5:1 với chữ thường, ≥ 3:1 với chữ ≥ 18px).
+- **NFR-6.2** — Vùng chạm tối thiểu 44×44px trên mobile.
+- **NFR-6.3** — Mọi phần tử tương tác có focus state nhìn thấy được và điều hướng được bằng bàn phím.
+- **NFR-6.4** — Ảnh bìa có `alt` là tên sách; icon trang trí có `aria-hidden`.
+- **NFR-6.5** — Không truyền đạt thông tin chỉ bằng màu sắc.
+- **NFR-6.6** — Chữ nội dung tối thiểu 14px.
+
+## 7. Lịch sử thay đổi
+
+| Phiên bản | Ngày | Nội dung |
+| --- | --- | --- |
+| 1.0 | 21/09/2026 | Bản đầu: 7 tính năng Core. |
+| 1.1 | 22/09/2026 | Tìm kiếm theo tác giả, không dấu (FR-1.3); RPC `search_books` (FR-1.11); route `/sach` (FR-1.12, FR-2.1); sách liên quan có phương án dự phòng (FR-2.3); khối "Có trong tủ sách" (FR-2.6); thanh mua hàng dính đáy trên mobile (FR-2.7); ghi log sự kiện (5.8); tủ sách tuyển chọn (5.9); schema 9 bảng; NFR giọng văn (NFR-3.4) và accessibility (6.6). |
