@@ -15,6 +15,17 @@
   --color-danger: #C2362B;     /* lỗi form, cảnh báo */
   --color-success: #2E7D4F;    /* thông báo thành công */
 
+  /* Bảng 8 màu trầm cho <BookCover> (mục 4.2b) — nền bìa typographic khi
+     không có cover_image_url. Tất cả đã kiểm tra đạt >= 4.5:1 với chữ trắng. */
+  --color-cover-1: #2A5A54;    /* teal trầm */
+  --color-cover-2: #5B3358;    /* tím mận */
+  --color-cover-3: #2F4A34;    /* xanh rêu */
+  --color-cover-4: #7A3B2E;    /* nâu đất nung */
+  --color-cover-5: #333366;    /* chàm */
+  --color-cover-6: #4B4A2A;    /* ô liu */
+  --color-cover-7: #34495A;    /* xanh than */
+  --color-cover-8: #5C2436;    /* đỏ rượu vang */
+
   --font-sans: var(--font-be-vietnam-pro), system-ui, sans-serif;
   --font-serif: var(--font-lora), Georgia, serif;
 
