@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { CategoryNav } from "@/components/CategoryNav";
+import { getCategoryTree } from "@/lib/queries";
 
 function SearchIcon() {
   return (
@@ -82,10 +84,12 @@ interface HeaderProps {
   cartCount?: number;
 }
 
-export function Header({ cartCount = 0 }: HeaderProps) {
+export async function Header({ cartCount = 0 }: HeaderProps) {
+  const categories = await getCategoryTree();
+
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
+      <div className="mx-auto flex max-w-6xl items-center gap-4 border-b border-line px-4 py-3">
         <Link
           href="/"
           className="shrink-0 rounded-control font-serif text-xl font-semibold text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
@@ -139,6 +143,8 @@ export function Header({ cartCount = 0 }: HeaderProps) {
           </Link>
         </nav>
       </div>
+
+      <CategoryNav categories={categories} />
     </header>
   );
 }
