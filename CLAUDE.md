@@ -4,45 +4,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 @AGENTS.md
 
-## Tổng quan
+## Stack
 
-Đây là dự án Next.js 16 (App Router) vừa được khởi tạo bằng `create-next-app`, dự kiến làm nền cho một website bán sách. Hiện tại `app/page.tsx` và `app/layout.tsx` vẫn là nội dung mặc định do `create-next-app` sinh ra — chưa có tính năng nghiệp vụ nào được xây dựng, ngoài việc đã gắn sẵn một Supabase client dùng chung.
-
-## Lệnh thường dùng
+Next.js 16 (App Router) + React 19 + TypeScript strict + Tailwind CSS v4 (CSS-first qua `@theme` trong `app/globals.css`, không có `tailwind.config.*`) + Supabase (Postgres + Auth).
 
 ```bash
-npm run dev     # chạy dev server (Turbopack) tại http://localhost:3000
+npm run dev     # dev server (Turbopack)
 npm run build   # build production
-npm run start   # chạy server production sau khi build
-npm run lint    # chạy ESLint (eslint.config.mjs)
+npm run lint    # ESLint
 ```
 
-Repo chưa cấu hình test framework nào (không có script `test` trong `package.json`).
+## Database
 
-## Kiến trúc & cấu trúc
+- Mọi thay đổi schema đi qua migration trong `supabase/migrations/`, apply bằng Supabase MCP (không có CLI cục bộ), tên file theo đúng `version` Supabase trả về — không sửa qua Table Editor.
+- Trước mọi thao tác xoá/phá dữ liệu đang được tham chiếu: DỪNG LẠI, hỏi trước khi làm.
 
-- **App Router, không dùng `src/`**: route/layout nằm trực tiếp trong `app/` ở thư mục gốc (`app/layout.tsx`, `app/page.tsx`), không phải `src/app/`.
-- **Import alias**: `@/*` trỏ về thư mục gốc repo (khai báo ở `tsconfig.json` → `compilerOptions.paths`), ví dụ `@/lib/supabase`.
-- **TypeScript strict mode** đang bật.
-- **Tailwind CSS v4** dùng cấu hình kiểu CSS-first — không có file `tailwind.config.*`. Theme khai báo bằng khối `@theme inline` ngay trong `app/globals.css`; Tailwind được nạp qua PostCSS plugin `@tailwindcss/postcss` (`postcss.config.mjs`).
-- **ESLint dùng flat config** (`eslint.config.mjs`), kế thừa `eslint-config-next/core-web-vitals` và `eslint-config-next/typescript`.
-- **`lib/supabase.ts`**: khởi tạo Supabase client dùng chung (an toàn cho phía client, `createClient` từ `@supabase/supabase-js`), đọc `NEXT_PUBLIC_SUPABASE_URL` và `NEXT_PUBLIC_SUPABASE_ANON_KEY` từ biến môi trường. Import qua `@/lib/supabase`.
+## Bảo mật
 
-## Biến môi trường
+- Không bao giờ commit `.env*`, trừ `.env.local.example` (chỉ chứa placeholder rỗng, không có giá trị thật).
+- Secret key (vd. `SUPABASE_SECRET_KEY`) chỉ dùng phía server, không bao giờ prefix `NEXT_PUBLIC_`; bảng mới trong Supabase phải bật RLS trước khi có dữ liệu thật.
 
-Copy `.env.local.example` thành `.env.local` (đã nằm trong `.gitignore`, không commit) rồi điền giá trị thật lấy từ project Supabase:
+## Giao diện
 
-```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-```
+- Chỉ dùng token màu khai báo trong `@theme` (`app/globals.css`) — không viết cứng mã hex trong component.
+- Dùng lại component dùng chung đã có: `Price`, `BookCard`, `BookCover`, `StockLabel`, `Toast`.
+- Chữ hiển thị cho người dùng viết bằng tiếng Việt, đúng giọng văn NA Books ở `docs/specs/claude-code-brand-update.md` mục 6.
 
-`.gitignore` chặn toàn bộ `.env*` nhưng có ngoại lệ giữ lại `.env.local.example` (file mẫu, không chứa key thật) để file này được commit vào repo.
+## Quy trình làm việc
 
-## Về AGENTS.md
-
-`AGENTS.md` được Next.js tự sinh/ghi đè mỗi khi chạy `next dev` (xem `node_modules/next/dist/server/lib/generate-agent-files.js`) và được nạp vào đầu file này qua dòng `@AGENTS.md` ở trên. Nội dung của nó cảnh báo rằng phiên bản Next.js đang dùng có thể có API/quy ước khác với dữ liệu huấn luyện của model — nên đọc tài liệu trong `node_modules/next/dist/docs/` trước khi viết code mới, và nên commit lại thay đổi ở file này thay vì xoá nó đi.
+- Mỗi việc lớn làm trên một nhánh riêng; commit sau mỗi đợt hoàn thành, không gộp nhiều đợt vào một commit.
+- Khi báo cáo hoàn thành: liệt kê file đã sửa, file tạo mới, và những gì chưa đạt được.
 
 ## Tài liệu tham khảo
 
-Xem docs/SRS.md để biết đầy đủ yêu cầu chức năng của 7 tính năng core.
+`docs/SRS.md` — yêu cầu chức năng 7 tính năng core. `docs/specs/` — spec triển khai chi tiết cho từng đợt việc (vd. `claude-code-brand-update.md`).
