@@ -1,26 +1,23 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --color-paper: #FBFAF7;      /* nền trang */
+  --color-surface: #FFFFFF;    /* nền thẻ, header */
+  --color-line: #E4E2DC;       /* border hairline */
+  --color-ink-900: #1A1C2E;    /* chữ chính */
+  --color-ink-600: #4A4E66;    /* chữ phụ */
+  --color-ink-400: #6B6F85;    /* metadata: tác giả, giá gốc */
+  --color-cham-700: #26306B;   /* màu thương hiệu: nút chính, link, header phụ */
+  --color-cham-600: #3A4585;   /* hover */
+  --color-cham-50: #EEF0F7;    /* nền tint: tab đang chọn, section nổi bật */
+  --color-nghe-400: #D9A33A;   /* CHỈ badge giảm giá + số đếm giỏ hàng */
+  --color-sale: #C2362B;       /* giá bán khi có giảm giá */
+  --color-danger: #C2362B;     /* lỗi form, cảnh báo */
+  --color-success: #2E7D4F;    /* thông báo thành công */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-sans: var(--font-be-vietnam-pro), system-ui, sans-serif;
+  --font-serif: var(--font-lora), Georgia, serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  --radius-card: 4px;
+  --radius-control: 6px;
 }
