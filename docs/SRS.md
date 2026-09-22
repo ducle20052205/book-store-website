@@ -141,7 +141,7 @@ flowchart LR
     G[Khách vãng lai]
     C[Khách hàng]
 
-    UC1([Duyệt, tìm kiếm (tên sách/tác giả) và lọc sách])
+    UC1(["Duyệt, tìm kiếm (tên sách/tác giả) và lọc sách"])
     UC2([Xem chi tiết sách])
     UC3([Quản lý giỏ hàng])
     UC4([Đăng ký tài khoản])
