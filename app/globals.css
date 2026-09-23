@@ -138,51 +138,37 @@
     transform: scale(1.03);
   }
 
-  /* A.5: header dính cuộn. Nền mờ + blur cố định (có fallback nền đặc cho
-     trình duyệt không hỗ trợ backdrop-filter); viền dưới và chiều cao
-     top-bar chỉ đổi khi trang đã cuộn quá 8px (gắn qua [data-scrolled] từ
-     HeaderShell). */
+  /* A2.1: header dính cuộn. Đã BỎ backdrop-filter (đợt A dùng blur, nhưng
+     kết hợp với position:sticky gây lỗi hiển thị nền mờ chỉ phủ 1 phần
+     chiều ngang ở một số trình duyệt — xem báo cáo đợt A2) — dùng nền đặc
+     hơi trong suốt, không cần @supports fallback nữa vì không còn tính
+     năng nào cần dò hỗ trợ. Khi cuộn chỉ đổi border-color + box-shadow,
+     KHÔNG đổi height/padding/font-size (từng gây reflow toàn trang mỗi lần
+     đổi ngưỡng — nguyên nhân thật của lỗi giật, xem báo cáo đợt A2). */
   .header-surface {
-    background-color: var(--color-surface);
+    background-color: rgb(255 255 255 / 0.96);
     border-bottom: 1px solid transparent;
-    transition-property: border-color;
+    box-shadow: none;
+    transition-property: border-color, box-shadow;
     transition-duration: var(--dur-base);
     transition-timing-function: var(--ease-out);
   }
   .header-surface[data-scrolled="true"] {
     border-bottom-color: var(--color-line);
-  }
-  /* 2 khối @supports tách riêng (thay vì gộp bằng "or") vì bản build từng
-     bị Lightning CSS rút gọn mất khai báo backdrop-filter khi gộp chung 1
-     điều kiện — tách ra từng khối đơn giản để chắc chắn build giữ đủ. */
-  @supports (-webkit-backdrop-filter: blur(1px)) {
-    .header-surface {
-      background-color: rgb(255 255 255 / 0.82);
-      -webkit-backdrop-filter: blur(12px);
-    }
-  }
-  @supports (backdrop-filter: blur(1px)) {
-    .header-surface {
-      background-color: rgb(255 255 255 / 0.82);
-      backdrop-filter: blur(12px);
-    }
+    box-shadow: var(--shadow-sm);
   }
 
-  /* Chiều cao cố định + hiệu ứng co chỉ áp dụng từ md trở lên — dưới md,
-     top-bar tự wrap 2 dòng (logo+icon, rồi ô tìm kiếm full-width) nên
-     chiều cao cố định sẽ làm tràn nội dung; mobile giữ auto. */
+  /* Chiều cao cố định 64px, mọi trạng thái, không animate — chỉ áp dụng từ
+     md trở lên vì dưới md top-bar tự wrap 2 dòng (logo+icon, rồi ô tìm
+     kiếm full-width), ép 64px sẽ tràn nội dung; mobile giữ auto (hành vi
+     này không đổi so với đợt A, không phải nguyên nhân gây giật vì mobile
+     chưa từng animate height). */
   .header-topbar {
     height: auto;
   }
   @media (min-width: 768px) {
     .header-topbar {
-      height: 72px;
-      transition-property: height;
-      transition-duration: var(--dur-base);
-      transition-timing-function: var(--ease-out);
-    }
-    .header-surface[data-scrolled="true"] .header-topbar {
-      height: 60px;
+      height: 64px;
     }
   }
 }
@@ -195,8 +181,7 @@
   .book-card-lift,
   .book-cover-shadow,
   .cover-zoom img,
-  .header-surface,
-  .header-topbar {
+  .header-surface {
     transition: none !important;
   }
   .hover-lift:hover,
@@ -204,4 +189,13 @@
   .book-card-lift:hover .cover-zoom img {
     transform: none !important;
   }
+}
+
+/* A2.1 bước 6: header dính cao 64px (md+) không che nội dung khi nhảy tới
+   một mốc neo trong trang (vd. id trong URL). scroll-padding-top áp dụng
+   cho MỌI điều hướng cuộn-tới-neo mà không cần scroll-margin-top riêng lẻ
+   trên từng phần tử đích — hiện repo chưa có neo nào dùng, đặt sẵn để an
+   toàn khi có mục lục hay link nội bộ sau này. */
+html {
+  scroll-padding-top: 80px;
 }

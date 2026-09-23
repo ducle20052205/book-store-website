@@ -50,7 +50,7 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
   const activeFilterCount = countActiveFilters(parsed);
 
   return (
-    <div className="container-page py-8 md:py-12">
+    <div className="container-page py-8">
       {parsed.q && parsed.page === 1 && (
         <TrackEvent
           eventType="search"
@@ -60,12 +60,18 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
 
       <Breadcrumb items={categoryChainToBreadcrumbItems(categoryChain)} />
 
-      <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="font-serif text-h1 text-ink-900">{heading}</h1>
-        <p className="text-sm text-ink-600">{totalCount} cuốn sách</p>
-      </div>
+      {/*
+        A2.3: gộp tiêu đề+số kết quả (trái) và chip lọc+sắp xếp (phải) vào
+        MỘT khối, căn baseline — trước đây 2 hàng riêng (mt-2 rồi mt-4) tạo
+        2 dải trống ở đầu trang. py-8 (thay vì py-8 md:py-12) để khoảng cách
+        từ header xuống tiêu đề không quá 32px.
+      */}
+      <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-3">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h1 className="font-serif text-h1 text-ink-900">{heading}</h1>
+          <p className="text-sm text-ink-600">{totalCount} cuốn sách</p>
+        </div>
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <div className="lg:hidden">
             <MobileFilterSheet
@@ -76,13 +82,22 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
             />
           </div>
           <FilterChips current={parsed} categoryName={categoryName} />
+          <SortSelect value={parsed.sort} />
         </div>
-
-        <SortSelect value={parsed.sort} />
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[240px_1fr]">
-        <aside className="hidden lg:block">
+      <div className="mt-12 grid grid-cols-1 gap-10 lg:grid-cols-[240px_1fr]">
+        {/*
+          A2.3: cột lọc dính khi cuộn. Đo thực tế: <header> gồm CẢ topbar
+          (64px) LẪN CategoryNav bên dưới (~53px) cùng dính chung một khối,
+          tổng cao 117px — không phải 64px như ước tính ban đầu trong spec.
+          top-20 (80px) từng để lộ 37px header đè lên đỉnh cột lọc khi cuộn
+          (đo được overlapPx: 37 ở scrollY 1200, 1280px). Đổi sang top-32
+          (128px, dư 11px so với 117px) để hết chồng; max-h trừ 152px
+          (128 + 24 đệm dưới) để luôn còn khoảng hở phía dưới, tự cuộn riêng
+          khi danh mục dài hơn màn hình.
+        */}
+        <aside className="hidden lg:sticky lg:top-32 lg:block lg:max-h-[calc(100vh-152px)] lg:overflow-y-auto">
           <CatalogFilters categories={categories} current={parsed} />
         </aside>
 

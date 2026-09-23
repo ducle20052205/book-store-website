@@ -112,8 +112,9 @@ export function CatalogFilters({ categories, current, applyLabel = "Áp dụng",
               name="min"
               min={0}
               step={1000}
+              placeholder="0"
               defaultValue={current.min ?? ""}
-              className="mt-1 block min-h-11 w-full rounded-control border border-line bg-surface px-2 text-sm text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+              className="mt-1 block min-h-11 w-full rounded-control border border-line bg-surface px-2 text-sm text-ink-900 placeholder:text-ink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
             />
           </label>
           <label className="col-span-1 block text-xs text-ink-600">
@@ -123,8 +124,9 @@ export function CatalogFilters({ categories, current, applyLabel = "Áp dụng",
               name="max"
               min={0}
               step={1000}
+              placeholder="500.000"
               defaultValue={current.max ?? ""}
-              className="mt-1 block min-h-11 w-full rounded-control border border-line bg-surface px-2 text-sm text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+              className="mt-1 block min-h-11 w-full rounded-control border border-line bg-surface px-2 text-sm text-ink-900 placeholder:text-ink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
             />
           </label>
           <button
