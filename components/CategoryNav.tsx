@@ -51,10 +51,10 @@ export function CategoryNav({ categories }: { categories: CategoryNode[] }) {
           </svg>
         </button>
 
-        <Link href="/#sach-moi" className={navLinkClass}>
+        <Link href="/sach?sort=newest" className={navLinkClass}>
           Sách mới
         </Link>
-        <Link href="/#sach-moi" className={navLinkClass}>
+        <Link href="/sach?sort=bestseller" className={navLinkClass}>
           Bán chạy
         </Link>
         <Link href="/tu-sach" className={navLinkClass}>

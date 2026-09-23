@@ -1,19 +1,21 @@
 import Link from "next/link";
 import { Hero } from "@/components/Hero";
 import { HomeTabs } from "@/components/HomeTabs";
-import { getBestsellingBooks, getCollections, getFeaturedCollection, getNewestBooks } from "@/lib/queries";
+import { getCollections, getFeaturedCollection, getNewestBooks, searchBooks } from "@/lib/queries";
 
 // Trang không dùng API động (cookies/headers/searchParams) nên Next.js sẽ
 // static hoá và đóng băng dữ liệu Supabase lúc build nếu không có dòng này.
 export const revalidate = 60;
 
 export default async function Home() {
-  const [featured, newest, bestselling, collections] = await Promise.all([
+  const [featured, newest, bestsellerResult, collections] = await Promise.all([
     getFeaturedCollection(),
     getNewestBooks(8),
-    getBestsellingBooks(8),
+    // 1b.1: tab "Bán chạy" dùng chung search_books(p_sort => 'bestseller') với /sach.
+    searchBooks({ sort: "bestseller", page: 1 }),
     getCollections(),
   ]);
+  const bestselling = bestsellerResult.books.slice(0, 8);
 
   return (
     <div>
