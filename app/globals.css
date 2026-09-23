@@ -15,8 +15,10 @@
   --color-danger: #C2362B;     /* lỗi form, cảnh báo */
   --color-success: #2E7D4F;    /* thông báo thành công */
 
-  /* Bảng 8 màu trầm cho <BookCover> (mục 4.2b) — nền bìa typographic khi
-     không có cover_image_url. Tất cả đã kiểm tra đạt >= 4.5:1 với chữ trắng. */
+  /* B.2: bảng 12 màu trầm cho <BookCover> (mở rộng từ 8) — nền bìa
+     typographic khi không có cover_image_url. Tất cả đã kiểm tra đạt
+     >= 4.5:1 với chữ trắng (8 màu đầu từ mục 4.2b, 4 màu 9-12 tính lại khi
+     mở rộng — xem báo cáo đợt B cho bảng số liệu đầy đủ). */
   --color-cover-1: #2A5A54;    /* teal trầm */
   --color-cover-2: #5B3358;    /* tím mận */
   --color-cover-3: #2F4A34;    /* xanh rêu */
@@ -25,6 +27,10 @@
   --color-cover-6: #4B4A2A;    /* ô liu */
   --color-cover-7: #34495A;    /* xanh than */
   --color-cover-8: #5C2436;    /* đỏ rượu vang */
+  --color-cover-9: #33383D;    /* xám than trung tính */
+  --color-cover-10: #4A2020;   /* đỏ mận sẫm */
+  --color-cover-11: #24402C;   /* xanh lá rừng */
+  --color-cover-12: #5A3D1E;   /* nâu hổ phách */
 
   --font-sans: var(--font-be-vietnam-pro), system-ui, sans-serif;
   --font-serif: var(--font-lora), Georgia, serif;
@@ -33,6 +39,7 @@
   --radius-card: 10px;
   --radius-control: 8px;
   --radius-pill: 999px;
+  --radius-spine: 2px; /* B.2: mép gáy sách trong <BookCover>, bo nhỏ hơn --radius-card */
 
   --shadow-sm: 0 1px 2px rgba(26, 28, 46, 0.06);
   --shadow-md: 0 8px 24px -10px rgba(26, 28, 46, 0.22);
@@ -72,6 +79,18 @@
   /* A.6 — chữ nút chính/phụ (15px/500), không thuộc thang chữ A.2. */
   --text-button: 0.9375rem; /* 15px */
   --text-button--line-height: 1.2;
+
+  /* B.3 — phân cấp trong <BookCard>: giá > tên > tác giả. */
+  --text-card-title: 0.9375rem; /* 15px */
+  --text-card-title--line-height: 1.3;
+
+  --text-card-price: 1.0625rem; /* 17px */
+  --text-card-price--line-height: 1.25;
+
+  /* Dùng chung cho tác giả trong BookCard và giá gốc gạch ngang trong
+     <Price> — cùng vai trò "chữ phụ rất nhỏ", tránh thêm token trùng lặp. */
+  --text-meta: 0.8125rem; /* 13px */
+  --text-meta--line-height: 1.4;
 }
 
 /* Khung nội dung 1200px dùng chung cho header, nav, nội dung, footer. */
@@ -138,6 +157,16 @@
     transform: scale(1.03);
   }
 
+  /* B.2: vân giấy rất nhẹ trên bìa typographic — SVG feTurbulence nhúng
+     data-URI, lặp lại (tile) khắp bìa. opacity 0.05 để "nhìn thoáng qua
+     không nhận ra" như spec yêu cầu; không cần đổi theo prefers-reduced-motion
+     vì đây là hoạ tiết tĩnh, không chuyển động. */
+  .paper-grain {
+    opacity: 0.05;
+    background-repeat: repeat;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
   /* A2.1: header dính cuộn. Đã BỎ backdrop-filter (đợt A dùng blur, nhưng
      kết hợp với position:sticky gây lỗi hiển thị nền mờ chỉ phủ 1 phần
      chiều ngang ở một số trình duyệt — xem báo cáo đợt A2) — dùng nền đặc
@@ -189,15 +218,19 @@
   .book-card-lift:hover .cover-zoom img {
     transform: none !important;
   }
+  /* B.4: skeleton dùng animate-pulse (utility có sẵn của Tailwind) — tắt
+     luôn hiệu ứng nhấp nháy khi người dùng giảm chuyển động. */
+  .animate-pulse {
+    animation: none !important;
+  }
 }
 
 /* A2.1 bước 6: không che nội dung khi nhảy tới một mốc neo trong trang (vd.
    id trong URL). scroll-padding-top áp dụng cho MỌI điều hướng cuộn-tới-neo
    mà không cần scroll-margin-top riêng lẻ trên từng phần tử đích — hiện
    repo chưa có neo nào dùng, đặt sẵn để an toàn khi có mục lục hay link nội
-   bộ sau này. 128px chứ không phải 64px: <header> dính gồm CẢ topbar
-   (64px) LẪN CategoryNav bên dưới, đo thực tế cao tổng 117px (xem cùng lý
-   do ở cột lọc trang /sach). */
+   bộ sau này. 80px = 64px (chiều cao phần dính, chỉ còn topbar từ đợt B —
+   CategoryNav không còn dính) + 16px đệm. */
 html {
-  scroll-padding-top: 128px;
+  scroll-padding-top: 80px;
 }

@@ -89,71 +89,73 @@ export async function Header({ cartCount = 0 }: HeaderProps) {
   const categories = await getCategoryTree();
 
   return (
-    <HeaderShell>
-      <div className="header-topbar container-page flex flex-wrap items-center gap-4 border-b border-line py-3 md:flex-nowrap md:py-0">
-        <Link
-          href="/"
-          className="order-1 shrink-0 rounded-control font-serif text-xl font-semibold text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
-        >
-          NA Books
-        </Link>
-
-        <form
-          role="search"
-          action="/sach"
-          method="get"
-          className="order-3 w-full md:order-2 md:w-auto md:min-w-0 md:flex-1"
-        >
-          <label htmlFor="site-search" className="sr-only">
-            Tìm tên sách, tác giả
-          </label>
-          <div className="relative">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-400">
-              <SearchIcon />
-            </span>
-            <input
-              id="site-search"
-              name="q"
-              type="search"
-              placeholder="Tìm tên sách, tác giả…"
-              className="w-full min-w-0 rounded-control border border-line bg-paper py-2 pl-9 pr-3 text-sm text-ink-900 placeholder:text-ink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
-            />
-          </div>
-        </form>
-
-        <nav
-          aria-label="Tài khoản và giỏ hàng"
-          className="order-2 ml-auto flex shrink-0 items-center gap-1 md:order-3 md:ml-0"
-        >
-          <Link href="/yeu-thich" aria-label="Yêu thích" className={iconLinkClass}>
-            <HeartIcon />
-            <span className="hidden text-sm sm:inline">Yêu thích</span>
-          </Link>
-
-          <Link href="/tai-khoan" aria-label="Tài khoản" className={iconLinkClass}>
-            <UserIcon />
-            <span className="hidden text-sm sm:inline">Tài khoản</span>
-          </Link>
-
+    <HeaderShell
+      topbar={
+        <div className="header-topbar container-page flex flex-wrap items-center gap-4 border-b border-line py-3 md:flex-nowrap md:py-0">
           <Link
-            href="/gio-hang"
-            aria-label={`Giỏ hàng${cartCount > 0 ? `, ${cartCount} sản phẩm` : ""}`}
-            className={`relative ${iconLinkClass}`}
+            href="/"
+            className="order-1 shrink-0 rounded-control font-serif text-xl font-semibold text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
           >
-            <BagIcon />
-            <span className="hidden text-sm sm:inline">Giỏ hàng</span>
-            {cartCount > 0 && (
-              <span
-                aria-hidden="true"
-                className="absolute -top-1 right-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-nghe-400 px-1 text-xs font-semibold leading-none text-ink-900"
-              >
-                {cartCount > 99 ? "99+" : cartCount}
-              </span>
-            )}
+            NA Books
           </Link>
-        </nav>
-      </div>
 
+          <form
+            role="search"
+            action="/sach"
+            method="get"
+            className="order-3 w-full md:order-2 md:w-auto md:min-w-0 md:flex-1"
+          >
+            <label htmlFor="site-search" className="sr-only">
+              Tìm tên sách, tác giả
+            </label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-400">
+                <SearchIcon />
+              </span>
+              <input
+                id="site-search"
+                name="q"
+                type="search"
+                placeholder="Tìm tên sách, tác giả…"
+                className="w-full min-w-0 rounded-control border border-line bg-paper py-2 pl-9 pr-3 text-sm text-ink-900 placeholder:text-ink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+              />
+            </div>
+          </form>
+
+          <nav
+            aria-label="Tài khoản và giỏ hàng"
+            className="order-2 ml-auto flex shrink-0 items-center gap-1 md:order-3 md:ml-0"
+          >
+            <Link href="/yeu-thich" aria-label="Yêu thích" className={iconLinkClass}>
+              <HeartIcon />
+              <span className="hidden text-sm sm:inline">Yêu thích</span>
+            </Link>
+
+            <Link href="/tai-khoan" aria-label="Tài khoản" className={iconLinkClass}>
+              <UserIcon />
+              <span className="hidden text-sm sm:inline">Tài khoản</span>
+            </Link>
+
+            <Link
+              href="/gio-hang"
+              aria-label={`Giỏ hàng${cartCount > 0 ? `, ${cartCount} sản phẩm` : ""}`}
+              className={`relative ${iconLinkClass}`}
+            >
+              <BagIcon />
+              <span className="hidden text-sm sm:inline">Giỏ hàng</span>
+              {cartCount > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-1 right-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-nghe-400 px-1 text-xs font-semibold leading-none text-ink-900"
+                >
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
+            </Link>
+          </nav>
+        </div>
+      }
+    >
       <CategoryNav categories={categories} />
     </HeaderShell>
   );

@@ -21,7 +21,7 @@ export function CategoryNav({ categories }: { categories: CategoryNode[] }) {
   }, [open]);
 
   return (
-    <div className="relative">
+    <div className="relative bg-surface">
       <nav
         aria-label="Danh mục và điều hướng nhanh"
         className="container-page scrollbar-hidden flex items-center gap-5 overflow-x-auto whitespace-nowrap py-1 text-sm"

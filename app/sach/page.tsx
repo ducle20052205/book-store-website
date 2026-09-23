@@ -88,16 +88,13 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
 
       <div className="mt-12 grid grid-cols-1 gap-10 lg:grid-cols-[240px_1fr]">
         {/*
-          A2.3: cột lọc dính khi cuộn. Đo thực tế: <header> gồm CẢ topbar
-          (64px) LẪN CategoryNav bên dưới (~53px) cùng dính chung một khối,
-          tổng cao 117px — không phải 64px như ước tính ban đầu trong spec.
-          top-20 (80px) từng để lộ 37px header đè lên đỉnh cột lọc khi cuộn
-          (đo được overlapPx: 37 ở scrollY 1200, 1280px). Đổi sang top-32
-          (128px, dư 11px so với 117px) để hết chồng; max-h trừ 152px
-          (128 + 24 đệm dưới) để luôn còn khoảng hở phía dưới, tự cuộn riêng
-          khi danh mục dài hơn màn hình.
+          A2.3/B: cột lọc dính khi cuộn. top-20 (80px) = 64px chiều cao
+          phần dính (chỉ topbar từ đợt B — CategoryNav không còn dính, cuộn
+          đi như nội dung thường) + 16px đệm; max-h trừ 96px (80 + 16) để
+          luôn còn khoảng hở phía dưới, tự cuộn riêng khi danh mục dài hơn
+          màn hình.
         */}
-        <aside className="hidden lg:sticky lg:top-32 lg:block lg:max-h-[calc(100vh-152px)] lg:overflow-y-auto">
+        <aside className="hidden lg:sticky lg:top-20 lg:block lg:max-h-[calc(100vh-96px)] lg:overflow-y-auto">
           <CatalogFilters categories={categories} current={parsed} />
         </aside>
 
@@ -119,7 +116,7 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
             </p>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
                 {books.map((book) => (
                   <BookCard key={book.slug} book={book} />
                 ))}

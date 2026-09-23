@@ -1,4 +1,8 @@
-/** 1b.2: skeleton lưới thẻ sách khi /sach đang tải dữ liệu. */
+/**
+ * 1b.2/B.4: skeleton lưới thẻ sách khi /sach đang tải dữ liệu — khớp thứ tự
+ * giá/tên/tác giả và vị trí badge góc bìa của <BookCard> sau đợt B.
+ * animate-pulse tắt qua prefers-reduced-motion ở globals.css.
+ */
 export default function Loading() {
   return (
     <div className="container-page py-8 md:py-12">
@@ -13,12 +17,18 @@ export default function Loading() {
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              <div className="aspect-2/3 animate-pulse rounded-card bg-line" />
-              <div className="h-4 w-3/4 animate-pulse rounded-control bg-line" />
-              <div className="h-3 w-1/2 animate-pulse rounded-control bg-line" />
+            <div key={i}>
+              <div className="relative">
+                <div className="aspect-2/3 animate-pulse rounded-card bg-line" />
+                <div className="absolute left-2 top-2 h-5 w-10 animate-pulse rounded-pill bg-surface" />
+              </div>
+              <div className="mt-3 space-y-1.5">
+                <div className="h-[17px] w-1/3 animate-pulse rounded-control bg-line" />
+                <div className="h-[15px] w-full animate-pulse rounded-control bg-line" />
+                <div className="h-[13px] w-1/2 animate-pulse rounded-control bg-line" />
+              </div>
             </div>
           ))}
         </div>

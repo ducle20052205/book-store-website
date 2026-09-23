@@ -254,7 +254,7 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
         {related && (
           <div>
             <h2 className="font-serif text-h2 font-semibold text-ink-900">{related.heading}</h2>
-            <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
               {related.books.map((relatedBook) => (
                 <BookCard key={relatedBook.slug} book={relatedBook} />
               ))}
