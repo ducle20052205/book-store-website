@@ -191,11 +191,13 @@
   }
 }
 
-/* A2.1 bước 6: header dính cao 64px (md+) không che nội dung khi nhảy tới
-   một mốc neo trong trang (vd. id trong URL). scroll-padding-top áp dụng
-   cho MỌI điều hướng cuộn-tới-neo mà không cần scroll-margin-top riêng lẻ
-   trên từng phần tử đích — hiện repo chưa có neo nào dùng, đặt sẵn để an
-   toàn khi có mục lục hay link nội bộ sau này. */
+/* A2.1 bước 6: không che nội dung khi nhảy tới một mốc neo trong trang (vd.
+   id trong URL). scroll-padding-top áp dụng cho MỌI điều hướng cuộn-tới-neo
+   mà không cần scroll-margin-top riêng lẻ trên từng phần tử đích — hiện
+   repo chưa có neo nào dùng, đặt sẵn để an toàn khi có mục lục hay link nội
+   bộ sau này. 128px chứ không phải 64px: <header> dính gồm CẢ topbar
+   (64px) LẪN CategoryNav bên dưới, đo thực tế cao tổng 117px (xem cùng lý
+   do ở cột lọc trang /sach). */
 html {
-  scroll-padding-top: 80px;
+  scroll-padding-top: 128px;
 }
