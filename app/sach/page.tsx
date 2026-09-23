@@ -1,29 +1,35 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BookCard } from "@/components/BookCard";
+import { Breadcrumb, categoryChainToBreadcrumbItems } from "@/components/Breadcrumb";
 import { CatalogFilters } from "@/components/CatalogFilters";
 import { FilterChips } from "@/components/FilterChips";
 import { MobileFilterSheet } from "@/components/MobileFilterSheet";
 import { Pagination } from "@/components/Pagination";
 import { SortSelect } from "@/components/SortSelect";
+import { TrackEvent } from "@/components/TrackEvent";
 import { type ParsedCatalogParams, countActiveFilters, parseCatalogSearchParams } from "@/lib/catalog";
-import { getCategoryBySlug, getCategoryTree, searchBooks } from "@/lib/queries";
+import { type CategoryBasic, getCategoryChainBySlug, getCategoryTree, searchBooks } from "@/lib/queries";
 
-async function resolveHeading(parsed: ParsedCatalogParams): Promise<{ heading: string; categoryName?: string }> {
-  if (parsed.q) return { heading: `Kết quả cho "${parsed.q}"` };
+async function resolveCatalogContext(
+  parsed: ParsedCatalogParams,
+): Promise<{ heading: string; categoryName?: string; categoryChain: CategoryBasic[] }> {
+  const categoryChain = parsed.category ? await getCategoryChainBySlug(parsed.category) : [];
+  const leaf = categoryChain[categoryChain.length - 1];
 
-  if (parsed.category) {
-    const category = await getCategoryBySlug(parsed.category);
-    return category ? { heading: category.name, categoryName: category.name } : { heading: "Không tìm thấy danh mục" };
-  }
+  let heading: string;
+  if (parsed.q) heading = `Kết quả cho "${parsed.q}"`;
+  else if (leaf) heading = leaf.name;
+  else if (parsed.category) heading = "Không tìm thấy danh mục";
+  else heading = "Tất cả sách";
 
-  return { heading: "Tất cả sách" };
+  return { heading, categoryName: leaf?.name, categoryChain };
 }
 
 export async function generateMetadata({ searchParams }: PageProps<"/sach">): Promise<Metadata> {
   const sp = await searchParams;
   const parsed = parseCatalogSearchParams(sp);
-  const { heading } = await resolveHeading(parsed);
+  const { heading } = await resolveCatalogContext(parsed);
   return { title: `${heading} – NA Books` };
 }
 
@@ -35,8 +41,8 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
   const sp = await searchParams;
   const parsed = parseCatalogSearchParams(sp);
 
-  const [{ heading, categoryName }, categories, { books, totalCount }] = await Promise.all([
-    resolveHeading(parsed),
+  const [{ heading, categoryName, categoryChain }, categories, { books, totalCount }] = await Promise.all([
+    resolveCatalogContext(parsed),
     getCategoryTree(),
     searchBooks(parsed),
   ]);
@@ -45,7 +51,16 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
 
   return (
     <div className="container-page py-8 md:py-12">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
+      {parsed.q && parsed.page === 1 && (
+        <TrackEvent
+          eventType="search"
+          metadata={{ q: parsed.q, results_count: totalCount, category: parsed.category ?? null, sort: parsed.sort }}
+        />
+      )}
+
+      <Breadcrumb items={categoryChainToBreadcrumbItems(categoryChain)} />
+
+      <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2">
         <h1 className="font-serif text-3xl text-ink-900">{heading}</h1>
         <p className="text-sm text-ink-600">{totalCount} cuốn sách</p>
       </div>
@@ -53,9 +68,12 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <div className="lg:hidden">
-            <MobileFilterSheet activeCount={activeFilterCount}>
-              <CatalogFilters categories={categories} current={parsed} />
-            </MobileFilterSheet>
+            <MobileFilterSheet
+              activeCount={activeFilterCount}
+              categories={categories}
+              current={parsed}
+              totalCount={totalCount}
+            />
           </div>
           <FilterChips current={parsed} categoryName={categoryName} />
         </div>

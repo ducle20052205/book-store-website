@@ -1,6 +1,9 @@
 "use client";
 
 import { useRef } from "react";
+import { CatalogFilters } from "@/components/CatalogFilters";
+import type { ParsedCatalogParams } from "@/lib/catalog";
+import type { CategoryNode } from "@/lib/queries";
 
 function FilterIcon() {
   return (
@@ -27,15 +30,20 @@ function FilterIcon() {
 
 interface MobileFilterSheetProps {
   activeCount: number;
-  children: React.ReactNode;
+  categories: CategoryNode[];
+  current: ParsedCatalogParams;
+  totalCount: number;
 }
 
 /**
  * 1b.2 (mobile): nút "Bộ lọc" mở bottom sheet. Dùng <dialog>/showModal() vì
  * trình duyệt tự lo focus trap và đóng bằng Esc — đúng yêu cầu "focus bị giữ
  * trong sheet" + "đóng được bằng phím Esc" mà không cần tự viết focus trap.
+ *
+ * 1c (bổ sung): nút chính của form khoảng giá đổi thành "Xem N kết quả" (N =
+ * totalCount hiện tại) và tự đóng sheet khi bấm — khác desktop vẫn "Áp dụng".
  */
-export function MobileFilterSheet({ activeCount, children }: MobileFilterSheetProps) {
+export function MobileFilterSheet({ activeCount, categories, current, totalCount }: MobileFilterSheetProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   return (
@@ -69,7 +77,12 @@ export function MobileFilterSheet({ activeCount, children }: MobileFilterSheetPr
           className="overflow-y-auto px-4 py-4"
           style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
         >
-          {children}
+          <CatalogFilters
+            categories={categories}
+            current={current}
+            applyLabel={`Xem ${totalCount} kết quả`}
+            onApply={() => dialogRef.current?.close()}
+          />
         </div>
       </dialog>
     </>

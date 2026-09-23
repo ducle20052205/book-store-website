@@ -89,6 +89,35 @@ export const getCategoryBySlug = cache(async function getCategoryBySlug(
   return { id: data.id, name: data.name, slug: data.slug, parentId: data.parent_id };
 });
 
+/** Danh mục theo id — dùng để lấy tên danh mục cha khi chỉ có category_id của sách. */
+export const getCategoryById = cache(async function getCategoryById(id: string): Promise<CategoryBasic | null> {
+  const { data } = await supabase
+    .from("categories")
+    .select("id, name, slug, parent_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!data) return null;
+  return { id: data.id, name: data.name, slug: data.slug, parentId: data.parent_id };
+});
+
+/** 1c (bổ sung): chuỗi breadcrumb [cha, con] (hoặc chỉ [cha] nếu category đã là cấp cao nhất). */
+async function buildCategoryChain(category: CategoryBasic): Promise<CategoryBasic[]> {
+  if (!category.parentId) return [category];
+  const parent = await getCategoryById(category.parentId);
+  return parent ? [parent, category] : [category];
+}
+
+export async function getCategoryChainBySlug(slug: string): Promise<CategoryBasic[]> {
+  const category = await getCategoryBySlug(slug);
+  return category ? buildCategoryChain(category) : [];
+}
+
+export async function getCategoryChainById(id: string): Promise<CategoryBasic[]> {
+  const category = await getCategoryById(id);
+  return category ? buildCategoryChain(category) : [];
+}
+
 interface SearchBookRow extends BookRow {
   id: string;
   total_count: number;
@@ -244,4 +273,158 @@ export async function getCollectionBySlug(slug: string): Promise<CollectionDetai
         position: r.position,
       })),
   };
+}
+
+export interface BookDetail {
+  id: string;
+  slug: string;
+  title: string;
+  author: string;
+  translator: string | null;
+  publisher: string | null;
+  description: string | null;
+  tableOfContents: string | null;
+  price: number;
+  discountPrice: number | null;
+  isbn: string | null;
+  pageCount: number | null;
+  dimensions: string | null;
+  publishDate: string | null;
+  coverImageUrl: string | null;
+  stockQuantity: number;
+  categoryId: string;
+}
+
+/** 1c.1/1c.2: dữ liệu đầy đủ cho trang /sach/[slug]. */
+export const getBookBySlug = cache(async function getBookBySlug(slug: string): Promise<BookDetail | null> {
+  const { data } = await supabase
+    .from("books")
+    .select(
+      "id, slug, title, author, translator, publisher, description, table_of_contents, price, discount_price, isbn, page_count, dimensions, publish_date, cover_image_url, stock_quantity, category_id",
+    )
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    slug: data.slug,
+    title: data.title,
+    author: data.author,
+    translator: data.translator,
+    publisher: data.publisher,
+    description: data.description,
+    tableOfContents: data.table_of_contents,
+    price: data.price,
+    discountPrice: data.discount_price,
+    isbn: data.isbn,
+    pageCount: data.page_count,
+    dimensions: data.dimensions,
+    publishDate: data.publish_date,
+    coverImageUrl: data.cover_image_url,
+    stockQuantity: data.stock_quantity,
+    categoryId: data.category_id,
+  };
+});
+
+export interface BookCollectionEntry {
+  slug: string;
+  title: string;
+  curatorNote: string;
+  bookCount: number;
+}
+
+interface CollectionBooksJoinRow {
+  curator_note: string;
+  collections: { id: string; slug: string; title: string } | null;
+}
+
+/** [Thay đổi SRS — FR-2.6 mới] Mọi tủ sách có chứa cuốn này, kèm curator_note riêng của cuốn trong tủ đó. */
+export async function getBookCollections(bookId: string): Promise<BookCollectionEntry[]> {
+  const { data } = await supabase
+    .from("collection_books")
+    .select("curator_note, collections(id, slug, title)")
+    .eq("book_id", bookId);
+
+  const rows = (data ?? []) as unknown as CollectionBooksJoinRow[];
+
+  return Promise.all(
+    rows
+      .filter((r) => r.collections !== null)
+      .map(async (r) => {
+        const { count } = await supabase
+          .from("collection_books")
+          .select("*", { count: "exact", head: true })
+          .eq("collection_id", r.collections!.id);
+
+        return {
+          slug: r.collections!.slug,
+          title: r.collections!.title,
+          curatorNote: r.curator_note,
+          bookCount: count ?? 0,
+        };
+      }),
+  );
+}
+
+export interface RelatedBooks {
+  heading: string;
+  books: BookSummary[];
+}
+
+/**
+ * [Thay đổi SRS — FR-2.3] Tối đa 4 cuốn cùng category_id (con), mới nhất
+ * trước; nếu chưa đủ 4, lấy thêm từ các category con khác cùng cha, không
+ * trùng. Tiêu đề đổi theo việc có phải lấy thêm từ cha hay không.
+ */
+export async function getRelatedBooks(book: Pick<BookDetail, "id" | "categoryId">): Promise<RelatedBooks | null> {
+  const category = await getCategoryById(book.categoryId);
+  if (!category) return null;
+
+  const { data: sameData } = await supabase
+    .from("books")
+    .select("slug, title, author, cover_image_url, price, discount_price, stock_quantity")
+    .eq("category_id", book.categoryId)
+    .neq("id", book.id)
+    .order("created_at", { ascending: false })
+    .limit(4);
+
+  let books = (sameData ?? []).map(mapBookRow);
+  let usedParent = false;
+
+  if (books.length < 4 && category.parentId) {
+    const { data: siblingCategories } = await supabase
+      .from("categories")
+      .select("id")
+      .eq("parent_id", category.parentId)
+      .neq("id", category.id);
+
+    const siblingIds = (siblingCategories ?? []).map((c) => c.id);
+
+    if (siblingIds.length > 0) {
+      const { data: extraData } = await supabase
+        .from("books")
+        .select("id, slug, title, author, cover_image_url, price, discount_price, stock_quantity")
+        .in("category_id", siblingIds)
+        .neq("id", book.id)
+        .order("created_at", { ascending: false })
+        .limit(4 - books.length);
+
+      if (extraData && extraData.length > 0) {
+        usedParent = true;
+        books = [...books, ...extraData.map(mapBookRow)];
+      }
+    }
+  }
+
+  if (books.length === 0) return null;
+
+  let headingCategoryName = category.name;
+  if (usedParent && category.parentId) {
+    const parent = await getCategoryById(category.parentId);
+    if (parent) headingCategoryName = parent.name;
+  }
+
+  return { heading: `Cùng thể loại ${headingCategoryName}`, books };
 }

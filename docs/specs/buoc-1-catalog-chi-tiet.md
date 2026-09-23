@@ -236,6 +236,14 @@ Lý do: mỗi danh mục con hiện chỉ có 1–3 cuốn. Ví dụ "Kỳ ảo 
 - Chặn ghi trùng: ở dev mode, React Strict Mode chạy effect hai lần. Dùng `useRef` để mỗi lần mở trang chỉ ghi một sự kiện.
 - `results_count = 0` là dữ liệu quan trọng ("tìm mà không thấy"). Vẫn phải ghi.
 
+### 1c.4 Bổ sung ngoài spec ban đầu (ghi nhận khi duyệt đợt 1c)
+
+Ba điểm dưới đây không nằm trong bản spec gốc, được thêm khi duyệt đợt 1b và làm cùng đợt 1c:
+
+1. **Sửa link `/books/[slug]` còn sót lại.** `BookCard` (và mọi nơi khác) trỏ sai sang route cũ `/books/<slug>` — route này không tồn tại. Đổi toàn bộ sang `/sach/<slug>` (route đúng theo 1c.1). Không có route `/books` nào cần xóa (chưa từng được tạo).
+2. **Breadcrumb** trên cả `/sach` (khi có `category` hợp lệ) và `/sach/[slug]` (luôn có, vì mọi sách đều thuộc 1 category con): `Trang chủ / <danh mục cha> / <danh mục con>`. Nếu category đang chọn đã là cấp cao nhất (không có cha) thì breadcrumb chỉ còn `Trang chủ / <danh mục>`. Mỗi cấp là link tới `/sach?category=<slug>` của cấp đó, trừ `Trang chủ` (`/`) và cấp cuối cùng (trang hiện tại, không phải link). Dùng `<nav aria-label="Breadcrumb"><ol>...`. Trang `/sach` không có `category` (vd. "Tất cả sách", kết quả tìm kiếm không lọc category) thì không hiển thị breadcrumb.
+3. **Bộ lọc mobile — nút chính đổi nhãn theo ngữ cảnh.** Nút submit của form khoảng giá trong bottom sheet mobile hiển thị `Xem {totalCount} kết quả` (N = số kết quả của bộ lọc **đang áp dụng trên URL hiện tại**, cùng con số hiển thị ở "N cuốn sách" phía trên — không phải preview trực tiếp theo giá trị đang gõ dở trong ô Từ/Đến). Bấm nút này thì đóng bottom sheet lại (gọi `dialog.close()`), ngoài việc submit form như bình thường. Desktop giữ nguyên nhãn "Áp dụng" và không tự đóng gì (không có sheet để đóng). Các lựa chọn khác trong bộ lọc (cây danh mục, 3 lựa chọn nhanh, "Xóa bộ lọc") không đổi hành vi.
+
 ---
 
 ## Hoàn thành khi
@@ -249,6 +257,9 @@ Lý do: mỗi danh mục con hiện chỉ có 1–3 cuốn. Ví dụ "Kỳ ảo 
   - Thanh mua hàng dính đáy trên mobile.
   - Toast hiện khi bấm nút giỏ hàng.
   - Slug sai trả về 404.
+  - **(bổ sung 1c.4)** Không còn link nào trỏ `/books/<slug>` trong repo.
+  - **(bổ sung 1c.4)** Breadcrumb đúng cấp trên cả `/sach` (khi có category) và `/sach/[slug]`.
+  - **(bổ sung 1c.4)** Bottom sheet mobile: nút chính ghi "Xem N kết quả" đúng số, bấm xong tự đóng sheet. Desktop vẫn "Áp dụng".
 - [ ] Đối chiếu với ảnh trong `docs/mockups/buoc-1/`, liệt kê mọi chỗ lệch.
 - [ ] **Events:** mở 1 trang sách + tìm 1 từ khóa → có đúng 2 dòng trong `events`, `user_id` là null, có `session_id`.
 - [ ] Kiểm tra NFR-6.1 → 6.6 (accessibility) trên cả 2 trang mới.

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { type ParsedCatalogParams, buildCatalogQuery } from "@/lib/catalog";
 import type { CategoryNode } from "@/lib/queries";
@@ -5,6 +7,10 @@ import type { CategoryNode } from "@/lib/queries";
 interface CatalogFiltersProps {
   categories: CategoryNode[];
   current: ParsedCatalogParams;
+  /** Nhãn nút submit của form khoảng giá — mặc định "Áp dụng" (desktop). */
+  applyLabel?: string;
+  /** Gọi thêm khi bấm nút submit — mobile dùng để đóng bottom sheet lại. */
+  onApply?: () => void;
 }
 
 const optionLinkClass =
@@ -16,7 +22,7 @@ const activeClass = "bg-cham-50 font-semibold text-cham-700";
  * (1b.2: "nội dung lọc giống desktop"). Mọi lựa chọn là link GET tới /sach
  * để URL luôn phản ánh đúng bộ lọc và nút Back hoạt động đúng (1b.1).
  */
-export function CatalogFilters({ categories, current }: CatalogFiltersProps) {
+export function CatalogFilters({ categories, current, applyLabel = "Áp dụng", onApply }: CatalogFiltersProps) {
   const isUnder100k = current.max === 100000 && current.min === undefined;
   const isMidRange = current.min === 100000 && current.max === 200000;
   const isOver200k = current.min === 200000 && current.max === undefined;
@@ -123,9 +129,10 @@ export function CatalogFilters({ categories, current }: CatalogFiltersProps) {
           </label>
           <button
             type="submit"
+            onClick={onApply}
             className="col-span-2 min-h-11 rounded-control bg-cham-700 px-4 text-sm font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
           >
-            Áp dụng
+            {applyLabel}
           </button>
         </form>
       </div>

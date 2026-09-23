@@ -16,7 +16,7 @@ interface BookCardBook {
 export function BookCard({ book }: { book: BookCardBook }) {
   return (
     <Link
-      href={`/books/${book.slug}`}
+      href={`/sach/${book.slug}`}
       className="group block rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
     >
       <div className="relative transition-shadow group-hover:shadow-sm">
