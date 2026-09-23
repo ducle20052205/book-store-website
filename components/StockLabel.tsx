@@ -8,7 +8,7 @@ export function StockLabel({ stockQuantity, className }: StockLabelProps) {
 
   return (
     <span
-      className={`inline-flex items-center rounded-control border border-line bg-surface px-2 py-0.5 text-xs font-medium text-ink-900 ${className ?? ""}`}
+      className={`inline-flex items-center rounded-pill border border-line bg-surface px-2.5 py-0.5 text-micro font-medium text-ink-900 ${className ?? ""}`}
     >
       Hết hàng
     </span>

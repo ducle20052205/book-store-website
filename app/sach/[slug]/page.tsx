@@ -108,12 +108,12 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
             author={book.author}
             coverImageUrl={book.coverImageUrl}
             sizes="(min-width: 768px) 40vw, 60vw"
-            className="max-w-[240px] md:max-w-none"
+            className="max-w-[240px] shadow-md md:max-w-none"
           />
         </div>
 
         <div>
-          <h1 className="font-serif text-3xl text-ink-900">{book.title}</h1>
+          <h1 className="font-serif text-book-title font-semibold text-ink-900">{book.title}</h1>
           <p className="mt-2 text-sm text-ink-600">
             Tác giả:{" "}
             <Link
@@ -163,9 +163,7 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
           {book.description && (
             <div className="mt-8">
               <h2 className="font-serif text-lg font-semibold text-ink-900">Giới thiệu sách</h2>
-              <p className="mt-2 max-w-prose whitespace-pre-line text-sm leading-relaxed text-ink-600">
-                {book.description}
-              </p>
+              <p className="mt-2 max-w-prose whitespace-pre-line text-body text-ink-600">{book.description}</p>
             </div>
           )}
 
@@ -205,7 +203,7 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
 
       {related && (
         <div className="mt-12">
-          <h2 className="font-serif text-2xl text-ink-900">{related.heading}</h2>
+          <h2 className="font-serif text-h2 font-semibold text-ink-900">{related.heading}</h2>
           <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
             {related.books.map((relatedBook) => (
               <BookCard key={relatedBook.slug} book={relatedBook} />

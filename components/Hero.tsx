@@ -10,16 +10,14 @@ export function Hero({ collection }: { collection: FeaturedCollection | null }) 
     <section className="border-b border-line bg-cham-50">
       <div className="container-page flex flex-col gap-8 py-10 md:flex-row md:items-center">
         <div className="flex-1 space-y-4">
-          <span className="inline-block rounded-control bg-surface px-2 py-1 text-xs font-medium text-cham-700">
+          <span className="inline-block rounded-pill bg-surface px-3 py-1 text-micro font-medium text-cham-700">
             Tuyển chọn
           </span>
-          <h1 className="font-serif text-3xl font-semibold leading-tight text-ink-900 md:text-4xl">
-            {collection.title}
-          </h1>
-          <p className="line-clamp-2 max-w-prose text-ink-600">{collection.description}</p>
+          <h1 className="font-serif text-display font-semibold text-ink-900">{collection.title}</h1>
+          <p className="line-clamp-2 max-w-prose text-body text-ink-600">{collection.description}</p>
           <Link
             href={`/tu-sach/${collection.slug}`}
-            className="inline-flex min-h-11 items-center justify-center rounded-control bg-cham-700 px-5 text-sm font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
+            className="inline-flex min-h-11 items-center justify-center rounded-control bg-cham-700 px-5 text-button font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
           >
             Xem tủ sách
           </Link>

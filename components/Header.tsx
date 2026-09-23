@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CategoryNav } from "@/components/CategoryNav";
+import { HeaderShell } from "@/components/HeaderShell";
 import { getCategoryTree } from "@/lib/queries";
 
 function SearchIcon() {
@@ -88,8 +89,8 @@ export async function Header({ cartCount = 0 }: HeaderProps) {
   const categories = await getCategoryTree();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-surface">
-      <div className="container-page flex flex-wrap items-center gap-4 border-b border-line py-3 md:flex-nowrap">
+    <HeaderShell>
+      <div className="header-topbar container-page flex flex-wrap items-center gap-4 border-b border-line py-3 md:flex-nowrap md:py-0">
         <Link
           href="/"
           className="order-1 shrink-0 rounded-control font-serif text-xl font-semibold text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
@@ -154,6 +155,6 @@ export async function Header({ cartCount = 0 }: HeaderProps) {
       </div>
 
       <CategoryNav categories={categories} />
-    </header>
+    </HeaderShell>
   );
 }

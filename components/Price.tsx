@@ -36,7 +36,7 @@ export function Price({ price, discountPrice, className }: PriceProps) {
       <span className="text-sm text-ink-400 line-through">
         {currencyFormatter.format(price)}
       </span>
-      <span className="rounded-control bg-nghe-400 px-1.5 py-0.5 text-xs font-semibold text-ink-900">
+      <span className="rounded-pill bg-nghe-400 px-2 py-0.5 text-micro font-semibold text-ink-900">
         -{percentOff}%
       </span>
     </span>

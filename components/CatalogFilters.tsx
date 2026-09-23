@@ -130,7 +130,7 @@ export function CatalogFilters({ categories, current, applyLabel = "Áp dụng",
           <button
             type="submit"
             onClick={onApply}
-            className="col-span-2 min-h-11 rounded-control bg-cham-700 px-4 text-sm font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
+            className="col-span-2 min-h-11 rounded-control bg-cham-700 px-4 text-button font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
           >
             {applyLabel}
           </button>
@@ -139,7 +139,7 @@ export function CatalogFilters({ categories, current, applyLabel = "Áp dụng",
 
       <Link
         href="/sach"
-        className="block min-h-11 rounded-control border border-line px-3 py-2 text-center font-medium text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+        className="block min-h-11 rounded-control border border-line px-3 py-2 text-center text-button font-medium text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
       >
         Xóa bộ lọc
       </Link>

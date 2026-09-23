@@ -61,7 +61,7 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
       <Breadcrumb items={categoryChainToBreadcrumbItems(categoryChain)} />
 
       <div className="mt-2 flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="font-serif text-3xl text-ink-900">{heading}</h1>
+        <h1 className="font-serif text-h1 text-ink-900">{heading}</h1>
         <p className="text-sm text-ink-600">{totalCount} cuốn sách</p>
       </div>
 

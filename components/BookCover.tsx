@@ -50,7 +50,7 @@ export function BookCover({
   if (coverImageUrl) {
     return (
       <div
-        className={`relative aspect-[2/3] overflow-hidden rounded-card border border-line bg-surface ${className ?? ""}`}
+        className={`book-cover-shadow cover-zoom relative aspect-[2/3] overflow-hidden rounded-card border border-line bg-surface ${className ?? ""}`}
       >
         <Image src={coverImageUrl} alt={title} fill sizes={sizes} className="object-cover" />
       </div>
@@ -61,7 +61,7 @@ export function BookCover({
     <div
       role="img"
       aria-label={title}
-      className={`@container relative aspect-[2/3] overflow-hidden rounded-card border border-line p-3 text-white ${colorClassForSlug(slug)} ${className ?? ""}`}
+      className={`book-cover-shadow @container relative aspect-[2/3] overflow-hidden rounded-card border border-line p-3 text-white ${colorClassForSlug(slug)} ${className ?? ""}`}
     >
       <p
         aria-hidden="true"

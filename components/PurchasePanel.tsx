@@ -22,10 +22,10 @@ function useMounted() {
 const MAX_QTY_CAP = 99;
 
 const primaryButtonClass =
-  "inline-flex min-h-11 flex-1 items-center justify-center rounded-control bg-cham-700 px-5 text-sm font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-cham-700";
+  "inline-flex min-h-11 flex-1 items-center justify-center rounded-control bg-cham-700 px-5 text-button font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-cham-700";
 
 const secondaryButtonClass =
-  "inline-flex min-h-11 flex-1 items-center justify-center rounded-control border border-line px-5 text-sm font-medium text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 disabled:cursor-not-allowed disabled:opacity-40";
+  "inline-flex min-h-11 flex-1 items-center justify-center rounded-control border border-line px-5 text-button font-medium text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 disabled:cursor-not-allowed disabled:opacity-40";
 
 interface PurchasePanelProps {
   stockQuantity: number;
