@@ -12,10 +12,10 @@ interface HomeTabsProps {
 type TabKey = "moi-nhat" | "ban-chay";
 
 /**
- * Mục 2: khối tab Sách mới / Bán chạy, dùng lại logic FR-1.6 / FR-1.7.
- * Cả 2 link nhanh "Sách mới"/"Bán chạy" ở CategoryNav cùng trỏ về #sach-moi
- * (anchor duy nhất) và mặc định mở tab "Sách mới" — không tự chọn tab theo
- * URL để tránh set state trong effect chỉ để đọc location.hash lúc mount.
+ * Mục 2: khối tab Sách mới / Bán chạy trên trang chủ, dùng lại logic FR-1.6 /
+ * FR-1.7 (8 sách mỗi tab). Độc lập với /sach — link nhanh "Sách mới"/"Bán
+ * chạy" ở CategoryNav trỏ sang /sach?sort=... (1b.1), tab này chỉ còn phục vụ
+ * xem nhanh ngay trên trang chủ nên mặc định mở "Sách mới".
  */
 export function HomeTabs({ newest, bestselling }: HomeTabsProps) {
   const [active, setActive] = useState<TabKey>("moi-nhat");
@@ -23,7 +23,7 @@ export function HomeTabs({ newest, bestselling }: HomeTabsProps) {
   const books = active === "moi-nhat" ? newest : bestselling;
 
   return (
-    <section id="sach-moi" className="scroll-mt-24">
+    <section>
       <div role="tablist" aria-label="Sách theo mục mới nhất hoặc bán chạy" className="flex gap-2 border-b border-line">
         <button
           type="button"

@@ -97,7 +97,12 @@ export async function Header({ cartCount = 0 }: HeaderProps) {
           NA Books
         </Link>
 
-        <form role="search" className="order-3 w-full md:order-2 md:w-auto md:min-w-0 md:flex-1">
+        <form
+          role="search"
+          action="/sach"
+          method="get"
+          className="order-3 w-full md:order-2 md:w-auto md:min-w-0 md:flex-1"
+        >
           <label htmlFor="site-search" className="sr-only">
             Tìm tên sách, tác giả
           </label>
@@ -107,6 +112,7 @@ export async function Header({ cartCount = 0 }: HeaderProps) {
             </span>
             <input
               id="site-search"
+              name="q"
               type="search"
               placeholder="Tìm tên sách, tác giả…"
               className="w-full min-w-0 rounded-control border border-line bg-paper py-2 pl-9 pr-3 text-sm text-ink-900 placeholder:text-ink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"

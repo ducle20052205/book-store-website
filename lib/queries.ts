@@ -1,3 +1,5 @@
+import { cache } from "react";
+import type { ParsedCatalogParams } from "@/lib/catalog";
 import { supabase } from "@/lib/supabase";
 
 export interface BookSummary {
@@ -66,35 +68,58 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
   return roots;
 }
 
-/** FR-1.4: category cha (parent_id null) -> gồm cả sách của các category con trực tiếp. */
-export async function resolveCategoryFilter(
+export interface CategoryBasic {
+  id: string;
+  name: string;
+  slug: string;
+  parentId: string | null;
+}
+
+/** Tên + vị trí danh mục theo slug, dùng cho tiêu đề trang /sach và chip bộ lọc. */
+export const getCategoryBySlug = cache(async function getCategoryBySlug(
   slug: string,
-): Promise<{ name: string; categoryIds: string[] } | null> {
-  const { data: category } = await supabase
+): Promise<CategoryBasic | null> {
+  const { data } = await supabase
     .from("categories")
-    .select("id, name, parent_id")
+    .select("id, name, slug, parent_id")
     .eq("slug", slug)
     .maybeSingle();
 
-  if (!category) return null;
+  if (!data) return null;
+  return { id: data.id, name: data.name, slug: data.slug, parentId: data.parent_id };
+});
 
-  if (category.parent_id === null) {
-    const { data: children } = await supabase.from("categories").select("id").eq("parent_id", category.id);
-    return { name: category.name, categoryIds: [category.id, ...(children ?? []).map((c) => c.id)] };
-  }
-
-  return { name: category.name, categoryIds: [category.id] };
+interface SearchBookRow extends BookRow {
+  id: string;
+  total_count: number;
 }
 
-export async function getBooksByCategoryIds(categoryIds: string[], limit = 60): Promise<BookSummary[]> {
-  if (categoryIds.length === 0) return [];
-  const { data } = await supabase
-    .from("books")
-    .select("slug, title, author, cover_image_url, price, discount_price, stock_quantity")
-    .in("category_id", categoryIds)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  return (data ?? []).map(mapBookRow);
+export interface SearchBooksResult {
+  books: BookSummary[];
+  totalCount: number;
+}
+
+/**
+ * 1b: gọi RPC `search_books` (đợt 1a) — lọc theo q/category/khoảng giá, sắp
+ * xếp và phân trang chạy hết phía server (NFR-1.3).
+ */
+export async function searchBooks(params: ParsedCatalogParams): Promise<SearchBooksResult> {
+  const { data, error } = await supabase.rpc("search_books", {
+    p_q: params.q ?? null,
+    p_category_slug: params.category ?? null,
+    p_min: params.min ?? null,
+    p_max: params.max ?? null,
+    p_sort: params.sort,
+    p_page: params.page,
+  });
+
+  if (error || !data) return { books: [], totalCount: 0 };
+
+  const rows = data as SearchBookRow[];
+  return {
+    books: rows.map(mapBookRow),
+    totalCount: rows[0]?.total_count ?? 0,
+  };
 }
 
 /** FR-1.6(a): mới nhất trước. */
@@ -105,40 +130,6 @@ export async function getNewestBooks(limit = 8): Promise<BookSummary[]> {
     .order("created_at", { ascending: false })
     .limit(limit);
   return (data ?? []).map(mapBookRow);
-}
-
-/**
- * FR-1.7: SUM(order_items.quantity) nhóm theo book_id, chỉ tính đơn
- * status != 'cancelled'; sách chưa có đơn xếp cuối. Tính ở tầng ứng dụng
- * (không tạo view/function mới trong DB) vì đợt này chỉ đụng frontend.
- * Vì orders/order_items hiện đang trống, "bán chạy nhất" tạm thời trùng
- * "mới nhất" — đây là kết quả đúng của rule, không phải lỗi.
- */
-export async function getBestsellingBooks(limit = 8): Promise<BookSummary[]> {
-  const { data: books } = await supabase
-    .from("books")
-    .select("id, slug, title, author, cover_image_url, price, discount_price, stock_quantity")
-    .order("created_at", { ascending: false });
-
-  if (!books) return [];
-
-  const { data: orderItems } = await supabase
-    .from("order_items")
-    .select("book_id, quantity, orders!inner(status)")
-    .neq("orders.status", "cancelled");
-
-  const soldByBookId = new Map<string, number>();
-  for (const item of orderItems ?? []) {
-    soldByBookId.set(item.book_id, (soldByBookId.get(item.book_id) ?? 0) + item.quantity);
-  }
-
-  const ranked = [...books].sort((a, b) => {
-    const soldA = soldByBookId.get(a.id) ?? 0;
-    const soldB = soldByBookId.get(b.id) ?? 0;
-    return soldB - soldA;
-  });
-
-  return ranked.slice(0, limit).map(mapBookRow);
 }
 
 export interface CollectionSummary {
