@@ -18,11 +18,15 @@ export function Hero({ collection }: { collection: FeaturedCollection | null }) 
 
   return (
     <section className="bg-cham-700">
-      <div className="container-page flex flex-col gap-8 py-10 md:flex-row md:items-center">
+      <div className="container-page flex flex-col gap-8 pt-10 pb-8 md:flex-row md:items-center">
         <div className="flex-1 space-y-4">
-          <span className="inline-block rounded-pill bg-nghe-400 px-3 py-1 text-micro font-medium text-ink-900">
-            Tuyển chọn
-          </span>
+          {/*
+            E1 [Điều chỉnh sau duyệt]: bỏ nhãn "Tuyển chọn" phía trên tiêu
+            đề — đúng khuôn mẫu "nhãn nhỏ trên tiêu đề lớn" mà đợt E liệt kê
+            là dấu hiệu mặc định. Định vị "tuyển chọn" đã có trong
+            collection.description ngay bên dưới, không cần nhắc lại bằng
+            một nhãn riêng.
+          */}
           <h1 className="font-serif text-display font-semibold text-white">{collection.title}</h1>
           <p className="line-clamp-2 max-w-[68ch] text-body text-white/80">{collection.description}</p>
           <Link

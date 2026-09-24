@@ -40,7 +40,7 @@ export async function Footer() {
           </div>
 
           <div>
-            <h2 className="text-xs font-semibold tracking-wide text-white uppercase">Danh mục</h2>
+            <h2 className="text-xs font-semibold text-white/90">Danh mục</h2>
             <ul className="mt-1 text-sm">
               {categories.map((category) => (
                 <li key={category.id}>
@@ -53,7 +53,7 @@ export async function Footer() {
           </div>
 
           <div>
-            <h2 className="text-xs font-semibold tracking-wide text-white uppercase">Tủ sách</h2>
+            <h2 className="text-xs font-semibold text-white/90">Tủ sách</h2>
             {collections.length === 0 ? (
               <p className="mt-3 text-sm text-white/70">Chưa có tủ sách nào.</p>
             ) : (
@@ -70,7 +70,7 @@ export async function Footer() {
           </div>
 
           <div>
-            <h2 className="text-xs font-semibold tracking-wide text-white uppercase">Về dự án</h2>
+            <h2 className="text-xs font-semibold text-white/90">Về dự án</h2>
             <p className="mt-3 max-w-[68ch] text-sm text-white/70">
               Đây là dự án portfolio cá nhân, phi thương mại — xây dựng để luyện tập đặc tả yêu cầu và phát triển sản
               phẩm.
@@ -81,7 +81,7 @@ export async function Footer() {
               rel="noopener noreferrer"
               className={`text-sm font-medium ${linkClass}`}
             >
-              Xem mã nguồn trên GitHub ↗
+              Xem mã nguồn trên GitHub
             </a>
           </div>
         </div>

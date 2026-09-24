@@ -4,13 +4,13 @@ import { notFound } from "next/navigation";
 import { BookCard } from "@/components/BookCard";
 import { BookCover } from "@/components/BookCover";
 import { Breadcrumb, categoryChainToBreadcrumbItems } from "@/components/Breadcrumb";
+import { EditorNoteConnector } from "@/components/EditorNoteConnector";
 import { Price } from "@/components/Price";
 import { PurchasePanel } from "@/components/PurchasePanel";
 import { StockLabel } from "@/components/StockLabel";
 import { TrackEvent } from "@/components/TrackEvent";
 import {
   type BookDetail,
-  type CategoryBasic,
   getBookBySlug,
   getBookCollections,
   getCategoryChainById,
@@ -45,7 +45,12 @@ interface InfoRow {
   value: React.ReactNode;
 }
 
-function buildInfoRows(book: BookDetail, categoryChain: CategoryBasic[]): InfoRow[] {
+/**
+ * E1 [Điều chỉnh sau duyệt, mục 4]: bỏ dòng "Danh mục" từng có ở đây — đã
+ * trùng breadcrumb ngay phía trên <h1>, breadcrumb đã hiện đúng tên danh
+ * mục kèm link. Không còn dùng categoryChain nên bỏ luôn tham số.
+ */
+function buildInfoRows(book: BookDetail): InfoRow[] {
   const rows: InfoRow[] = [];
 
   if (book.translator) rows.push({ label: "Người dịch", value: book.translator });
@@ -54,21 +59,6 @@ function buildInfoRows(book: BookDetail, categoryChain: CategoryBasic[]): InfoRo
   if (book.pageCount) rows.push({ label: "Số trang", value: String(book.pageCount) });
   if (book.dimensions) rows.push({ label: "Kích thước", value: book.dimensions });
   if (book.publishDate) rows.push({ label: "Ngày phát hành", value: formatDateVN(book.publishDate) });
-
-  const leafCategory = categoryChain[categoryChain.length - 1];
-  if (leafCategory) {
-    rows.push({
-      label: "Danh mục",
-      value: (
-        <Link
-          href={`/sach?category=${leafCategory.slug}`}
-          className="text-cham-700 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
-        >
-          {leafCategory.name}
-        </Link>
-      ),
-    });
-  }
 
   return rows;
 }
@@ -139,7 +129,7 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
     getRelatedBooks(book),
   ]);
 
-  const infoRows = buildInfoRows(book, categoryChain);
+  const infoRows = buildInfoRows(book);
   const inStock = book.stockQuantity > 0;
 
   return (
@@ -231,29 +221,51 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
 
       <div className="mt-12 space-y-10">
         {collections.length > 0 && (
-          <div className="space-y-4">
+          <div className="space-y-8">
+            {/*
+              E1 mục 1 [Điều chỉnh sau duyệt]: bỏ khung hộp bg-cham-50 —
+              ghi chú trong lề không nằm trong hộp. Thêm bìa nhỏ của chính
+              cuốn đang xem (trang này chưa có bìa nào cục bộ trong khối,
+              bìa lớn ở đầu trang cách quá xa để nét kẻ nối tới hợp lý) làm
+              điểm neo cho nét kẻ. Nghiêng: text-lg (18px, đúng ngưỡng tối
+              thiểu) + line-clamp-3.
+            */}
             {collections.map((collection) => (
-              <div key={collection.slug} className="rounded-card border border-line bg-cham-50 p-5">
-                <p className="text-xs font-semibold tracking-wide text-cham-700 uppercase">Có trong tủ sách</p>
-                <Link
-                  href={`/tu-sach/${collection.slug}`}
-                  className="mt-1 block font-serif text-lg font-semibold text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
-                >
-                  {collection.title}
-                </Link>
-                {/* C.3: lời biên tập trình bày như trích dẫn — serif 18px (text-lg), dấu ngoặc kép trang trí. */}
-                <blockquote className="relative mt-3 max-w-[68ch] pl-5 font-serif text-lg text-ink-900">
-                  <span aria-hidden="true" className="absolute left-0 top-0 -translate-y-1 text-2xl leading-none text-cham-700/40">
-                    &ldquo;
-                  </span>
-                  {collection.curatorNote}
-                </blockquote>
-                <Link
-                  href={`/tu-sach/${collection.slug}`}
-                  className="mt-2 inline-block text-sm font-medium text-cham-700 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
-                >
-                  Xem cả tủ sách ({collection.bookCount} cuốn) →
-                </Link>
+              <div key={collection.slug} className="flex gap-4">
+                <BookCover
+                  slug={book.slug}
+                  title={book.title}
+                  author={book.author}
+                  coverImageUrl={book.coverImageUrl}
+                  className="w-16 shrink-0"
+                />
+                <EditorNoteConnector className="h-6 w-10 shrink-0 -rotate-6 self-center text-cham-700/40" />
+                <div className="min-w-0 flex-1 rotate-[-1deg]">
+                  <p className="text-xs font-semibold text-ink-600">
+                    Có trong tủ{" "}
+                    <Link
+                      href={`/tu-sach/${collection.slug}`}
+                      className="font-semibold text-cham-700 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+                    >
+                      {collection.title}
+                    </Link>
+                  </p>
+                  <blockquote className="relative mt-2 max-w-[68ch] pl-5 font-serif text-lg italic text-ink-900">
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-0 top-0 -translate-y-1 text-2xl leading-none not-italic text-cham-700/40"
+                    >
+                      &ldquo;
+                    </span>
+                    <span className="line-clamp-3">{collection.curatorNote}</span>
+                  </blockquote>
+                  <Link
+                    href={`/tu-sach/${collection.slug}`}
+                    className="mt-2 inline-block text-sm font-medium text-cham-700 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+                  >
+                    Xem cả tủ sách ({collection.bookCount} cuốn)
+                  </Link>
+                </div>
               </div>
             ))}
           </div>

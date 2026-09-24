@@ -161,6 +161,21 @@ export async function getNewestBooks(limit = 8): Promise<BookSummary[]> {
   return (data ?? []).map(mapBookRow);
 }
 
+/**
+ * Đợt E1: cuốn đầu tiên trong khối "Sách mới"/"Bán chạy" ở trang chủ hiển
+ * thị to hơn kèm mô tả ngắn — `search_books` (RPC, dùng cho tab Bán chạy)
+ * không trả `description`, sửa RPC chỉ để thêm 1 cột không đáng công một
+ * migration. Lấy riêng qua bảng `books` theo đúng slug cần, chỉ 1-2 slug
+ * mỗi lần gọi (chỉ dùng cho mục đầu tiên của mỗi tab).
+ */
+export async function getBookDescriptionsBySlug(slugs: string[]): Promise<Record<string, string | null>> {
+  if (slugs.length === 0) return {};
+  const { data } = await supabase.from("books").select("slug, description").in("slug", slugs);
+  const map: Record<string, string | null> = {};
+  for (const row of data ?? []) map[row.slug] = row.description;
+  return map;
+}
+
 export interface CollectionSummary {
   id: string;
   slug: string;
@@ -196,12 +211,14 @@ export async function getCollectionsWithPreview(): Promise<CollectionPreview[]> 
 
   return Promise.all(
     collections.map(async (collection) => {
+      // E1: tủ nổi bật hiện 4 bìa (thẻ lớn hơn), tủ thường chỉ dùng 3 — lấy
+      // dư 1 cho mọi tủ rồi cắt bớt lúc hiển thị, đơn giản hơn 2 nhánh truy vấn.
       const { data: rows } = await supabase
         .from("collection_books")
         .select("position, books(slug, title, author, cover_image_url)")
         .eq("collection_id", collection.id)
         .order("position", { ascending: true })
-        .limit(3);
+        .limit(4);
 
       const bookRows = (rows ?? []) as unknown as {
         position: number;

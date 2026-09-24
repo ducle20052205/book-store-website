@@ -1,6 +1,12 @@
-# NA Books — Đợt E0: Kế hoạch thiết kế (chờ duyệt)
+# NA Books — Đợt E0: Kế hoạch thiết kế
 
-> Đặt tại `docs/specs/dot-e-design-plan.md`. Không có dòng code nào đi kèm tài liệu này — đúng yêu cầu E0.
+> Đặt tại `docs/specs/dot-e-design-plan.md`.
+
+**Đã duyệt, kèm 4 điều chỉnh — cập nhật vào tài liệu tại đúng mục liên quan, đánh dấu `[Điều chỉnh sau duyệt]`:**
+1. Không bỏ nhãn chữ cạnh icon Yêu thích/Tài khoản/Giỏ hàng (quy ước chung của nhà sách Việt Nam). Thay bằng bỏ nhãn "Tuyển chọn" trên tiêu đề Hero — xem mục 4.
+2. Chữ nghiêng chỉ dùng ở cỡ ≥18px và đoạn ≤3 dòng — xem mục 2.
+3. Line-height mọi bậc chữ lớn tối thiểu 1.15, đã đo lại bằng số — xem mục 2.
+4. Nét kẻ nối: dưới 768px bỏ nét kẻ, đặt ghi chú ngay dưới bìa, giữ xoay nhẹ; nét kẻ SVG có `aria-hidden="true"` — xem mục 1.
 
 ---
 
@@ -15,8 +21,8 @@
 ### Cơ chế cụ thể
 
 - Đoạn `curator_note` không nằm trong khung/thẻ như hiện tại, mà tách ra như một mảnh giấy ghi chú: lệch sang một bên (lề trái trên desktop), xoay nhẹ (-1.5°), chữ nghiêng (Newsreader italic — xem mục 2), **không dùng font viết tay/script**. Lý do bỏ font script: (a) rủi ro hiển thị dấu tiếng Việt của các font script trên Google Fonts thường kém hơn font text thường, chưa kiểm chứng được; (b) font script + xoay nghiêng + kẻ nối là 3 lớp "làm màu" cộng dồn, dễ thành lố. Chỉ giữ 2 lớp: nghiêng nhẹ + kẻ nối.
-- Một nét kẻ cong mảnh (SVG, 1 màu `cham-700`, dày 1.5px, dài ~30–50px tuỳ khoảng cách thật) nối từ mép ghi chú tới mép bìa sách nó nhắc tới — giống ký hiệu biên tập viên khoanh tay nối annotation vào bản thảo, không phải đường thẳng kẻ thước.
-- Trên mobile (không đủ chỗ lệch lề): bỏ hẳn nét kẻ, ghi chú thu về nằm ngay dưới bìa, chỉ giữ chữ nghiêng + dấu ngoặc kép — đây là mức "suy biến chấp nhận được", không cố nhồi hiệu ứng vào màn hình hẹp.
+- Một nét kẻ cong mảnh (SVG, 1 màu `cham-700`, dày 1.5px, dài ~30–50px tuỳ khoảng cách thật) nối từ mép ghi chú tới mép bìa sách nó nhắc tới — giống ký hiệu biên tập viên khoanh tay nối annotation vào bản thảo, không phải đường thẳng kẻ thước. Nét kẻ thuần trang trí, không mang thông tin gì thêm ngoài thứ đã thấy bằng mắt (ghi chú nằm cạnh đúng cuốn nào) — SVG đánh dấu `aria-hidden="true"`, không đọc ra cho trình đọc màn hình. **[Điều chỉnh sau duyệt]**
+- **[Điều chỉnh sau duyệt]** Dưới 768px: bỏ hẳn nét kẻ (không đủ chỗ lệch lề để có gì mà nối), ghi chú đặt ngay dưới bìa thay vì lệch lề — nhưng **vẫn giữ độ xoay nhẹ** (-1.5°) và chữ nghiêng nếu đủ điều kiện cỡ chữ (xem mục 2). Xoay nhẹ không tốn chỗ ngang nên giữ được trên mọi kích thước màn hình, chỉ riêng nét kẻ mới cần chỗ lệch lề nên phải bỏ.
 
 ### Đúng 3 chỗ áp dụng
 
@@ -53,13 +59,18 @@ Tất cả 6 ứng viên đều lên đúng dấu, không vỡ chồng dấu, kh
 
 Newsreader có trục cỡ quang học (optical size, `opsz`) — con chữ tự vẽ lại hình dạng khác nhau ở cỡ nhỏ (đọc liền mạch) so với cỡ lớn (tiêu đề), không phải phóng to/thu nhỏ cùng một hình. Lora không có trục này. Tận dụng đúng đặc điểm kỹ thuật này (không chỉ vì "nhìn ấm hơn Lora") là lý do kỹ thuật cụ thể, không phải chọn ngẫu nhiên từ danh sách gợi ý.
 
-**Quy tắc chữ nghiêng xuyên suốt (không chỉ ở chi tiết chữ ký):** chữ nghiêng (Newsreader italic) dành riêng cho nội dung **do người biên tập nói** (`curator_note`, mô tả ngắn ở Hero lấy từ `collections.description`). Chữ đứng dành cho nội dung **do hệ thống mô tả** (tên sách, tên danh mục, thông số). Đây là quy tắc ngữ nghĩa, không phải trang trí — nghiêng/đứng tự nó trả lời câu hỏi "ai đang nói câu này", áp dụng nhất quán toàn site chứ không chỉ ở 3 chỗ chữ ký.
+**Quy tắc chữ nghiêng xuyên suốt (không chỉ ở chi tiết chữ ký):** chữ nghiêng (Newsreader italic) dành riêng cho nội dung **do người biên tập nói** (`curator_note`). Chữ đứng dành cho nội dung **do hệ thống mô tả** (tên sách, tên danh mục, thông số). Đây là quy tắc ngữ nghĩa, không phải trang trí — nghiêng/đứng tự nó trả lời câu hỏi "ai đang nói câu này", áp dụng nhất quán toàn site chứ không chỉ ở 3 chỗ chữ ký.
+
+**[Điều chỉnh sau duyệt] Điều kiện dùng chữ nghiêng:** chỉ áp dụng khi cỡ chữ ≥18px **và** đoạn hiển thị tối đa 3 dòng (`line-clamp-3` phòng hờ khi có `curator_note` dài bất thường). Hai điều kiện cùng lúc, thiếu một là giữ chữ đứng. Hệ quả cụ thể:
+- 2 trong 3 chỗ chữ ký (trang chi tiết: `text-lg`=18px; trang chủ editorial: `text-h2`=28px) đủ điều kiện → nghiêng.
+- Chỗ thứ 3 (`/tu-sach/[slug]`, dòng `curator_note` dưới mỗi `BookCard`, hiện `text-sm`=14px) **không đủ điều kiện** → giữ chữ đứng. Vẫn giữ các dấu hiệu chữ ký khác (lệch vị trí, xoay nhẹ, nét kẻ) — chỉ riêng lớp "nghiêng" không áp dụng ở đây, không tự ý tăng cỡ chữ lên 18px chỉ để hợp thức hoá nghiêng, vì 14px là cỡ đúng vai trò phụ chú trong danh sách.
+- **`description` dài của tủ sách** (Hero lấy từ `collections.description`, và trang `/tu-sach/[slug]` hiển thị lại) — luôn giữ chữ đứng, kể cả nếu sau này đổi cỡ chữ ≥18px, vì đây là đoạn mô tả dài không giới hạn số dòng chắc chắn (Hero có `line-clamp-2` nhưng trang tủ sách thì không), khác bản chất với `curator_note` vốn đã ngắn theo thiết kế dữ liệu (1–2 câu).
 
 ### Thang chữ đầy đủ
 
 | Bậc | Font | Cỡ | Trọng lượng | Line-height | Letter-spacing |
 |---|---|---|---|---|---|
-| Display (Hero) | Newsreader | `clamp(2.5rem, 5vw, 4rem)` | 600 | 1.05 | -0.02em |
+| Display (Hero) | Newsreader | `clamp(2.25rem, 5vw, 3.75rem)` (36px→60px, không đổi từ đợt A) | 600 | **1.15** [Điều chỉnh sau duyệt, xem đo bên dưới] | -0.02em |
 | H1 trang | Newsreader | `clamp(1.875rem, 3.4vw, 2.625rem)` | 600 | 1.15 | 0 |
 | H2 section | Newsreader | 1.75rem | 600 | 1.25 | 0 |
 | Tên sách (chi tiết) | Newsreader | `clamp(1.625rem, 2.6vw, 2.25rem)` | 600 | 1.15 | 0 |
@@ -68,6 +79,16 @@ Newsreader có trục cỡ quang học (optical size, `opsz`) — con chữ tự
 | Body phụ / metadata | Be Vietnam Pro | 0.875rem | 400 | 1.5 | 0 |
 | Micro (nhãn, chip) | Be Vietnam Pro | 0.75rem | 500 | 1.4 | 0.04em |
 | Nút | Be Vietnam Pro | 0.9375rem | 500 | 1.2 | 0 |
+
+**[Điều chỉnh sau duyệt] Đo line-height, cỡ 64px (cao hơn cả mức tối đa thật của Display là 60px, để có biên an toàn dư ra):** dựng trang test, render chuỗi `Điệp Ừ Ỡ Ặ Ỹ Đ ữ ộ ằ ẫ` 2 dòng liên tiếp bằng Newsreader 600/64px, đo khoảng cách giữa mép dưới cùng của dòng 1 (điểm thấp nhất của các dấu nặng ệ/ặ/ộ/ằ/ẫ) và mép trên cùng của dòng 2 (điểm cao nhất của Ừ/Ỡ/Ỹ/ữ) bằng `Range.getBoundingClientRect()` — đo trên vùng chữ thật, không suy ra từ chỉ số line-height. Xoá trang test ngay sau khi đo. Vì test dùng 64px > 60px thật, số đo dưới đây đã là kịch bản khắt khe hơn thực tế.
+
+| line-height | Khoảng cách dòng 1↔dòng 2 đo được |
+|---|---|
+| 1.05 (giá trị cũ) | 3.19px |
+| **1.15 (giá trị mới)** | **9.59px** |
+| 1.2 (đối chứng thêm) | 12.80px |
+
+Cả 3 mức đều dương (không chồng chữ), nhưng 1.05 chỉ chừa 3.19px — quá sát để an toàn nếu font hoặc trình duyệt render lệch đi chút ít. 1.15 cho khoảng hở gấp 3 lần, xác nhận an toàn. Áp dụng 1.15 cho toàn bộ các bậc lớn (Display/H1/H2/Tên sách) — 3 bậc còn lại vốn đã ≥1.15 sẵn, chỉ riêng Display phải sửa từ 1.05.
 
 Các token khác của `BookCard` (giá/tên/tác giả, đợt B) giữ nguyên vì đã tách bậc hợp lý, không đổi.
 
@@ -153,7 +174,9 @@ Trang catalog **cố tình ít "nhịp" hơn trang chủ** — đây là trang t
 
 1. **Dòng "Danh mục: [tên]" trong khối thông tin ở trang chi tiết sách.** Trùng lặp với breadcrumb ngay phía trên `<h1>` — breadcrumb đã hiện đúng tên danh mục kèm link, giữ cả hai là nói lại cùng một thứ hai lần trên cùng một màn hình.
 2. **Link "Xóa bộ lọc" ở cột lọc `/sach`, khi chưa có bộ lọc nào đang áp dụng.** Hiện tại link này luôn hiện, kể cả khi không có gì để xoá — một hành động vô nghĩa luôn nằm sờ sờ trên màn hình. Chỉ hiện khi `countActiveFilters(current) > 0`.
-3. **Chữ nhãn "Yêu thích" / "Tài khoản" / "Giỏ hàng" hiện cạnh icon trên desktop.** Giữ icon + `aria-label` (không mất khả năng tiếp cận), bỏ chữ hiển thị — ba icon này đủ quen thuộc để nhận ra không cần chú thích, bỏ chữ giúp thanh trên cùng đỡ rối, nhất là sau khi container đã rộng ra 1440px ở đợt D.
+3. ~~Chữ nhãn cạnh icon Yêu thích/Tài khoản/Giỏ hàng trên desktop~~ **[Điều chỉnh sau duyệt — KHÔNG bỏ nữa]**: đây là quy ước chung của các nhà sách Việt Nam (Fahasa, Nhã Nam, Phương Nam đều hiện chữ cạnh icon), bỏ đi làm giảm rõ ràng chứ không phải "gọn hơn" — rút kinh nghiệm, giữ nguyên.
+
+   **Thay bằng: nhãn "Tuyển chọn" đặt phía trên tiêu đề Hero.** Đây đúng kiểu "nhãn nhỏ đặt trên khối" mà chính đề bài Đợt E liệt kê là dấu hiệu mặc định (mục "Vì sao có đợt này", điểm 1 — dù điểm 1 nói về nhãn viết hoa như "DANH MỤC", nhãn "Tuyển chọn" tuy không viết hoa nhưng cùng một khuôn mẫu: nhãn nhỏ nền màu đặt phía trên tiêu đề lớn, mẫu này lặp lại ở gần như mọi landing page). Bỏ hẳn, để `collection.title` (đã đủ lớn, đã đủ rõ nhờ Display) tự đứng một mình — định vị "tuyển chọn" đã nằm trong nội dung `collection.description` ngay bên dưới rồi, không cần nhãn nhắc lại.
 
 ---
 
@@ -185,8 +208,10 @@ Quyết định "giữ nguyên lưới đều ở trang catalog, không thêm nh
 
 ### Mục 4 — Ba thứ xoá bỏ
 
-**Không.** Cả ba đều là lỗi/thừa cụ thể của chính codebase này (breadcrumb trùng thông tin, link chết khi chưa lọc, nhãn chữ cạnh icon quen thuộc) — một đề bài không có ngữ cảnh không thể biết ba chỗ thừa này tồn tại, vì chúng chỉ xuất hiện do cách tôi đã dựng qua các đợt trước. Đây là quan sát trên sản phẩm thật, không phải danh sách "mẹo dọn dẹp UI" chung chung.
+**Không, cho 2 mục đầu** — breadcrumb trùng thông tin và link "Xóa bộ lọc" chết khi chưa lọc đều là lỗi cụ thể của chính codebase này, một đề bài chung chung không thể biết chúng tồn tại.
+
+**Mục thứ 3 (nhãn "Tuyển chọn") — tôi đã sai một lần rồi ở đúng bài kiểm tra này.** Đề xuất ban đầu (bỏ chữ cạnh icon Yêu thích/Tài khoản/Giỏ hàng) hoá ra chính là ví dụ phản diện: tôi tưởng đó là "dọn dẹp cho gọn", nhưng thực ra icon-only cho 3 mục này lại là mẫu **phổ biến ở các web bán lẻ chung (thời trang, điện máy)**, còn nhà sách Việt Nam cụ thể lại giữ chữ — tức là bỏ chữ mới là lựa chọn generic kiểu "web bán hàng bất kỳ", đúng thứ đợt E đang cố tránh (điểm 7 trong "Vì sao có đợt này": *"không có chi tiết nào chỉ thuộc về một nhà sách: thay chữ và màu là thành website bán quần áo"*). Nhãn "Tuyển chọn" bị thay vào đúng là ví dụ đề bài liệt kê sẵn (nhãn nhỏ trên tiêu đề) nên câu trả lời cho mục này là **không mặc định theo nghĩa "tự nghĩ ra"**, nhưng cũng không cần tự nhận công — đề bài đã chỉ thẳng, tôi chỉ áp dụng đúng chỗ.
 
 ---
 
-**Dừng ở đây, chờ duyệt trước khi viết bất kỳ dòng code nào (E1).**
+**E0 đã duyệt kèm 4 điều chỉnh (đánh dấu `[Điều chỉnh sau duyệt]` ở trên). Đã triển khai E1 theo đúng kế hoạch đã điều chỉnh — xem báo cáo E1 kèm số đo.**

@@ -86,14 +86,25 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
         </div>
       </div>
 
-      <div className="mt-12 grid grid-cols-1 gap-10 lg:grid-cols-[240px_1fr]">
+      {/*
+        E1: mt-12(48px) -> mt-16(64px) — ranh giới "chuyển từ điều hướng
+        sang duyệt hàng hoá" cần rõ hơn mức đồng đều 24-32px hiện có ở các
+        khoảng cách khác trên trang này (trang tác vụ cố tình giữ ít nhịp,
+        xem docs/specs/dot-e-design-plan.md mục 3 — đây là điểm nhịp DUY
+        NHẤT được thêm ở trang catalog).
+      */}
+      <div className="mt-16 grid grid-cols-1 gap-10 lg:grid-cols-[240px_1fr]">
         {/*
           Sửa lỗi đợt B: bỏ max-h/overflow-y-auto (từng tạo vùng cuộn riêng
           bên trong cột lọc — xem .filter-sidebar ở globals.css). Sticky
           (top: 80px) chỉ bật qua media query chiều cao trong đó, không
           còn set trực tiếp bằng class Tailwind ở đây.
+
+          E1: viền phải mảnh tách cột lọc khỏi lưới sách — trước chỉ dựa
+          vào khoảng trắng gap-10, giờ thêm 1 đường kẻ để ranh giới rõ hơn
+          là chỉ dựa vào mắt đo khoảng cách.
         */}
-        <aside className="filter-sidebar hidden lg:block">
+        <aside className="filter-sidebar hidden lg:block lg:border-r lg:border-line lg:pr-8">
           <CatalogFilters categories={categories} current={parsed} />
         </aside>
 

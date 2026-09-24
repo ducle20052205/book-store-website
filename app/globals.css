@@ -33,13 +33,29 @@
   --color-cover-12: #5A3D1E;   /* nâu hổ phách */
 
   --font-sans: var(--font-be-vietnam-pro), system-ui, sans-serif;
-  --font-serif: var(--font-lora), Georgia, serif;
+  --font-serif: var(--font-newsreader), Georgia, serif; /* Đợt E: thay Lora, xem app/layout.tsx */
 
-  /* Bước 1.5 — A.1: --radius-card đổi từ 4px, --radius-control đổi từ 6px. */
-  --radius-card: 10px;
-  --radius-control: 8px;
+  /*
+   * Đợt E1: bo góc phân theo thứ bậc — mỗi loại một giá trị, không dùng
+   * chung một số cho tất cả như trước (--radius-card từng dùng cho cả bìa
+   * lẫn thẻ, --radius-control từng dùng cho cả nút lẫn ô nhập).
+   *   6  ô nhập   — nơi gõ số chính xác (khoảng giá, tìm kiếm), bo ít nhất
+   *                 trong thang để có cảm giác "chuẩn, kỹ thuật".
+   *   8  bìa sách — bìa là một VẬT THỂ (cuốn sách thật gần như không bo
+   *                 góc), giữ cứng cáp hơn hẳn các khối giao diện thuần
+   *                 tuý bên cạnh nó.
+   *  10  nút      — bo vừa, đủ mềm để mời bấm nhưng không tròn xoe.
+   *  14  thẻ      — khối chứa giao diện thuần tuý (không phải vật thể),
+   *                 được phép mềm mại nhất trong các hình chữ nhật.
+   * 999  chip/pill — hình con nhộng, khác thể loại hoàn toàn, không tính
+   *                 vào thang số bên trên.
+   */
+  --radius-input: 6px;
+  --radius-cover: 8px;
+  --radius-control: 10px;
+  --radius-card: 14px;
   --radius-pill: 999px;
-  --radius-spine: 2px; /* B.2: mép gáy sách trong <BookCover>, bo nhỏ hơn --radius-card */
+  --radius-spine: 2px; /* mép gáy sách trong <BookCover>, bo nhỏ hơn cả --radius-cover */
 
   --shadow-sm: 0 1px 2px rgba(26, 28, 46, 0.06);
   --shadow-md: 0 8px 24px -10px rgba(26, 28, 46, 0.22);
@@ -54,7 +70,12 @@
      --text-{tên}--line-height / --letter-spacing để 1 class gộp đủ 3 thuộc
      tính (vd. `text-display` = cỡ chữ + line-height + letter-spacing). */
   --text-display: clamp(2.25rem, 5vw, 3.75rem); /* 36px -> 60px */
-  --text-display--line-height: 1.05;
+  /* Đợt E1: 1.05 -> 1.15 tối thiểu. Đo tại 64px (Newsreader 600, chuỗi
+     "Điệp Ừ Ỡ Ặ Ỹ Đ ữ ộ ằ ẫ", 2 dòng liên tiếp, đo mép chữ thật bằng
+     Range.getBoundingClientRect — không suy từ line-height): 1.05 chỉ chừa
+     3.19px giữa 2 dòng, 1.15 chừa 9.59px. Xem docs/specs/dot-e-design-plan.md
+     mục 2 cho bảng đo đầy đủ. */
+  --text-display--line-height: 1.15;
   --text-display--letter-spacing: -0.02em;
 
   --text-h1: clamp(1.875rem, 3.4vw, 2.625rem); /* 30px -> 42px */

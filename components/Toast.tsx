@@ -22,7 +22,7 @@ export function Toast({ open, message, onClose }: ToastProps) {
     <div
       role="status"
       aria-live="polite"
-      className="fixed inset-x-4 bottom-24 z-40 flex items-center justify-between gap-3 rounded-control border border-line bg-surface px-4 py-3 text-sm text-ink-900 shadow-sm md:inset-x-auto md:bottom-4 md:left-auto md:right-4 md:max-w-sm"
+      className="fixed inset-x-4 bottom-24 z-40 flex items-center justify-between gap-3 rounded-card border border-line bg-surface px-4 py-3 text-sm text-ink-900 shadow-sm md:inset-x-auto md:bottom-4 md:left-auto md:right-4 md:max-w-sm"
     >
       <p>{message}</p>
       <button

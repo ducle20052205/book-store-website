@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type ParsedCatalogParams, buildCatalogQuery } from "@/lib/catalog";
+import { type ParsedCatalogParams, buildCatalogQuery, countActiveFilters } from "@/lib/catalog";
 import type { CategoryNode } from "@/lib/queries";
 
 interface CatalogFiltersProps {
@@ -30,7 +30,7 @@ export function CatalogFilters({ categories, current, applyLabel = "Áp dụng",
   return (
     <div className="space-y-6 text-sm">
       <div>
-        <h2 className="text-xs font-semibold tracking-wide text-ink-600 uppercase">Danh mục</h2>
+        <h2 className="text-xs font-semibold text-ink-600">Danh mục</h2>
         <ul className="mt-3 space-y-0.5">
           {categories.map((parent) => {
             const parentActive = current.category === parent.slug;
@@ -69,7 +69,7 @@ export function CatalogFilters({ categories, current, applyLabel = "Áp dụng",
       </div>
 
       <div>
-        <h2 className="text-xs font-semibold tracking-wide text-ink-600 uppercase">Khoảng giá</h2>
+        <h2 className="text-xs font-semibold text-ink-600">Khoảng giá</h2>
         <ul className="mt-3 space-y-0.5">
           <li>
             <Link
@@ -114,7 +114,7 @@ export function CatalogFilters({ categories, current, applyLabel = "Áp dụng",
               step={1000}
               placeholder="0"
               defaultValue={current.min ?? ""}
-              className="mt-1 block min-h-11 w-full rounded-control border border-line bg-surface px-2 text-sm text-ink-900 placeholder:text-ink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+              className="mt-1 block min-h-11 w-full rounded-input border border-line bg-surface px-2 text-sm text-ink-900 placeholder:text-ink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
             />
           </label>
           <label className="col-span-1 block text-xs text-ink-600">
@@ -126,7 +126,7 @@ export function CatalogFilters({ categories, current, applyLabel = "Áp dụng",
               step={1000}
               placeholder="500.000"
               defaultValue={current.max ?? ""}
-              className="mt-1 block min-h-11 w-full rounded-control border border-line bg-surface px-2 text-sm text-ink-900 placeholder:text-ink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+              className="mt-1 block min-h-11 w-full rounded-input border border-line bg-surface px-2 text-sm text-ink-900 placeholder:text-ink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
             />
           </label>
           <button
@@ -139,12 +139,16 @@ export function CatalogFilters({ categories, current, applyLabel = "Áp dụng",
         </form>
       </div>
 
-      <Link
-        href="/sach"
-        className="block min-h-11 rounded-control border border-line px-3 py-2 text-center text-button font-medium text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
-      >
-        Xóa bộ lọc
-      </Link>
+      {/* E1: chỉ hiện khi thật sự có gì để xoá — trước đó luôn hiện kể cả
+          lúc chưa lọc gì, một hành động vô nghĩa nằm sẵn trên màn hình. */}
+      {countActiveFilters(current) > 0 && (
+        <Link
+          href="/sach"
+          className="block min-h-11 rounded-control border border-line px-3 py-2 text-center text-button font-medium text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+        >
+          Xóa bộ lọc
+        </Link>
+      )}
     </div>
   );
 }
