@@ -200,6 +200,25 @@
       height: 64px;
     }
   }
+
+  /* Sửa lỗi đợt B: cột lọc /sach từng dùng max-height + overflow-y: auto
+     để tự cuộn bên trong khi nội dung dài hơn vùng còn lại — 2 lớp cuộn
+     lồng nhau (trang + cột lọc) là trải nghiệm kém. Bỏ hẳn max-height/
+     overflow, chỉ bật sticky khi màn hình đủ cao để chứa hết cột lọc ở
+     trạng thái thường (đo thực tế: 672px không mở rộng danh mục con, tới
+     868px khi mở danh mục nhiều con nhất — Văn học, 5 con). 800px = 80px
+     (top) + 672px (cột lọc thường) + ~48px đệm dưới, khớp trạng thái phổ
+     biến; trường hợp mở rộng danh mục nhiều con trên màn hình sát ngưỡng
+     800px có thể hơi chật nhưng không tràn/mất nội dung vì không còn
+     sticky ép chiều cao — cột lọc vẫn cuộn cùng trang bình thường. Dưới
+     ngưỡng này giữ position mặc định (static), cột lọc cuộn cùng trang
+     như nội dung thường, không sticky. */
+  @media (min-width: 1024px) and (min-height: 800px) {
+    .filter-sidebar {
+      position: sticky;
+      top: 80px;
+    }
+  }
 }
 
 /* A.4: bắt buộc tắt mọi chuyển động (transition + transform) khi người

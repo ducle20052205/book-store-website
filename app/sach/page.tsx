@@ -88,13 +88,12 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
 
       <div className="mt-12 grid grid-cols-1 gap-10 lg:grid-cols-[240px_1fr]">
         {/*
-          A2.3/B: cột lọc dính khi cuộn. top-20 (80px) = 64px chiều cao
-          phần dính (chỉ topbar từ đợt B — CategoryNav không còn dính, cuộn
-          đi như nội dung thường) + 16px đệm; max-h trừ 96px (80 + 16) để
-          luôn còn khoảng hở phía dưới, tự cuộn riêng khi danh mục dài hơn
-          màn hình.
+          Sửa lỗi đợt B: bỏ max-h/overflow-y-auto (từng tạo vùng cuộn riêng
+          bên trong cột lọc — xem .filter-sidebar ở globals.css). Sticky
+          (top: 80px) chỉ bật qua media query chiều cao trong đó, không
+          còn set trực tiếp bằng class Tailwind ở đây.
         */}
-        <aside className="hidden lg:sticky lg:top-20 lg:block lg:max-h-[calc(100vh-96px)] lg:overflow-y-auto">
+        <aside className="filter-sidebar hidden lg:block">
           <CatalogFilters categories={categories} current={parsed} />
         </aside>
 
