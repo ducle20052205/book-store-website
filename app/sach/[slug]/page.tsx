@@ -239,7 +239,13 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
                 >
                   {collection.title}
                 </Link>
-                <p className="mt-2 max-w-prose text-sm text-ink-600">{collection.curatorNote}</p>
+                {/* C.3: lời biên tập trình bày như trích dẫn — serif 18px (text-lg), dấu ngoặc kép trang trí. */}
+                <blockquote className="relative mt-3 max-w-prose pl-5 font-serif text-lg text-ink-900">
+                  <span aria-hidden="true" className="absolute left-0 top-0 -translate-y-1 text-2xl leading-none text-cham-700/40">
+                    &ldquo;
+                  </span>
+                  {collection.curatorNote}
+                </blockquote>
                 <Link
                   href={`/tu-sach/${collection.slug}`}
                   className="mt-2 inline-block text-sm font-medium text-cham-700 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"

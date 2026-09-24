@@ -2,6 +2,16 @@ import Link from "next/link";
 import { BookCover } from "@/components/BookCover";
 import type { FeaturedCollection } from "@/lib/queries";
 
+/* C.2 mục 1: 4 bìa xếp chồng hơi lệch nhau thay vì xếp hàng đều — lệch
+   theo cả xoay nhẹ (rotate) lẫn cao độ (translate-y), z-index giảm dần từ
+   trái sang phải để bìa sau chồng đúng lên bìa trước. */
+const HERO_STACK_OFFSETS = [
+  "z-40 rotate-[-4deg]",
+  "z-30 translate-y-3 rotate-[3deg]",
+  "z-20 rotate-[-2deg]",
+  "z-10 translate-y-4 rotate-[2deg]",
+];
+
 /** Mục 5.2: không có tủ nào featured -> ẩn hero, không báo lỗi. */
 export function Hero({ collection }: { collection: FeaturedCollection | null }) {
   if (!collection) return null;
@@ -24,16 +34,18 @@ export function Hero({ collection }: { collection: FeaturedCollection | null }) 
         </div>
 
         {collection.books.length > 0 && (
-          <div
-            className="scrollbar-hidden grid auto-cols-[6.5rem] grid-flow-col gap-3 overflow-x-auto pb-1 [scroll-snap-type:x_mandatory] md:flex-1 md:auto-cols-fr md:grid-flow-row md:grid-cols-4 md:overflow-visible md:pb-0 md:[scroll-snap-type:none]"
-          >
-            {collection.books.slice(0, 4).map((book) => (
-              <div key={book.slug} className="[scroll-snap-align:start] md:[scroll-snap-align:none]">
+          <div className="flex items-end justify-center -space-x-8 md:flex-1 md:justify-end">
+            {collection.books.slice(0, 4).map((book, i) => (
+              <div
+                key={book.slug}
+                className={`w-20 shrink-0 transition-transform sm:w-24 md:w-28 ${HERO_STACK_OFFSETS[i % HERO_STACK_OFFSETS.length]}`}
+              >
                 <BookCover
                   slug={book.slug}
                   title={book.title}
                   author={book.author}
                   coverImageUrl={book.coverImageUrl}
+                  className="shadow-md"
                 />
               </div>
             ))}
