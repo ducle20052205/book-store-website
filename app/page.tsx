@@ -40,8 +40,15 @@ const COLLECTION_STACK_OFFSETS = [
  *   Sách mới → Editorial= 128px (64 + 64) — khoảng rộng nhất trang, tách
  *                          hẳn khối bán hàng khỏi khối "dừng lại đọc".
  *   Editorial → Tủ sách = 88px  (48 + 40)
- *   Tủ sách → Footer    = 56px  (chỉ còn pb-14 của Tủ sách — nền ink-900
- *                          của Footer bắt đầu ngay sau, không cộng thêm gì).
+ *   Tủ sách → Footer    = 104px (56 pb-14 của Tủ sách + 48 padding-top có
+ *                          sẵn trong py-12 của chính Footer — ĐÃ ĐO LẠI
+ *                          BẰNG SỐ, không phải chỉ còn 56px như ước tính
+ *                          ban đầu: padding riêng của Footer vẫn cộng vào
+ *                          khoảng cách nhìn thấy được, không "biến mất" chỉ
+ *                          vì đổi màu nền. 56px (bằng mức nhỏ nhất ở trên)
+ *                          là phần Tủ sách chủ động chọn; 48px còn lại là
+ *                          padding tiêu chuẩn của Footer, không phải một
+ *                          mức nhịp thứ 4 được tính riêng.
  * Xem docs/specs/dot-e-design-plan.md mục 3 cho wireframe đầy đủ.
  */
 export default async function Home() {

@@ -134,7 +134,10 @@ Nguyên tắc: không section nào cách section kế cận đúng một khoản
    │ │ Tủ #2 (nhỏ)   │ │ Tủ #3 (nhỏ)   │         │
    │ └───────────────┘ └───────────────┘         │
    └────────────────────────────────────────────┘
-        ↕ 56px
+        ↕ 104px (56 chủ động chọn + 48 padding chuẩn sẵn có của
+                 Footer — [Điều chỉnh sau duyệt: đo lại lúc làm
+                 E1, số ban đầu ước tính thiếu phần padding riêng
+                 của Footer])
 ┌──────────────────────────────────────────────────────┐
 │ FOOTER — tràn hết viewport, nền ink-900                 │  ← full-bleed
 └──────────────────────────────────────────────────────┘
