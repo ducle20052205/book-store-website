@@ -86,18 +86,25 @@ export default async function Home() {
                   &ldquo;
                 </span>
                 <blockquote className="-mt-4 font-serif text-h2 text-ink-900">{editorial.curatorNote}</blockquote>
+                {/*
+                  NFR-6.2: 2 link nằm giữa câu văn nên không thể đổi thành
+                  block (sẽ vỡ dòng). inline-block + py-3 (44px vùng bấm,
+                  giống Footer) + -my-3 triệt tiêu khoảng cách dòng mà
+                  padding thêm vào — chữ vẫn nằm đúng vị trí trong câu,
+                  chỉ vùng bấm lớn hơn.
+                */}
                 <p className="mt-4 text-sm text-ink-600">
                   Về{" "}
                   <Link
                     href={`/sach/${editorial.book.slug}`}
-                    className="font-medium text-cham-700 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+                    className="inline-block rounded-control py-3 -my-3 font-medium text-cham-700 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
                   >
                     {editorial.book.title}
                   </Link>
                   , trong tủ{" "}
                   <Link
                     href={`/tu-sach/${editorial.collectionSlug}`}
-                    className="font-medium text-cham-700 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+                    className="inline-block rounded-control py-3 -my-3 font-medium text-cham-700 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
                   >
                     {editorial.collectionTitle}
                   </Link>

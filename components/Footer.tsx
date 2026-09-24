@@ -3,8 +3,15 @@ import { getCategoryTree, getCollections } from "@/lib/queries";
 
 const GITHUB_REPO_URL = "https://github.com/ducle20052205/book-store-website";
 
+/*
+ * NFR-6.2: vùng chạm tối thiểu 44px trên mobile — text-sm có line-height
+ * 20px (mặc định Tailwind), py-3 (12px trên + 12px dưới) cộng thêm 24px
+ * thành đúng 44px, không đổi cỡ chữ. block để padding dọc thật sự tính
+ * vào vùng bấm (padding trên phần tử inline không đảm bảo điều này ở mọi
+ * trình duyệt).
+ */
 const linkClass =
-  "rounded-control text-ink-600 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600";
+  "block rounded-control py-3 text-ink-600 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600";
 
 /**
  * C.1: footer 4 cột (mobile xếp dọc) — trước đó chỉ có 1 dòng ghi chú dữ
@@ -28,7 +35,7 @@ export async function Footer() {
 
           <div>
             <h2 className="text-xs font-semibold tracking-wide text-ink-900 uppercase">Danh mục</h2>
-            <ul className="mt-3 space-y-2 text-sm">
+            <ul className="mt-1 text-sm">
               {categories.map((category) => (
                 <li key={category.id}>
                   <Link href={`/sach?category=${category.slug}`} className={linkClass}>
@@ -44,7 +51,7 @@ export async function Footer() {
             {collections.length === 0 ? (
               <p className="mt-3 text-sm text-ink-600">Chưa có tủ sách nào.</p>
             ) : (
-              <ul className="mt-3 space-y-2 text-sm">
+              <ul className="mt-1 text-sm">
                 {collections.map((collection) => (
                   <li key={collection.id}>
                     <Link href={`/tu-sach/${collection.slug}`} className={linkClass}>
@@ -66,7 +73,7 @@ export async function Footer() {
               href={GITHUB_REPO_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className={`mt-2 inline-block text-sm font-medium ${linkClass}`}
+              className={`text-sm font-medium ${linkClass}`}
             >
               Xem mã nguồn trên GitHub ↗
             </a>
