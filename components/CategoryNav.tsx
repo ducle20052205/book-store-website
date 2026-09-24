@@ -78,23 +78,32 @@ export function CategoryNav({ categories }: { categories: CategoryNode[] }) {
             className="fixed inset-0 cursor-default bg-ink-900/20"
           />
           <div id={panelId} className="absolute inset-x-0 top-full border-b border-line bg-surface shadow-sm">
+            {/*
+              NFR-6.2: link chữ thuần (inline, không padding) đo được cao
+              20px — bounding box của phần tử inline phản ánh khung glyph
+              (~font-size * 1.25), KHÔNG phải line-height CSS (24px). Đổi
+              sang block + py-2.5 (10px trên/dưới): khi đã là block, chiều
+              cao tự nhiên = line-height thật (24px), cộng 20px padding
+              thành đúng 44px. Bỏ mt-2/space-y-1.5 cũ vì padding đã tự tạo
+              khoảng cách giữa link cha/con, cộng thêm sẽ quá rộng.
+            */}
             <div className="container-page grid grid-cols-2 gap-6 py-6 sm:grid-cols-3 lg:grid-cols-5">
               {categories.map((parent) => (
                 <div key={parent.id}>
                   <Link
                     href={`/sach?category=${parent.slug}`}
                     onClick={() => setOpen(false)}
-                    className="font-serif text-base font-semibold text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+                    className="block rounded-control py-2.5 font-serif text-base font-semibold text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
                   >
                     {parent.name}
                   </Link>
-                  <ul className="mt-2 space-y-1.5">
+                  <ul>
                     {parent.children.map((child) => (
                       <li key={child.id}>
                         <Link
                           href={`/sach?category=${child.slug}`}
                           onClick={() => setOpen(false)}
-                          className="text-ink-600 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+                          className="block rounded-control py-2.5 text-ink-600 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
                         >
                           {child.name}
                         </Link>
