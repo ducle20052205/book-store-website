@@ -214,14 +214,16 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
           {book.description && (
             <div className="mt-8">
               <h2 className="font-serif text-lg font-semibold text-ink-900">Giới thiệu sách</h2>
-              <p className="mt-2 whitespace-pre-line text-body text-ink-600">{book.description}</p>
+              <p className="mt-2 max-w-[68ch] whitespace-pre-line text-body text-ink-600">{book.description}</p>
             </div>
           )}
 
           {book.tableOfContents && (
             <details className="mt-8">
               <summary className="cursor-pointer font-serif text-lg font-semibold text-ink-900">Mục lục</summary>
-              <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-600">{book.tableOfContents}</p>
+              <p className="mt-2 max-w-[68ch] whitespace-pre-line text-sm leading-relaxed text-ink-600">
+                {book.tableOfContents}
+              </p>
             </details>
           )}
         </div>
@@ -240,7 +242,7 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
                   {collection.title}
                 </Link>
                 {/* C.3: lời biên tập trình bày như trích dẫn — serif 18px (text-lg), dấu ngoặc kép trang trí. */}
-                <blockquote className="relative mt-3 max-w-prose pl-5 font-serif text-lg text-ink-900">
+                <blockquote className="relative mt-3 max-w-[68ch] pl-5 font-serif text-lg text-ink-900">
                   <span aria-hidden="true" className="absolute left-0 top-0 -translate-y-1 text-2xl leading-none text-cham-700/40">
                     &ldquo;
                   </span>
@@ -260,7 +262,7 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
         {related && (
           <div>
             <h2 className="font-serif text-h2 font-semibold text-ink-900">{related.heading}</h2>
-            <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
               {related.books.map((relatedBook) => (
                 <BookCard key={relatedBook.slug} book={relatedBook} />
               ))}

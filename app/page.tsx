@@ -85,7 +85,9 @@ export default async function Home() {
                 <span aria-hidden="true" className="font-serif text-5xl leading-none text-cham-700/30">
                   &ldquo;
                 </span>
-                <blockquote className="-mt-4 font-serif text-h2 text-ink-900">{editorial.curatorNote}</blockquote>
+                <blockquote className="-mt-4 max-w-[68ch] font-serif text-h2 text-ink-900">
+                  {editorial.curatorNote}
+                </blockquote>
                 {/*
                   NFR-6.2: 2 link nằm giữa câu văn nên không thể đổi thành
                   block (sẽ vỡ dòng). inline-block + py-3 (44px vùng bấm,
@@ -156,7 +158,7 @@ export default async function Home() {
                   )}
                   <div className="min-w-0 flex-1">
                     <h3 className="font-serif text-lg font-semibold text-ink-900">{collection.title}</h3>
-                    <p className="mt-1 line-clamp-2 text-body-sm text-ink-600">{collection.description}</p>
+                    <p className="mt-1 line-clamp-2 max-w-[68ch] text-body-sm text-ink-600">{collection.description}</p>
                   </div>
                 </Link>
               ))}

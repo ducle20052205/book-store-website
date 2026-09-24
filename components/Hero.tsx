@@ -17,17 +17,17 @@ export function Hero({ collection }: { collection: FeaturedCollection | null }) 
   if (!collection) return null;
 
   return (
-    <section className="border-b border-line bg-cham-50">
+    <section className="bg-cham-700">
       <div className="container-page flex flex-col gap-8 py-10 md:flex-row md:items-center">
         <div className="flex-1 space-y-4">
-          <span className="inline-block rounded-pill bg-surface px-3 py-1 text-micro font-medium text-cham-700">
+          <span className="inline-block rounded-pill bg-nghe-400 px-3 py-1 text-micro font-medium text-ink-900">
             Tuyển chọn
           </span>
-          <h1 className="font-serif text-display font-semibold text-ink-900">{collection.title}</h1>
-          <p className="line-clamp-2 max-w-prose text-body text-ink-600">{collection.description}</p>
+          <h1 className="font-serif text-display font-semibold text-white">{collection.title}</h1>
+          <p className="line-clamp-2 max-w-[68ch] text-body text-white/80">{collection.description}</p>
           <Link
             href={`/tu-sach/${collection.slug}`}
-            className="inline-flex min-h-11 items-center justify-center rounded-control bg-cham-700 px-5 text-button font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
+            className="inline-flex min-h-11 items-center justify-center rounded-control bg-white px-5 text-button font-medium text-cham-700 hover:bg-cham-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-700 focus-visible:ring-offset-2"
           >
             Xem tủ sách
           </Link>

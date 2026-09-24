@@ -4,8 +4,15 @@ import Link from "next/link";
 import { useEffect, useId, useState } from "react";
 import type { CategoryNode } from "@/lib/queries";
 
+/*
+ * D: thanh dưới header đổi nền cham-700 chữ trắng, trải hết chiều ngang.
+ * Trạng thái hover/đang mở dùng cham-600 làm NỀN (không phải màu chữ) —
+ * cham-600 là sắc xanh liền kề cham-700, dùng làm màu chữ trên chính nền
+ * cham-700 sẽ gần như không đọc được (tối trên tối). Ring focus đổi sang
+ * trắng vì cham-600 (ring mặc định) cũng quá gần cham-700 để nhìn thấy.
+ */
 const navLinkClass =
-  "flex min-h-11 shrink-0 items-center rounded-control px-1 text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600";
+  "flex min-h-11 shrink-0 items-center rounded-control px-2 text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
 
 export function CategoryNav({ categories }: { categories: CategoryNode[] }) {
   const [open, setOpen] = useState(false);
@@ -21,7 +28,7 @@ export function CategoryNav({ categories }: { categories: CategoryNode[] }) {
   }, [open]);
 
   return (
-    <div className="relative bg-surface">
+    <div className="relative bg-cham-700">
       <nav
         aria-label="Danh mục và điều hướng nhanh"
         className="container-page scrollbar-hidden flex items-center gap-5 overflow-x-auto whitespace-nowrap py-1 text-sm"
@@ -32,7 +39,7 @@ export function CategoryNav({ categories }: { categories: CategoryNode[] }) {
           aria-haspopup="true"
           aria-controls={panelId}
           onClick={() => setOpen((v) => !v)}
-          className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-control px-2 font-medium text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+          className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-control px-2 font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${open ? "bg-cham-600" : ""}`}
         >
           Danh mục
           <svg

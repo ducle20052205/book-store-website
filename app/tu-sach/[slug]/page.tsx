@@ -13,9 +13,9 @@ export default async function CollectionDetailPage({ params }: PageProps<"/tu-sa
   return (
     <div className="container-page py-12">
       <h1 className="font-serif text-h1 text-ink-900">{collection.title}</h1>
-      <p className="mt-3 max-w-prose text-body text-ink-600">{collection.description}</p>
+      <p className="mt-3 max-w-[68ch] text-body text-ink-600">{collection.description}</p>
 
-      <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="mt-8 grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
         {collection.books.map((book) => (
           <div key={book.slug}>
             <BookCard book={book} />

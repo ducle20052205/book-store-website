@@ -93,10 +93,11 @@
   --text-meta--line-height: 1.4;
 }
 
-/* Khung nội dung 1200px dùng chung cho header, nav, nội dung, footer. */
+/* D: khung nội dung rộng 1440px (từ 1200px) dùng chung cho header, nav, nội
+   dung, footer — đệm ngang 24px, riêng mobile giữ 16px. */
 @layer components {
   .container-page {
-    @apply mx-auto w-full max-w-[1200px] px-4;
+    @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6;
   }
 
   /* Ẩn thanh cuộn ngang (mega-menu bar, dải bìa hero ở mobile) nhưng vẫn

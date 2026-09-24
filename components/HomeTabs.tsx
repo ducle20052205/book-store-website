@@ -57,7 +57,7 @@ export function HomeTabs({ newest, bestselling }: HomeTabsProps) {
         id="panel-sach-tab"
         role="tabpanel"
         aria-labelledby={active === "moi-nhat" ? "tab-moi-nhat" : "tab-ban-chay"}
-        className="mt-6 grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-4"
+        className="mt-6 grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5"
       >
         {books.length === 0 ? (
           <p className="col-span-full text-ink-600">NA Books chưa có sách nào ở mục này. Ghé lại sau nhé.</p>
