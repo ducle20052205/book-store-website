@@ -186,6 +186,117 @@ export async function getCollections(): Promise<CollectionSummary[]> {
   }));
 }
 
+export interface CollectionPreview extends CollectionSummary {
+  previewBooks: { slug: string; title: string; author: string; coverImageUrl: string | null }[];
+}
+
+/** C.2 mục 5: mỗi tủ sách kèm tối đa 3 bìa đầu (theo position) để xếp chồng trên trang chủ. */
+export async function getCollectionsWithPreview(): Promise<CollectionPreview[]> {
+  const collections = await getCollections();
+
+  return Promise.all(
+    collections.map(async (collection) => {
+      const { data: rows } = await supabase
+        .from("collection_books")
+        .select("position, books(slug, title, author, cover_image_url)")
+        .eq("collection_id", collection.id)
+        .order("position", { ascending: true })
+        .limit(3);
+
+      const bookRows = (rows ?? []) as unknown as {
+        position: number;
+        books: { slug: string; title: string; author: string; cover_image_url: string | null } | null;
+      }[];
+
+      return {
+        ...collection,
+        previewBooks: bookRows
+          .filter((r) => r.books !== null)
+          .map((r) => ({
+            slug: r.books!.slug,
+            title: r.books!.title,
+            author: r.books!.author,
+            coverImageUrl: r.books!.cover_image_url,
+          })),
+      };
+    }),
+  );
+}
+
+export interface CategoryWithCount {
+  id: string;
+  name: string;
+  slug: string;
+  bookCount: number;
+}
+
+/** C.2 mục 2: mỗi danh mục cha kèm tổng số sách thuộc nó hoặc các danh mục con của nó. */
+export async function getCategoryCounts(): Promise<CategoryWithCount[]> {
+  const tree = await getCategoryTree();
+
+  return Promise.all(
+    tree.map(async (parent) => {
+      const categoryIds = [parent.id, ...parent.children.map((c) => c.id)];
+      const { count } = await supabase
+        .from("books")
+        .select("*", { count: "exact", head: true })
+        .in("category_id", categoryIds);
+
+      return { id: parent.id, name: parent.name, slug: parent.slug, bookCount: count ?? 0 };
+    }),
+  );
+}
+
+export interface EditorialPick {
+  curatorNote: string;
+  collectionSlug: string;
+  collectionTitle: string;
+  book: { slug: string; title: string; author: string; coverImageUrl: string | null };
+}
+
+/**
+ * C.2 mục 4: một curator_note thật để làm khối editorial trên trang chủ —
+ * lấy cuốn đầu tiên (position 1) của tủ sách không phải hero, theo
+ * sort_order, để không lặp lại đúng những cuốn đã hiện ở Hero.
+ */
+export async function getEditorialPick(): Promise<EditorialPick | null> {
+  const { data: candidateCollections } = await supabase
+    .from("collections")
+    .select("id, slug, title")
+    .eq("is_featured", false)
+    .order("sort_order", { ascending: true })
+    .limit(1);
+
+  const collection = candidateCollections?.[0];
+  if (!collection) return null;
+
+  const { data: row } = await supabase
+    .from("collection_books")
+    .select("curator_note, books(slug, title, author, cover_image_url)")
+    .eq("collection_id", collection.id)
+    .order("position", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  const book = row?.books as unknown as
+    | { slug: string; title: string; author: string; cover_image_url: string | null }
+    | null
+    | undefined;
+  if (!row || !book) return null;
+
+  return {
+    curatorNote: row.curator_note,
+    collectionSlug: collection.slug,
+    collectionTitle: collection.title,
+    book: {
+      slug: book.slug,
+      title: book.title,
+      author: book.author,
+      coverImageUrl: book.cover_image_url,
+    },
+  };
+}
+
 export interface FeaturedCollection {
   slug: string;
   title: string;

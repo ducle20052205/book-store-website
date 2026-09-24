@@ -21,11 +21,14 @@ function useMounted() {
 
 const MAX_QTY_CAP = 99;
 
+// A2.2: whitespace-nowrap + px-6 (24px) để nhãn nút không bao giờ tự xuống
+// dòng giữa chừng. flex-1 (mobile, chia đều thanh đáy) và shrink-0 (desktop,
+// giữ độ rộng tự nhiên — xem lý do ở className nơi dùng) áp riêng từng nơi.
 const primaryButtonClass =
-  "inline-flex min-h-11 flex-1 items-center justify-center rounded-control bg-cham-700 px-5 text-sm font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-cham-700";
+  "inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-control bg-cham-700 px-6 text-button font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-cham-700";
 
 const secondaryButtonClass =
-  "inline-flex min-h-11 flex-1 items-center justify-center rounded-control border border-line px-5 text-sm font-medium text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 disabled:cursor-not-allowed disabled:opacity-40";
+  "inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-control border border-line px-6 text-button font-medium text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 disabled:cursor-not-allowed disabled:opacity-40";
 
 interface PurchasePanelProps {
   stockQuantity: number;
@@ -75,11 +78,27 @@ export function PurchasePanel({ stockQuantity }: PurchasePanelProps) {
           </button>
         </div>
 
-        <div className="hidden items-center gap-3 md:flex">
-          <button type="button" disabled={outOfStock} onClick={handleCartAction} className={secondaryButtonClass}>
+        {/*
+          A2.2: hàng nút desktop — shrink-0 để nút giữ độ rộng tự nhiên theo
+          nội dung (không bị flex ép hẹp lại gây xuống dòng chữ bên trong);
+          flex-wrap để nếu thật sự không đủ chỗ thì "Mua ngay" xuống hẳn
+          MỘT DÒNG MỚI, không bao giờ vỡ chữ giữa chừng trong 1 nút.
+        */}
+        <div className="hidden flex-wrap items-center gap-3 md:flex">
+          <button
+            type="button"
+            disabled={outOfStock}
+            onClick={handleCartAction}
+            className={`${secondaryButtonClass} shrink-0`}
+          >
             Thêm vào giỏ hàng
           </button>
-          <button type="button" disabled={outOfStock} onClick={handleCartAction} className={primaryButtonClass}>
+          <button
+            type="button"
+            disabled={outOfStock}
+            onClick={handleCartAction}
+            className={`${primaryButtonClass} shrink-0`}
+          >
             Mua ngay
           </button>
         </div>
@@ -89,10 +108,20 @@ export function PurchasePanel({ stockQuantity }: PurchasePanelProps) {
         className="fixed inset-x-0 bottom-0 z-30 flex gap-3 border-t border-line bg-surface px-4 py-3 md:hidden"
         style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
       >
-        <button type="button" disabled={outOfStock} onClick={handleCartAction} className={secondaryButtonClass}>
+        <button
+          type="button"
+          disabled={outOfStock}
+          onClick={handleCartAction}
+          className={`${secondaryButtonClass} flex-1`}
+        >
           Thêm vào giỏ hàng
         </button>
-        <button type="button" disabled={outOfStock} onClick={handleCartAction} className={primaryButtonClass}>
+        <button
+          type="button"
+          disabled={outOfStock}
+          onClick={handleCartAction}
+          className={`${primaryButtonClass} flex-1`}
+        >
           Mua ngay
         </button>
       </div>

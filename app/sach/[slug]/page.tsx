@@ -40,8 +40,13 @@ function formatDateVN(isoDate: string): string {
   return `${day}/${month}/${year}`;
 }
 
-function buildInfoRows(book: BookDetail, categoryChain: CategoryBasic[]) {
-  const rows: { label: string; value: React.ReactNode }[] = [];
+interface InfoRow {
+  label: string;
+  value: React.ReactNode;
+}
+
+function buildInfoRows(book: BookDetail, categoryChain: CategoryBasic[]): InfoRow[] {
+  const rows: InfoRow[] = [];
 
   if (book.translator) rows.push({ label: "Người dịch", value: book.translator });
   if (book.publisher) rows.push({ label: "Nhà xuất bản", value: book.publisher });
@@ -66,6 +71,49 @@ function buildInfoRows(book: BookDetail, categoryChain: CategoryBasic[]) {
   }
 
   return rows;
+}
+
+const COMPACT_INFO_ROW_LIMIT = 2;
+
+/**
+ * A2.2: dưới 3 dòng (dữ liệu seed hiện để trống nhiều field) thì bỏ tiêu đề
+ * "Thông tin sách" và hiển thị gọn dạng metadata thay vì bảng đầy đủ —
+ * tránh 1 dòng đơn độc trông như lỗi bố cục. Từ 3 dòng trở lên mới tách
+ * thành khối bảng có tiêu đề riêng.
+ */
+function BookInfoBlock({ rows }: { rows: InfoRow[] }) {
+  if (rows.length === 0) return null;
+
+  if (rows.length <= COMPACT_INFO_ROW_LIMIT) {
+    return (
+      <dl className="mt-5 space-y-1.5 text-sm">
+        {rows.map((row) => (
+          <div key={row.label} className="flex flex-wrap gap-x-1.5">
+            <dt className="text-ink-600">{row.label}:</dt>
+            <dd className="text-ink-900">{row.value}</dd>
+          </div>
+        ))}
+      </dl>
+    );
+  }
+
+  return (
+    <div className="mt-8">
+      <h2 className="font-serif text-lg font-semibold text-ink-900">Thông tin sách</h2>
+      <table className="mt-3 w-full text-sm">
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.label} className="border-b border-line">
+              <th scope="row" className="w-36 py-2 pr-4 text-left font-normal text-ink-600">
+                {row.label}
+              </th>
+              <td className="py-2 text-ink-900">{row.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 export async function generateMetadata({ params }: PageProps<"/sach/[slug]">): Promise<Metadata> {
@@ -98,22 +146,28 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
     <div className="container-page py-8 pb-28 md:py-12 md:pb-12">
       <TrackEvent eventType="page_view" metadata={{ page: "book_detail", book_id: book.id, slug: book.slug }} />
 
-      <Breadcrumb items={categoryChainToBreadcrumbItems(categoryChain)} />
-
-      <div className="mt-4 grid grid-cols-1 gap-8 md:grid-cols-[40%_1fr] md:gap-10">
+      {/*
+        A2.2: lưới 2 cột cố định 380px/1fr (không dùng 40% như trước — bìa
+        40% của khung 1200px có thể lên tới ~700px cao, thừa nhiều so với
+        cột phải). items-start để cột phải không bị kéo dãn bằng chiều cao
+        bìa — tránh khoảng trắng chết ở cuối cột phải khi bìa cao hơn.
+      */}
+      <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-[380px_1fr] md:gap-14">
         <div>
           <BookCover
             slug={book.slug}
             title={book.title}
             author={book.author}
             coverImageUrl={book.coverImageUrl}
-            sizes="(min-width: 768px) 40vw, 60vw"
-            className="max-w-[240px] md:max-w-none"
+            sizes="(min-width: 768px) 380px, 60vw"
+            className="max-w-[240px] shadow-md md:max-w-none"
           />
         </div>
 
         <div>
-          <h1 className="font-serif text-3xl text-ink-900">{book.title}</h1>
+          <Breadcrumb items={categoryChainToBreadcrumbItems(categoryChain)} />
+
+          <h1 className="mt-3 font-serif text-book-title font-semibold text-ink-900">{book.title}</h1>
           <p className="mt-2 text-sm text-ink-600">
             Tác giả:{" "}
             <Link
@@ -142,37 +196,32 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
             <PurchasePanel stockQuantity={book.stockQuantity} />
           </div>
 
-          {infoRows.length > 0 && (
-            <div className="mt-8">
-              <h2 className="font-serif text-lg font-semibold text-ink-900">Thông tin sách</h2>
-              <table className="mt-3 w-full text-sm">
-                <tbody>
-                  {infoRows.map((row) => (
-                    <tr key={row.label} className="border-b border-line">
-                      <th scope="row" className="w-36 py-2 pr-4 text-left font-normal text-ink-600">
-                        {row.label}
-                      </th>
-                      <td className="py-2 text-ink-900">{row.value}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <BookInfoBlock rows={infoRows} />
 
+          {/*
+            [Lệch spec A2.2 — có lý do, xem báo cáo]: spec yêu cầu đưa mô
+            tả xuống "Phần dưới" full-width, nhưng đo thực tế thì grid vẫn
+            cao bằng CHIỀU CAO BÌA (bìa là cột lưới, "items-start" chỉ ảnh
+            hưởng vị trí nội dung TRONG cột, không rút ngắn hàng lưới) —
+            nghĩa là chuyển mô tả xuống dưới không hề xóa khoảng trống chết,
+            chỉ dời nó xuống dưới cột phải, đo được 334px (vượt xa mức tối
+            đa 120px). Giữ mô tả + mục lục trong cột phải để chúng lấp vào
+            đúng chỗ trống cạnh bìa — cách duy nhất thực sự xóa khoảng
+            trống khi bìa cao hơn phần chữ. "Có trong tủ sách"/"Sách liên
+            quan" vẫn chuyển xuống full-width vì chúng vốn cần bề ngang lớn
+            (lưới sách liên quan 4 cột), không phải nguồn gây khoảng trống.
+          */}
           {book.description && (
             <div className="mt-8">
               <h2 className="font-serif text-lg font-semibold text-ink-900">Giới thiệu sách</h2>
-              <p className="mt-2 max-w-prose whitespace-pre-line text-sm leading-relaxed text-ink-600">
-                {book.description}
-              </p>
+              <p className="mt-2 max-w-[68ch] whitespace-pre-line text-body text-ink-600">{book.description}</p>
             </div>
           )}
 
           {book.tableOfContents && (
             <details className="mt-8">
               <summary className="cursor-pointer font-serif text-lg font-semibold text-ink-900">Mục lục</summary>
-              <p className="mt-2 max-w-prose whitespace-pre-line text-sm leading-relaxed text-ink-600">
+              <p className="mt-2 max-w-[68ch] whitespace-pre-line text-sm leading-relaxed text-ink-600">
                 {book.tableOfContents}
               </p>
             </details>
@@ -180,39 +229,47 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
         </div>
       </div>
 
-      {collections.length > 0 && (
-        <div className="mt-12 space-y-4">
-          {collections.map((collection) => (
-            <div key={collection.slug} className="rounded-card border border-line bg-cham-50 p-5">
-              <p className="text-xs font-semibold tracking-wide text-cham-700 uppercase">Có trong tủ sách</p>
-              <Link
-                href={`/tu-sach/${collection.slug}`}
-                className="mt-1 block font-serif text-lg font-semibold text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
-              >
-                {collection.title}
-              </Link>
-              <p className="mt-2 max-w-prose text-sm text-ink-600">{collection.curatorNote}</p>
-              <Link
-                href={`/tu-sach/${collection.slug}`}
-                className="mt-2 inline-block text-sm font-medium text-cham-700 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
-              >
-                Xem cả tủ sách ({collection.bookCount} cuốn) →
-              </Link>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {related && (
-        <div className="mt-12">
-          <h2 className="font-serif text-2xl text-ink-900">{related.heading}</h2>
-          <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
-            {related.books.map((relatedBook) => (
-              <BookCard key={relatedBook.slug} book={relatedBook} />
+      <div className="mt-12 space-y-10">
+        {collections.length > 0 && (
+          <div className="space-y-4">
+            {collections.map((collection) => (
+              <div key={collection.slug} className="rounded-card border border-line bg-cham-50 p-5">
+                <p className="text-xs font-semibold tracking-wide text-cham-700 uppercase">Có trong tủ sách</p>
+                <Link
+                  href={`/tu-sach/${collection.slug}`}
+                  className="mt-1 block font-serif text-lg font-semibold text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+                >
+                  {collection.title}
+                </Link>
+                {/* C.3: lời biên tập trình bày như trích dẫn — serif 18px (text-lg), dấu ngoặc kép trang trí. */}
+                <blockquote className="relative mt-3 max-w-[68ch] pl-5 font-serif text-lg text-ink-900">
+                  <span aria-hidden="true" className="absolute left-0 top-0 -translate-y-1 text-2xl leading-none text-cham-700/40">
+                    &ldquo;
+                  </span>
+                  {collection.curatorNote}
+                </blockquote>
+                <Link
+                  href={`/tu-sach/${collection.slug}`}
+                  className="mt-2 inline-block text-sm font-medium text-cham-700 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+                >
+                  Xem cả tủ sách ({collection.bookCount} cuốn) →
+                </Link>
+              </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+
+        {related && (
+          <div>
+            <h2 className="font-serif text-h2 font-semibold text-ink-900">{related.heading}</h2>
+            <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+              {related.books.map((relatedBook) => (
+                <BookCard key={relatedBook.slug} book={relatedBook} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

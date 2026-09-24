@@ -13,6 +13,7 @@
 - **Chất liệu** (màu thương hiệu, typography, khoảng trắng, nội dung tủ sách, giọng văn) là nơi tạo khác biệt.
 - Người dùng mục tiêu: 18–30 tuổi. Định vị: nhà sách tuyển chọn, mỗi lựa chọn đều có lời giải thích.
 - Chỉ làm light mode trong MVP.
+- **Bìa sách không dùng ảnh bản quyền.** Toàn bộ bìa hiển thị — catalog, trang chi tiết, tủ sách — do `<BookCover>` sinh tự động theo nhận diện thương hiệu (màu, typography, bố cục), không lấy ảnh bìa thật từ nhà xuất bản và không hotlink ảnh từ nguồn khác. Đây là **quyết định sản phẩm chính thức**, không phải giải pháp tạm trong lúc chưa có ảnh thật — áp dụng cho mọi giai đoạn, kể cả khi danh mục sách mở rộng sau này.
 
 ## 1. Design tokens
 

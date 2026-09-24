@@ -15,8 +15,10 @@
   --color-danger: #C2362B;     /* lỗi form, cảnh báo */
   --color-success: #2E7D4F;    /* thông báo thành công */
 
-  /* Bảng 8 màu trầm cho <BookCover> (mục 4.2b) — nền bìa typographic khi
-     không có cover_image_url. Tất cả đã kiểm tra đạt >= 4.5:1 với chữ trắng. */
+  /* B.2: bảng 12 màu trầm cho <BookCover> (mở rộng từ 8) — nền bìa
+     typographic khi không có cover_image_url. Tất cả đã kiểm tra đạt
+     >= 4.5:1 với chữ trắng (8 màu đầu từ mục 4.2b, 4 màu 9-12 tính lại khi
+     mở rộng — xem báo cáo đợt B cho bảng số liệu đầy đủ). */
   --color-cover-1: #2A5A54;    /* teal trầm */
   --color-cover-2: #5B3358;    /* tím mận */
   --color-cover-3: #2F4A34;    /* xanh rêu */
@@ -25,18 +27,77 @@
   --color-cover-6: #4B4A2A;    /* ô liu */
   --color-cover-7: #34495A;    /* xanh than */
   --color-cover-8: #5C2436;    /* đỏ rượu vang */
+  --color-cover-9: #33383D;    /* xám than trung tính */
+  --color-cover-10: #4A2020;   /* đỏ mận sẫm */
+  --color-cover-11: #24402C;   /* xanh lá rừng */
+  --color-cover-12: #5A3D1E;   /* nâu hổ phách */
 
   --font-sans: var(--font-be-vietnam-pro), system-ui, sans-serif;
   --font-serif: var(--font-lora), Georgia, serif;
 
-  --radius-card: 4px;
-  --radius-control: 6px;
+  /* Bước 1.5 — A.1: --radius-card đổi từ 4px, --radius-control đổi từ 6px. */
+  --radius-card: 10px;
+  --radius-control: 8px;
+  --radius-pill: 999px;
+  --radius-spine: 2px; /* B.2: mép gáy sách trong <BookCover>, bo nhỏ hơn --radius-card */
+
+  --shadow-sm: 0 1px 2px rgba(26, 28, 46, 0.06);
+  --shadow-md: 0 8px 24px -10px rgba(26, 28, 46, 0.22);
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+
+  --color-surface-2: #F4F2ED;
+
+  /* A.2 — thang chữ theo vai trò. Quy ước Tailwind v4: --text-{tên} đi kèm
+     --text-{tên}--line-height / --letter-spacing để 1 class gộp đủ 3 thuộc
+     tính (vd. `text-display` = cỡ chữ + line-height + letter-spacing). */
+  --text-display: clamp(2.25rem, 5vw, 3.75rem); /* 36px -> 60px */
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.02em;
+
+  --text-h1: clamp(1.875rem, 3.4vw, 2.625rem); /* 30px -> 42px */
+  --text-h1--line-height: 1.15;
+
+  --text-h2: 1.75rem; /* 28px */
+  --text-h2--line-height: 1.25;
+
+  --text-book-title: clamp(1.625rem, 2.6vw, 2.25rem); /* 26px -> 36px */
+  --text-book-title--line-height: 1.15;
+
+  --text-body: 1rem; /* 16px */
+  --text-body--line-height: 1.65;
+
+  --text-body-sm: 0.875rem; /* 14px — "Body phụ / metadata" */
+  --text-body-sm--line-height: 1.5;
+
+  --text-micro: 0.75rem; /* 12px — nhãn, chip */
+  --text-micro--line-height: 1.4;
+  --text-micro--letter-spacing: 0.04em;
+
+  /* A.6 — chữ nút chính/phụ (15px/500), không thuộc thang chữ A.2. */
+  --text-button: 0.9375rem; /* 15px */
+  --text-button--line-height: 1.2;
+
+  /* B.3 — phân cấp trong <BookCard>: giá > tên > tác giả. */
+  --text-card-title: 0.9375rem; /* 15px */
+  --text-card-title--line-height: 1.3;
+
+  --text-card-price: 1.0625rem; /* 17px */
+  --text-card-price--line-height: 1.25;
+
+  /* Dùng chung cho tác giả trong BookCard và giá gốc gạch ngang trong
+     <Price> — cùng vai trò "chữ phụ rất nhỏ", tránh thêm token trùng lặp. */
+  --text-meta: 0.8125rem; /* 13px */
+  --text-meta--line-height: 1.4;
 }
 
-/* Khung nội dung 1200px dùng chung cho header, nav, nội dung, footer. */
+/* D: khung nội dung rộng 1440px (từ 1200px) dùng chung cho header, nav, nội
+   dung, footer — đệm ngang 24px, riêng mobile giữ 16px. */
 @layer components {
   .container-page {
-    @apply mx-auto w-full max-w-[1200px] px-4;
+    @apply mx-auto w-full max-w-[1440px] px-4 sm:px-6;
   }
 
   /* Ẩn thanh cuộn ngang (mega-menu bar, dải bìa hero ở mobile) nhưng vẫn
@@ -48,4 +109,148 @@
   .scrollbar-hidden::-webkit-scrollbar {
     display: none;
   }
+
+  /* A.3/A.4: thẻ tủ sách (1 khối bo viền) — nền surface + shadow-sm khi
+     nghỉ, nâng nhẹ + shadow-md khi rê chuột. */
+  .hover-lift {
+    box-shadow: var(--shadow-sm);
+    transition-property: transform, box-shadow;
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
+  }
+  .hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* A.3/A.4 — BookCard: bìa và phần chữ bên dưới không chung một khối nên
+     tách 3 lớp riêng: cả thẻ nâng nhẹ (.book-card-lift trên <Link>), bìa
+     đổi shadow-sm -> shadow-md (.book-cover-shadow, kích bằng group-hover
+     của .book-card-lift), ảnh trong bìa phóng nhẹ (.cover-zoom img). */
+  .book-card-lift {
+    transition-property: transform;
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
+  }
+  .book-card-lift:hover {
+    transform: translateY(-3px);
+  }
+
+  .book-cover-shadow {
+    box-shadow: var(--shadow-sm);
+    transition-property: box-shadow;
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
+  }
+  .book-card-lift:hover .book-cover-shadow {
+    box-shadow: var(--shadow-md);
+  }
+
+  .cover-zoom {
+    overflow: hidden;
+  }
+  .cover-zoom img {
+    transition-property: transform;
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
+  }
+  .book-card-lift:hover .cover-zoom img {
+    transform: scale(1.03);
+  }
+
+  /* B.2: vân giấy rất nhẹ trên bìa typographic — SVG feTurbulence nhúng
+     data-URI, lặp lại (tile) khắp bìa. opacity 0.05 để "nhìn thoáng qua
+     không nhận ra" như spec yêu cầu; không cần đổi theo prefers-reduced-motion
+     vì đây là hoạ tiết tĩnh, không chuyển động. */
+  .paper-grain {
+    opacity: 0.05;
+    background-repeat: repeat;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* A2.1: header dính cuộn. Đã BỎ backdrop-filter (đợt A dùng blur, nhưng
+     kết hợp với position:sticky gây lỗi hiển thị nền mờ chỉ phủ 1 phần
+     chiều ngang ở một số trình duyệt — xem báo cáo đợt A2) — dùng nền đặc
+     hơi trong suốt, không cần @supports fallback nữa vì không còn tính
+     năng nào cần dò hỗ trợ. Khi cuộn chỉ đổi border-color + box-shadow,
+     KHÔNG đổi height/padding/font-size (từng gây reflow toàn trang mỗi lần
+     đổi ngưỡng — nguyên nhân thật của lỗi giật, xem báo cáo đợt A2). */
+  .header-surface {
+    background-color: rgb(255 255 255 / 0.96);
+    border-bottom: 1px solid transparent;
+    box-shadow: none;
+    transition-property: border-color, box-shadow;
+    transition-duration: var(--dur-base);
+    transition-timing-function: var(--ease-out);
+  }
+  .header-surface[data-scrolled="true"] {
+    border-bottom-color: var(--color-line);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Chiều cao cố định 64px, mọi trạng thái, không animate — chỉ áp dụng từ
+     md trở lên vì dưới md top-bar tự wrap 2 dòng (logo+icon, rồi ô tìm
+     kiếm full-width), ép 64px sẽ tràn nội dung; mobile giữ auto (hành vi
+     này không đổi so với đợt A, không phải nguyên nhân gây giật vì mobile
+     chưa từng animate height). */
+  .header-topbar {
+    height: auto;
+  }
+  @media (min-width: 768px) {
+    .header-topbar {
+      height: 64px;
+    }
+  }
+
+  /* Sửa lỗi đợt B: cột lọc /sach từng dùng max-height + overflow-y: auto
+     để tự cuộn bên trong khi nội dung dài hơn vùng còn lại — 2 lớp cuộn
+     lồng nhau (trang + cột lọc) là trải nghiệm kém. Bỏ hẳn max-height/
+     overflow, chỉ bật sticky khi màn hình đủ cao để chứa hết cột lọc ở
+     trạng thái thường (đo thực tế: 672px không mở rộng danh mục con, tới
+     868px khi mở danh mục nhiều con nhất — Văn học, 5 con). 800px = 80px
+     (top) + 672px (cột lọc thường) + ~48px đệm dưới, khớp trạng thái phổ
+     biến; trường hợp mở rộng danh mục nhiều con trên màn hình sát ngưỡng
+     800px có thể hơi chật nhưng không tràn/mất nội dung vì không còn
+     sticky ép chiều cao — cột lọc vẫn cuộn cùng trang bình thường. Dưới
+     ngưỡng này giữ position mặc định (static), cột lọc cuộn cùng trang
+     như nội dung thường, không sticky. */
+  @media (min-width: 1024px) and (min-height: 800px) {
+    .filter-sidebar {
+      position: sticky;
+      top: 80px;
+    }
+  }
+}
+
+/* A.4: bắt buộc tắt mọi chuyển động (transition + transform) khi người
+   dùng bật "giảm chuyển động" ở hệ điều hành/trình duyệt. Đặt ngoài
+   @layer để chắc chắn thắng mọi rule cùng thuộc tính ở trên. */
+@media (prefers-reduced-motion: reduce) {
+  .hover-lift,
+  .book-card-lift,
+  .book-cover-shadow,
+  .cover-zoom img,
+  .header-surface {
+    transition: none !important;
+  }
+  .hover-lift:hover,
+  .book-card-lift:hover,
+  .book-card-lift:hover .cover-zoom img {
+    transform: none !important;
+  }
+  /* B.4: skeleton dùng animate-pulse (utility có sẵn của Tailwind) — tắt
+     luôn hiệu ứng nhấp nháy khi người dùng giảm chuyển động. */
+  .animate-pulse {
+    animation: none !important;
+  }
+}
+
+/* A2.1 bước 6: không che nội dung khi nhảy tới một mốc neo trong trang (vd.
+   id trong URL). scroll-padding-top áp dụng cho MỌI điều hướng cuộn-tới-neo
+   mà không cần scroll-margin-top riêng lẻ trên từng phần tử đích — hiện
+   repo chưa có neo nào dùng, đặt sẵn để an toàn khi có mục lục hay link nội
+   bộ sau này. 80px = 64px (chiều cao phần dính, chỉ còn topbar từ đợt B —
+   CategoryNav không còn dính) + 16px đệm. */
+html {
+  scroll-padding-top: 80px;
 }

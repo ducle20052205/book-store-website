@@ -1,6 +1,6 @@
 # Đặc tả Yêu cầu Phần mềm (SRS) – NA Books – 7 Tính năng Core
 
-Phiên bản 1.1 · 22/09/2026 · Soạn bởi Lê Minh Đức
+Phiên bản 1.2 · 24/09/2026 · Soạn bởi Lê Minh Đức
 
 Tài liệu liên quan: docs/specs/claude-code-brand-update.md (nhận diện thương hiệu), docs/specs/buoc-1-catalog-chi-tiet.md (triển khai bước 1), docs/mockups/ (mockup giao diện).
 
@@ -259,7 +259,7 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 
 ### 5.1 Catalog & Tìm kiếm/Lọc
 
-- **FR-1.1** — Hiển thị danh sách sách dạng lưới; mỗi thẻ gồm: ảnh bìa (`cover_image_url`), tên sách, tác giả, giá gốc (`price`), giá giảm (`discount_price` nếu có, gạch ngang giá gốc), trạng thái còn hàng/hết hàng.
+- **FR-1.1** — Hiển thị danh sách sách dạng lưới; mỗi thẻ gồm: ảnh bìa (sinh tự động qua `<BookCover>`, xem FR-2.8), tên sách, tác giả, giá gốc (`price`), giá giảm (`discount_price` nếu có, gạch ngang giá gốc), trạng thái còn hàng/hết hàng.
 - **FR-1.2** — Phân trang, mặc định 20 sách/trang.
 - **FR-1.3** — Tìm kiếm theo tên sách (`title`) **hoặc** tác giả (`author`), không phân biệt hoa/thường và **không phân biệt dấu tiếng Việt** (dùng extension `unaccent` qua hàm `f_unaccent`), khớp một phần chuỗi. Từ khóa được trim, tối đa 100 ký tự, escape ký tự `%` và `_`.
 - **FR-1.4** — Lọc theo `category_id`. Chọn category cha (`parent_id IS NULL`) → kết quả gồm cả sách thuộc các category con trực tiếp của nó.
@@ -274,13 +274,14 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 
 ### 5.2 Trang chi tiết sách
 
-- **FR-2.1** — Truy cập qua `/sach/[slug]`, hiển thị đầy đủ: `title`, `author`, `translator` (nếu có), `publisher`, `description`, `table_of_contents`, `price`, `discount_price` (nếu có), `isbn`, `page_count`, `dimensions`, `publish_date`, `cover_image_url`, tên category, trạng thái còn hàng (không hiển thị số lượng tồn kho chính xác). Các trường có giá trị `null` được ẩn hoàn toàn (không hiển thị "Đang cập nhật"). Trạng thái kho hiển thị bằng chữ: "Còn hàng" hoặc "Hết hàng".
+- **FR-2.1** — Truy cập qua `/sach/[slug]`, hiển thị đầy đủ: `title`, `author`, `translator` (nếu có), `publisher`, `description`, `table_of_contents`, `price`, `discount_price` (nếu có), `isbn`, `page_count`, `dimensions`, `publish_date`, ảnh bìa (sinh tự động qua `<BookCover>`, xem FR-2.8), tên category, trạng thái còn hàng (không hiển thị số lượng tồn kho chính xác). Các trường có giá trị `null` được ẩn hoàn toàn (không hiển thị "Đang cập nhật"). Trạng thái kho hiển thị bằng chữ: "Còn hàng" hoặc "Hết hàng".
 - **FR-2.2** — `stock_quantity = 0` → vô hiệu hóa nút "Thêm vào giỏ hàng", hiển thị rõ nhãn "Hết hàng".
 - **FR-2.3** — Hiển thị tối đa 4 sách liên quan: ưu tiên cùng danh mục con (`category_id`), loại trừ sách đang xem, mới nhất trước. Nếu chưa đủ 4 cuốn, lấy thêm từ các danh mục con khác cùng danh mục cha. Tiêu đề khối ghi tên danh mục thực tế đã dùng. Ẩn khối nếu không có sách nào.
 - **FR-2.4** — Slug không tồn tại → trả về trang 404.
 - **FR-2.5** — Không yêu cầu đăng nhập.
 - **FR-2.6** — Khối "Có trong tủ sách": liệt kê mọi tủ sách chứa cuốn đang xem, mỗi tủ gồm tên (link tới `/tu-sach/[slug]`) và `curator_note` của cuốn đó. Ẩn khối nếu sách không thuộc tủ nào.
 - **FR-2.7** — Trên mobile (< 768px), nút "Thêm vào giỏ" và "Mua ngay" nằm trong thanh dính ở đáy màn hình.
+- **FR-2.8** — Trong phạm vi hiện tại, ảnh bìa hiển thị ở mọi nơi (catalog, trang chi tiết, tủ sách) đều do `<BookCover>` sinh tự động từ `title`, `author` và `slug` (nền màu ổn định theo hash `slug`, tên sách/tác giả hiển thị bằng chữ) — không dùng ảnh bìa có bản quyền, không hotlink ảnh từ nguồn ngoài. Cột `cover_image_url` của bảng `books` giữ lại trong schema cho khả năng mở rộng sau này, nhưng không dùng trong phạm vi hiện tại (luôn `null`).
 
 ### 5.3 Giỏ hàng
 
@@ -413,3 +414,4 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 | --- | --- | --- |
 | 1.0 | 21/09/2026 | Bản đầu: 7 tính năng Core. |
 | 1.1 | 22/09/2026 | Tìm kiếm theo tác giả, không dấu (FR-1.3); RPC `search_books` (FR-1.11); route `/sach` (FR-1.12, FR-2.1); sách liên quan có phương án dự phòng (FR-2.3); khối "Có trong tủ sách" (FR-2.6); thanh mua hàng dính đáy trên mobile (FR-2.7); ghi log sự kiện (5.8); tủ sách tuyển chọn (5.9); schema 9 bảng; NFR giọng văn (NFR-3.4) và accessibility (6.6). |
+| 1.2 | 24/09/2026 | Chính thức hoá chính sách bìa sách: không dùng ảnh bìa bản quyền, toàn bộ bìa do `<BookCover>` sinh tự động từ `title`/`author`/`slug` (FR-2.8 mới); `cover_image_url` giữ trong schema `books` cho khả năng mở rộng sau này nhưng không dùng ở phạm vi hiện tại; cập nhật FR-1.1, FR-2.1 cho khớp. |

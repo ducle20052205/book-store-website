@@ -49,7 +49,7 @@ export function FilterChips({ current, categoryName }: FilterChipsProps) {
         <li key={chip.key}>
           <Link
             href={chip.href}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-control border border-line bg-cham-50 px-3 text-sm font-medium text-cham-700 hover:bg-line focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-line bg-cham-50 px-3 text-sm font-medium text-cham-700 hover:bg-line focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
           >
             {chip.label}
             <span aria-hidden="true">×</span>

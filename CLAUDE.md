@@ -29,6 +29,7 @@ npm run lint    # ESLint
 - Chỉ dùng token màu khai báo trong `@theme` (`app/globals.css`) — không viết cứng mã hex trong component.
 - Dùng lại component dùng chung đã có: `Price`, `BookCard`, `BookCover`, `StockLabel`, `Toast`.
 - Chữ hiển thị cho người dùng viết bằng tiếng Việt, đúng giọng văn NA Books ở `docs/specs/claude-code-brand-update.md` mục 6.
+- Không bao giờ thêm ảnh bìa sách từ nguồn ngoài (không hotlink, không tải ảnh có bản quyền) — bìa luôn do `BookCover` sinh tự động.
 
 ## Quy trình làm việc
 
