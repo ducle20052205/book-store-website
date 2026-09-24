@@ -121,8 +121,10 @@ Nguyên tắc: không section nào cách section kế cận đúng một khoản
         ↕ 128px (khoảng rộng nhất trang — tách hẳn khối bán hàng
                   khỏi khối "dừng lại đọc")
 ┌──────────────────────────────────────────────────────┐
-│ EDITORIAL — tràn hết viewport lần 2, nền surface-2      │  ← full-bleed, cao,
+│ EDITORIAL — tràn hết viewport lần 2, nền ink-900        │  ← full-bleed, cao,
 │  (bìa + trích dẫn lớn + ghi chú lề, xem mục 1)          │    lặp lại nhịp Hero
+│  [Cập nhật E1.5: nền đổi surface-2 → ink-900, thêm      │
+│  tiêu đề dẫn — xem mục 6]                               │
 └──────────────────────────────────────────────────────┘
         ↕ 88px
    ┌────────────────────────────────────────────┐
@@ -218,3 +220,92 @@ Quyết định "giữ nguyên lưới đều ở trang catalog, không thêm nh
 ---
 
 **E0 đã duyệt kèm 4 điều chỉnh (đánh dấu `[Điều chỉnh sau duyệt]` ở trên). Đã triển khai E1 theo đúng kế hoạch đã điều chỉnh — xem báo cáo E1 kèm số đo.**
+
+---
+
+## 6. Đợt E1.5 — sửa lỗi bố cục, tăng hiện diện màu chàm
+
+Bối cảnh: sau E1, trang vẫn bị đánh giá là nhạt nhòa — chàm chỉ xuất hiện ở Hero và Footer, còn toàn bộ phần giữa trang không có điểm neo màu, khác với Thái Hà/Fahasa/Nhã Nam (màu thương hiệu xuất hiện ở mọi màn hình khi cuộn). Đợt này KHÔNG thêm section mới — chỉ sửa 1 lỗi bố cục thật và tăng mật độ/độ hiện diện màu trong khung đã có.
+
+### 6.1 Lỗi bìa sách nổi bật (HomeTabs)
+
+Lỗi thật: bìa nổi bật từng có chiều rộng CỐ ĐỊNH (`w-28 sm:w-36`) trong khi ô lưới xung quanh co giãn liên tục theo viewport — ở nhiều mốc, bìa nổi bật còn NHỎ HƠN bìa thẻ thường (đo tay lúc điều tra: tỉ lệ thấp nhất ~0.77× quanh 639px).
+
+Sửa bằng 2 thay đổi cấu trúc (không chỉ đổi số đo):
+1. Bìa đổi từ px cố định sang **phần trăm chiều rộng thẻ** (`w-3/4` dọc dưới `md`, `md:w-1/2`, `lg:w-2/5`) — vì cả bìa lẫn ô lưới thường đều là hàm bậc nhất theo viewport, tỉ lệ giữa chúng gần như không đổi trong một tier thay vì trồi sụt.
+2. Thẻ nổi bật đổi từ "chiếm 2 cột cố định" sang **luôn chiếm trọn 1 hàng riêng** (`col-span-2 md:col-span-3 lg:col-span-4 2xl:col-span-5`) — lý do hình học, không phải thẩm mỹ: với span cố định 2 cột, để bìa đạt ≥1.4× thì bìa phải chiếm ~70-74% chiều rộng thẻ, không còn đủ chỗ cho cột chữ đọc được. Chiếm trọn hàng cho đủ không gian để vừa đạt tỉ lệ lớn vừa giữ cột chữ thoải mái, và tiện thể xoá luôn nguy cơ ô thường bị kéo dãn chung hàng.
+
+Bố cục dọc dưới `md` (không đủ ngang cho cả bìa to lẫn chữ), ngang từ `md` trở lên (`md:flex-row md:items-center` — `items-center` để chênh chiều cao bìa/chữ chia đều lên-xuống thay vì dồn hết xuống đáy cột chữ).
+
+**Tỉ lệ bìa nổi bật / bìa thường đo thực tế (mục tiêu tự đặt ≥1.4×, không phải số trong đề bài gốc):**
+
+| Viewport | Cột lưới | Bìa nổi bật | Bìa thường | Tỉ lệ |
+|---|---|---|---|---|
+| 375px | 2 | 226px | 159px | **1.42×** |
+| 768px | 3 | 332px | 219px | **1.52×** |
+| 1024px | 4 | 368px | 222px | **1.66×** |
+| 1600px | 5 | 540px | 259px | **2.09×** |
+
+Tất cả đều vượt mục tiêu, không chỉ vừa đủ.
+
+**Ô lưới mồ côi:** vì thẻ nổi bật giờ luôn chiếm trọn hàng riêng, số ô mồ côi chỉ còn phụ thuộc `restBooks.length` có chia hết cho số cột hiện tại. Lấy 13 sách (1 nổi bật + 12 thường) — 12 chia hết cho 2/3/4 (base/md/lg) nhưng dư 2 với 5 (2xl), nên ẩn đúng 2 cuốn cuối ở `2xl` (`2xl:hidden` từ chỉ số 11 trở đi). Đo thực tế số thẻ hiển thị: base 12/12, md 12/12, lg 12/12, 2xl 10/12 — cả 4 tier đều lấp kín hàng (12÷2=6, 12÷3=4, 12÷4=3, 10÷5=2), không ô nào mồ côi.
+
+### 6.2 Màu theo 5 danh mục cha
+
+5 token mới trong `@theme` (`app/globals.css`), tái dùng nguyên hex từ bảng `--color-cover-*` sẵn có (không thêm màu mới), tránh riêng `cover-5` (#333366) vì gần trùng chính `cham-700` — dùng sẽ nhầm "đây là màu thương hiệu" thay vì "đây là màu danh mục":
+
+| Danh mục | Token | Hex | Tương phản với chữ trắng (tiêu đề) | Tương phản (số đếm, trắng/70%) |
+|---|---|---|---|---|
+| Văn học | `--color-cat-van-hoc` | #5C2436 | 11.93:1 | 6.69:1 |
+| Kinh tế | `--color-cat-kinh-te` | #4B4A2A | 9.08:1 | 5.45:1 |
+| Tâm lý – Kỹ năng | `--color-cat-tam-ly-ky-nang` | #5B3358 | 10.20:1 | 5.94:1 |
+| Khoa học – Xã hội | `--color-cat-khoa-hoc-xa-hoi` | #34495A | 9.35:1 | 5.58:1 |
+| Manga – Light novel | `--color-cat-manga-light-novel` | #7A3B2E | 8.43:1 | 5.07:1 |
+
+Cả 10 giá trị đo lại bằng script thật trong trình duyệt (canvas + composite alpha, không chỉ tính tay) — thấp nhất 5.07:1, vẫn vượt AA (4.5:1). Áp dụng ở thẻ "Khám phá theo danh mục" (trang chủ, nền đặc màu danh mục + chữ trắng, thay hẳn nền trắng/viền mảnh cũ) và dải màu mỏng dưới `<h1>` trang `/sach?category=...` (chỉ hiện khi đang lọc theo 1 trong 5 danh mục cha, kể cả khi URL trỏ tới danh mục con — lấy màu của danh mục cha đầu chuỗi `categoryChain`).
+
+### 6.3 Thẻ tủ sách: nền nhuốm màu bìa + chồng bìa tràn mép
+
+Nền mỗi thẻ tủ sách đổi từ trắng/viền mảnh sang `color-mix(in srgb, var(--color-cover-N) 12%, white)`, với N lấy theo đúng hash chọn màu bìa của **cuốn đầu tiên trong tủ** (hàm `coverColorVarForSlug` mới trong `BookCover.tsx`, dùng lại đúng hash cũ — không phải màu chọn độc lập). Kết quả 3 tủ hiện có ra 3 sắc nền khác nhau, đều rất nhạt (gần trắng, kênh RGB đo được quanh 228-235/255) nên giữ nguyên chữ `ink-900`/`ink-600`, không cần tính lại tương phản (chênh lệch với nền trắng thuần không đáng kể).
+
+Chồng bìa kéo lệch `-mt-8 -ml-8` để tràn ra ngoài mép trên-trái của thẻ (đệm thẻ `p-5`/`p-7` nhỏ hơn 32px). Đo tràn thực tế: thẻ thường tràn 7px (trên) / 12px (trái), thẻ nổi bật tràn 4px cả hai chiều (đệm `p-7` lớn hơn nên tràn ít hơn — chấp nhận được, vẫn dương ở mọi thẻ). Tăng khoảng cách giữa các thẻ từ `space-y-4` lên `space-y-8` (đúng bằng độ tràn) để phần tràn của thẻ dưới không chạm vào thẻ trên — đo khoảng hở thực tế còn lại: 25px, không chồng lấn.
+
+### 6.4 Khối editorial: nền đặc + tiêu đề dẫn
+
+Đổi nền từ `surface-2` (tint nhạt) sang `ink-900` (đặc) — cùng họ với Footer. Thêm tiêu đề dẫn "Vì sao chúng mình chọn cuốn này" (chữ đứng — đây là lời NA Books nói, không phải trích dẫn của ai khác, nên không áp quy tắc nghiêng của E1) phía trên khối trích dẫn, dùng chính cơ chế `section-title` ở mục 6.5 nhưng đổi màu vạch sang `cham-50` (vạch mặc định `cham-700` gần như vô hình trên nền `ink-900` — hai màu tối tương đương độ sáng).
+
+Toàn bộ màu chữ trong khối đổi theo đúng quy ước đã có sẵn ở `Footer.tsx` (nền `ink-900` tương tự): chữ thường trắng/70%, link `cham-50` → trắng khi hover, ring focus trắng. Đo tương phản thật (composite kênh alpha qua canvas, vì `text-white/70` của Tailwind v4 tính ra `oklab(... / 0.7)` — không thể lấy giá trị RGB trực tiếp mà phải render rồi đọc lại pixel):
+
+| Phần tử | Màu (đã hoà nền) | Tương phản |
+|---|---|---|
+| Tiêu đề dẫn + trích dẫn (trắng) | rgb(255,255,255) | 16.81:1 |
+| Đoạn "Về X, trong tủ Y" (trắng/70%) | rgb(187,187,193) | 8.80:1 |
+| Link trong đoạn đó (cham-50) | rgb(238,240,247) | 14.76:1 |
+
+Tất cả vượt xa AA, phần lớn đạt cả AAA (7:1).
+
+### 6.5 Cơ chế neo màu chàm nhất quán (`section-title`) + phát hiện thêm khi kiểm tra
+
+Chọn **vạch trái 3px** (không phải gạch chân) làm cơ chế DUY NHẤT cho mọi tiêu đề section H1/H2 — gạch chân đã là ngôn ngữ riêng của tab đang chọn trong `HomeTabs`, dùng lại cho tiêu đề sẽ gây nhầm "đây cũng là một tab". Class `.section-title` dùng chung (`app/globals.css`), màu mặc định `cham-700`, đổi sang `cham-50` khi đặt trên nền tối (editorial). Áp dụng cho: "Khám phá theo danh mục", "Tủ sách tuyển chọn", tiêu đề dẫn editorial (trang chủ), và khối tiêu đề+số kết quả ở `/sach`. Ngoài ra: gạch chân tab đang chọn dày lên `2px → 3px`; viền phải cột lọc `/sach` đổi từ `border-line` (xám) sang `border-cham-700/15`; xác nhận `Pagination` (trang đang chọn nền chàm chữ trắng) và `CatalogFilters` (danh mục đang chọn nền `cham-50` chữ `cham-700`) đã đúng từ trước, không cần sửa.
+
+**Phát hiện quan trọng khi kiểm tra bằng số đo cuộn thực tế (không phải suy đoán):** sau khi áp hết các thay đổi trên, đo bằng script (lấy toạ độ Y tuyệt đối của mọi phần tử màu chàm, so với khung nhìn tại 5 mốc cuộn 0/800/1600/2400/3200px) thì **2 mốc 800px và 1600px KHÔNG có phần tử chàm nào trong khung nhìn** — đúng khoảng "Sách mới/Bán chạy" (thẻ nổi bật + lưới 12 bìa), vì bìa sách tuy nhiều màu nhưng không phải màu thương hiệu. Đây chính xác là lỗi chủ dự án mô tả, chỉ là tôi chưa sửa hết ở lần áp đầu tiên — vạch mảnh trên tiêu đề không đủ vì nó nằm NGOÀI khoảng bị thiếu.
+
+Sửa bằng cách thêm 1 vạch trái 3px nữa (`border-cham-700/35`, đệm `pl-6`), nhưng lần này bọc quanh **toàn bộ khối** Sách mới/Bán chạy (tab bar + thẻ nổi bật + lưới) thay vì chỉ riêng dòng tiêu đề — vạch chạy liên tục từ đầu khối tới cuối lưới, cùng cơ chế "vạch trái = neo chàm" nhưng kéo dài theo cả khối thay vì chỉ 1 dòng. Đo lại sau khi thêm: cả 5 mốc cuộn đều có phần tử chàm trong khung nhìn, kiểm tra chéo ở 2 kích thước khung nhìn khác nhau (1600×1000 và 1440×900, vì chiều cao trang đổi theo viewport):
+
+| Mốc cuộn | 1600×1000 | 1440×900 |
+|---|---|---|
+| 0px | Hero + 5 thẻ danh mục + vạch mới | Hero + 5 thẻ danh mục + vạch mới |
+| 800px | vạch mới (719-2642px) | vạch mới |
+| 1600px | vạch mới | vạch mới |
+| 2400px | vạch mới + nền editorial | vạch mới |
+| 3200px | nền Footer | vạch mới + nền Footer |
+
+### 6.6 Kiểm tra bắt buộc
+
+- `npm run build` + `npm run lint`: sạch, không lỗi TypeScript/ESLint.
+- Tràn ngang ở 375px: đo `document.body.scrollWidth - window.innerWidth` = 0px ở `/`, `/sach`, `/sach?category=van-hoc`, `/sach/nha-gia-kim`, `/tu-sach`.
+- Ràng buộc giữ nguyên: không thêm `will-change`, không thêm listener cuộn (vạch mới là CSS tĩnh, không JS), chỉ light mode, không dữ liệu giả.
+
+**Lưu ý thành thật về cách kiểm tra:** phần lớn số đo ở trên lấy qua script (đọc toạ độ/màu tính toán thật trong DOM, kể cả composite alpha qua canvas cho `text-white/70`) thay vì chỉ nhìn ảnh chụp — vì trong phiên làm việc này, cửa sổ trình duyệt bị hệ thống coi là "ẩn" (`Browser pane is currently hidden`) phần lớn thời gian, ảnh chụp trả về khung hình cũ/trắng trống không phản ánh đúng trạng thái thật. Đã xác nhận cấu trúc không vỡ (không phần tử kích thước 0, không chồng chữ lên bìa) bằng toạ độ `getBoundingClientRect`, và có 2 ảnh chụp sớm trong phiên (lúc cửa sổ còn hiện) xác nhận đúng: thẻ danh mục 5 màu rõ ràng, thẻ nổi bật bố cục ngang đúng như thiết kế.
+
+**Không làm E2.**

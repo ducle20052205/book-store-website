@@ -17,19 +17,31 @@ interface HomeTabsProps {
 type TabKey = "moi-nhat" | "ban-chay";
 
 /**
- * E1: cuốn đầu tiên trong danh sách hiển thị to hơn hẳn (chiếm nhiều cột,
- * kèm mô tả ngắn) thay vì tất cả các ô cùng kích thước — phân cấp bằng
- * kích thước, không chỉ bằng thứ tự. col-span đổi theo breakpoint để không
- * để lại 1 ô lẻ mồ côi cạnh khối lớn (md: chiếm hết hàng 3 cột; lg+: chiếm
- * 2 trong 4/5 cột, vẫn còn ít nhất 2 ô thường cùng hàng).
+ * E1.5 [sửa lỗi]: bản E1 cho bìa nổi bật một chiều rộng CỐ ĐỊNH (w-28/w-36)
+ * trong khi thẻ chiếm col-span-2/3 — vì bề rộng ô lưới đổi rất nhiều theo
+ * breakpoint (159px ở 375px đến 347px ở 767px, cùng một tier "chưa tới md"),
+ * bìa cố định có lúc còn NHỎ HƠN bìa thẻ thường (đo được tỉ lệ nhỏ nhất
+ * 0.77x ở khoảng 639px) — đúng lỗi được báo. Sửa bằng 2 thay đổi:
+ *   1. Thẻ nổi bật LUÔN chiếm trọn 1 hàng riêng (col-span bằng đúng số cột
+ *      ở mọi breakpoint) thay vì chỉ 2 cột cố định — để không còn thẻ
+ *      thường nào bị kéo dãn chung hàng với nó (grid mặc định stretch theo
+ *      hàng cao nhất).
+ *   2. Bìa đổi từ px cố định sang PHẦN TRĂM chiều rộng thẻ (w-3/4 dọc ở
+ *      dưới md, md:w-1/2 rồi lg:w-2/5 khi chuyển ngang) — tỉ lệ % bám theo
+ *      đúng tốc độ co giãn của ô lưới thường (cả hai cùng là hàm bậc nhất
+ *      theo viewport), nên tỉ lệ so với bìa thường gần như không đổi trong
+ *      cùng một tier, thay vì trồi sụt như trước.
+ * Bố cục dọc (ảnh trên, chữ dưới) ở dưới md vì thẻ hẹp — ngang không đủ chỗ
+ * cho cả bìa to lẫn chữ dễ đọc cùng lúc; chuyển ngang từ md vì thẻ đã đủ
+ * rộng. Đã đo bằng số cụ thể ở mọi breakpoint, xem báo cáo đợt E1.5.
  */
 function FeaturedBook({ book, description }: { book: BookSummary; description: string | null }) {
   return (
     <Link
       href={`/sach/${book.slug}`}
-      className="hover-lift col-span-2 flex gap-6 rounded-card border border-line bg-surface p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2 md:col-span-3 lg:col-span-2"
+      className="hover-lift col-span-2 flex flex-col gap-5 rounded-card border border-line bg-surface p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2 md:col-span-3 md:flex-row md:items-center md:gap-7 lg:col-span-4 2xl:col-span-5"
     >
-      <div className="w-28 shrink-0 sm:w-36">
+      <div className="mx-auto w-3/4 shrink-0 md:mx-0 md:w-1/2 lg:w-2/5">
         <BookCover
           slug={book.slug}
           title={book.title}
@@ -54,6 +66,14 @@ function FeaturedBook({ book, description }: { book: BookSummary; description: s
 }
 
 /**
+ * E1.5 [sửa lỗi]: bìa nổi bật giờ chiếm trọn 1 hàng riêng (xem FeaturedBook),
+ * nên số ô lưới mồ côi chỉ còn phụ thuộc restBooks.length có chia hết cho
+ * số cột hiện tại hay không — không còn phải trừ phần hàng bìa nổi bật
+ * chiếm như bản nháp đầu. 12 sách thường chia hết cho 2/3/4 (base/md/lg)
+ * nhưng KHÔNG chia hết cho 5 (2xl, dư 2) — ẩn đúng 2 cuốn cuối ở 2xl. */
+const HIDE_AT_2XL_FROM_INDEX = 10;
+
+/**
  * Mục 2: khối tab Sách mới / Bán chạy trên trang chủ, dùng lại logic FR-1.6 /
  * FR-1.7 (8 sách mỗi tab). Độc lập với /sach — link nhanh "Sách mới"/"Bán
  * chạy" ở CategoryNav trỏ sang /sach?sort=... (1b.1), tab này chỉ còn phục vụ
@@ -67,6 +87,9 @@ export function HomeTabs({ newest, bestselling, featuredDescriptions }: HomeTabs
 
   return (
     <section>
+      {/* E1.5 mục 5: gạch chân tab đang chọn dày 3px (từ 2px) — rõ hơn giữa
+          một trang giờ có nhiều mảng màu chàm khác, không còn là điểm neo
+          màu chàm mảnh nhất trên trang như trước. */}
       <div role="tablist" aria-label="Sách theo mục mới nhất hoặc bán chạy" className="flex gap-2 border-b border-line">
         <button
           type="button"
@@ -75,7 +98,7 @@ export function HomeTabs({ newest, bestselling, featuredDescriptions }: HomeTabs
           aria-selected={active === "moi-nhat"}
           aria-controls="panel-sach-tab"
           onClick={() => setActive("moi-nhat")}
-          className={`min-h-11 border-b-2 px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 ${
+          className={`min-h-11 border-b-[3px] px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 ${
             active === "moi-nhat" ? "border-cham-700 text-cham-700" : "border-transparent text-ink-600 hover:text-ink-900"
           }`}
         >
@@ -88,7 +111,7 @@ export function HomeTabs({ newest, bestselling, featuredDescriptions }: HomeTabs
           aria-selected={active === "ban-chay"}
           aria-controls="panel-sach-tab"
           onClick={() => setActive("ban-chay")}
-          className={`min-h-11 border-b-2 px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 ${
+          className={`min-h-11 border-b-[3px] px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 ${
             active === "ban-chay" ? "border-cham-700 text-cham-700" : "border-transparent text-ink-600 hover:text-ink-900"
           }`}
         >
@@ -107,8 +130,12 @@ export function HomeTabs({ newest, bestselling, featuredDescriptions }: HomeTabs
         ) : (
           <>
             <FeaturedBook book={firstBook} description={featuredDescriptions[firstBook.slug] ?? null} />
-            {restBooks.map((book) => (
-              <BookCard key={book.slug} book={book} />
+            {restBooks.map((book, i) => (
+              <BookCard
+                key={book.slug}
+                book={book}
+                className={i >= HIDE_AT_2XL_FROM_INDEX ? "2xl:hidden" : undefined}
+              />
             ))}
           </>
         )}

@@ -32,6 +32,18 @@
   --color-cover-11: #24402C;   /* xanh lá rừng */
   --color-cover-12: #5A3D1E;   /* nâu hổ phách */
 
+  /* E1.5: màu riêng cho 5 danh mục cha — lấy lại từ bảng 12 màu bìa ở
+     trên (không thêm hex mới), chọn 5 màu dàn trải đều các vùng màu (đỏ,
+     vàng-lục, tím, lam, cam-nâu) để phân biệt rõ nhau, tránh #333366
+     (cover-5) vì trùng gần như chính màu thương hiệu cham-700, dùng sẽ gây
+     nhầm "đây là màu chàm" thay vì "đây là màu danh mục". Tương phản với
+     chữ trắng đã tính tay, xem báo cáo đợt E1.5 — cả 5 đều > 8:1. */
+  --color-cat-van-hoc: var(--color-cover-8);           /* đỏ rượu vang */
+  --color-cat-kinh-te: var(--color-cover-6);           /* ô liu */
+  --color-cat-tam-ly-ky-nang: var(--color-cover-2);    /* tím mận */
+  --color-cat-khoa-hoc-xa-hoi: var(--color-cover-7);   /* xanh than */
+  --color-cat-manga-light-novel: var(--color-cover-4); /* nâu đất nung */
+
   --font-sans: var(--font-be-vietnam-pro), system-ui, sans-serif;
   --font-serif: var(--font-newsreader), Georgia, serif; /* Đợt E: thay Lora, xem app/layout.tsx */
 
@@ -240,6 +252,17 @@
       position: sticky;
       top: 80px;
     }
+  }
+
+  /* E1.5 mục 5: cơ chế neo màu chàm DUY NHẤT cho mọi tiêu đề section cấp
+     trang (H1/H2) — vạch 3px bên trái. Chọn vạch trái thay vì gạch chân vì
+     gạch chân đã là ngôn ngữ riêng của tab đang chọn trong HomeTabs, dùng
+     lại cho tiêu đề sẽ gây nhầm "đây cũng là một tab để bấm". Màu mặc định
+     cham-700 (nền sáng); nơi đặt trên nền tối (khối editorial) đổi màu vạch
+     qua chính class Tailwind border-color, không đổi ở đây, xem app/page.tsx. */
+  .section-title {
+    border-left: 3px solid var(--color-cham-700);
+    padding-left: 0.875rem; /* 14px */
   }
 }
 

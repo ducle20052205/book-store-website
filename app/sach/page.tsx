@@ -9,6 +9,7 @@ import { Pagination } from "@/components/Pagination";
 import { SortSelect } from "@/components/SortSelect";
 import { TrackEvent } from "@/components/TrackEvent";
 import { type ParsedCatalogParams, countActiveFilters, parseCatalogSearchParams } from "@/lib/catalog";
+import { categoryColorClasses } from "@/lib/categoryColors";
 import { type CategoryBasic, getCategoryChainBySlug, getCategoryTree, searchBooks } from "@/lib/queries";
 
 async function resolveCatalogContext(
@@ -48,6 +49,9 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
   ]);
 
   const activeFilterCount = countActiveFilters(parsed);
+  // E1.5 mục 2: màu theo danh mục CHA (đầu chuỗi categoryChain), kể cả khi
+  // đang lọc theo danh mục con — chỉ 5 danh mục cha có màu riêng.
+  const topCategorySlug = categoryChain[0]?.slug;
 
   return (
     <div className="container-page py-8">
@@ -67,9 +71,25 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
         từ header xuống tiêu đề không quá 32px.
       */}
       <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-3">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h1 className="font-serif text-h1 text-ink-900">{heading}</h1>
-          <p className="text-sm text-ink-600">{totalCount} cuốn sách</p>
+        {/*
+          E1.5 mục 5: section-title (vạch chàm trái) bọc quanh CẢ khối tiêu
+          đề + số kết quả + dải màu danh mục bên dưới — để vạch chạy hết
+          chiều cao khối, không chỉ riêng dòng H1. mục 2: dải màu ngắn dưới
+          H1 chỉ hiện khi đang lọc theo 1 trong 5 danh mục cha (không hiện ở
+          "Tất cả sách" / kết quả tìm kiếm chữ, vì khi đó không có danh mục
+          nào đang chọn để tô màu).
+        */}
+        <div className="section-title">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h1 className="font-serif text-h1 text-ink-900">{heading}</h1>
+            <p className="text-sm text-ink-600">{totalCount} cuốn sách</p>
+          </div>
+          {topCategorySlug && (
+            <div
+              aria-hidden="true"
+              className={`mt-2 h-1 w-12 rounded-pill ${categoryColorClasses(topCategorySlug).bg}`}
+            />
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -103,8 +123,13 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
           E1: viền phải mảnh tách cột lọc khỏi lưới sách — trước chỉ dựa
           vào khoảng trắng gap-10, giờ thêm 1 đường kẻ để ranh giới rõ hơn
           là chỉ dựa vào mắt đo khoảng cách.
+
+          E1.5 mục 5: viền đổi từ border-line (xám trung tính) sang
+          cham-700/15 — viền vẫn rất mảnh/nhạt (15% alpha) nên không cạnh
+          tranh với nội dung, nhưng là một điểm neo màu chàm nữa thay vì
+          trung tính, nhất quán với "chàm xuất hiện ở mọi phần trang".
         */}
-        <aside className="filter-sidebar hidden lg:block lg:border-r lg:border-line lg:pr-8">
+        <aside className="filter-sidebar hidden lg:block lg:border-r lg:border-cham-700/15 lg:pr-8">
           <CatalogFilters categories={categories} current={parsed} />
         </aside>
 

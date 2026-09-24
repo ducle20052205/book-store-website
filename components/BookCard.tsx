@@ -24,7 +24,7 @@ interface BookCardBook {
  * sách/tác giả. Chuyển hẳn ra ngoài bìa, đặt ngay trên tên sách, không còn
  * chồng lên bất kỳ chữ nào trên bìa ở cả 4 biến thể.
  */
-export function BookCard({ book }: { book: BookCardBook }) {
+export function BookCard({ book, className }: { book: BookCardBook; className?: string }) {
   const percentOff =
     book.discountPrice != null && book.discountPrice < book.price
       ? getPercentOff(book.price, book.discountPrice)
@@ -33,7 +33,7 @@ export function BookCard({ book }: { book: BookCardBook }) {
   return (
     <Link
       href={`/sach/${book.slug}`}
-      className="book-card-lift group block rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
+      className={`book-card-lift group block rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2 ${className ?? ""}`}
     >
       <div className="relative">
         <BookCover

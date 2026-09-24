@@ -34,6 +34,18 @@ function colorClassForSlug(slug: string): string {
   return COVER_COLORS[hashString(slug) % COVER_COLORS.length];
 }
 
+/**
+ * E1.5: dùng lại đúng hash chọn màu bìa (không tách rời) để nơi khác (thẻ
+ * tủ sách, xem app/page.tsx) tô nền theo màu bìa của cuốn đầu tiên trong
+ * tủ — trả về tên biến CSS thô (vd. "--color-cover-3") để dùng trong
+ * color-mix(), không phải class Tailwind vì giá trị nền ở đó tính động
+ * (làm nhạt 12%), Tailwind không tạo được utility cho tổ hợp động này.
+ */
+export function coverColorVarForSlug(slug: string): string {
+  const index = (hashString(slug) % COVER_COLORS.length) + 1;
+  return `--color-cover-${index}`;
+}
+
 const titleClass =
   "line-clamp-4 w-full font-serif font-semibold leading-snug text-[clamp(0.75rem,9cqw,1.125rem)]";
 const authorClass =
