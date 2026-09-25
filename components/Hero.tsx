@@ -18,7 +18,12 @@ export function Hero({ collection }: { collection: FeaturedCollection | null }) 
 
   return (
     <section className="bg-cham-700">
-      <div className="container-page flex flex-col gap-8 pt-10 pb-8 md:flex-row md:items-center">
+      {/*
+        Đợt F [F2.5]: min-h-[420px] trên desktop (chưa có ràng buộc chiều
+        cao nào trước đây — hero cao/thấp hoàn toàn theo nội dung). Giữ
+        md:items-center để nội dung căn giữa dọc trong khoảng cao mới.
+      */}
+      <div className="container-page flex flex-col gap-8 pt-10 pb-8 md:min-h-[420px] md:flex-row md:items-center">
         <div className="flex-1 space-y-4">
           {/*
             E1 [Điều chỉnh sau duyệt]: bỏ nhãn "Tuyển chọn" phía trên tiêu
@@ -37,12 +42,22 @@ export function Hero({ collection }: { collection: FeaturedCollection | null }) 
           </Link>
         </div>
 
+        {/*
+          Đợt F [F2.5]: cụm bìa trước đây dừng ở md:w-28 (112px) tại mọi
+          màn hình từ md trở lên — trên màn rộng (>=1536px, khi cột chữ bên
+          trái đã có nhiều chỗ hơn) cụm bìa vẫn nhỏ y hệt, để trống quá
+          nhiều bên phải so với cột chữ. Bỏ md:flex-1 (từng khiến cụm bìa
+          CÙNG co giãn chia đều với cột chữ nhưng bản thân bìa vẫn nhỏ, chỉ
+          tạo khoảng trống rỗng trong chính cột đó) — giờ cụm bìa rộng bằng
+          đúng nội dung của nó (shrink-0, không flex-1), phóng to dần qua
+          lg/xl/2xl để tự lấp khoảng trống thay vì để flexbox chia cột rỗng.
+        */}
         {collection.books.length > 0 && (
-          <div className="flex items-end justify-center -space-x-8 md:flex-1 md:justify-end">
+          <div className="flex items-end justify-center -space-x-8 md:justify-end">
             {collection.books.slice(0, 4).map((book, i) => (
               <div
                 key={book.slug}
-                className={`w-20 shrink-0 transition-transform sm:w-24 md:w-28 ${HERO_STACK_OFFSETS[i % HERO_STACK_OFFSETS.length]}`}
+                className={`w-20 shrink-0 transition-transform sm:w-24 md:w-28 lg:w-32 xl:w-40 2xl:w-48 ${HERO_STACK_OFFSETS[i % HERO_STACK_OFFSETS.length]}`}
               >
                 <BookCover
                   slug={book.slug}

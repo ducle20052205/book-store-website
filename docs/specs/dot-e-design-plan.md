@@ -308,4 +308,76 @@ Sửa bằng cách thêm 1 vạch trái 3px nữa (`border-cham-700/35`, đệm 
 
 **Lưu ý thành thật về cách kiểm tra:** phần lớn số đo ở trên lấy qua script (đọc toạ độ/màu tính toán thật trong DOM, kể cả composite alpha qua canvas cho `text-white/70`) thay vì chỉ nhìn ảnh chụp — vì trong phiên làm việc này, cửa sổ trình duyệt bị hệ thống coi là "ẩn" (`Browser pane is currently hidden`) phần lớn thời gian, ảnh chụp trả về khung hình cũ/trắng trống không phản ánh đúng trạng thái thật. Đã xác nhận cấu trúc không vỡ (không phần tử kích thước 0, không chồng chữ lên bìa) bằng toạ độ `getBoundingClientRect`, và có 2 ảnh chụp sớm trong phiên (lúc cửa sổ còn hiện) xác nhận đúng: thẻ danh mục 5 màu rõ ràng, thẻ nổi bật bố cục ngang đúng như thiết kế.
 
+---
+
+## 7. Đợt F — hoàn thiện hệ thống thị giác
+
+Chẩn đoán từ ảnh chụp toàn trang thu nhỏ 33%: các khối không lấp đầy chiều ngang của chính nó, và có 2 họ màu tối khác nhau (cham-700 ở Hero, ink-900 ở Footer/editorial).
+
+### 7.1 F1 — Hệ màu và lớp nền
+
+Thêm `--color-cham-900: #171D40` (cùng hue/sắc với cham-700, chỉ tối hơn — không ngả tím như ink-900 cũ), dùng cho Footer, khối editorial, và 2 lớp phủ mờ (backdrop mega-menu, mobile filter sheet) — `ink-900` từ nay chỉ dùng cho chữ. Tương phản chữ trắng trên cham-900: **16.33:1**.
+
+`--color-paper` đổi từ `#FBFAF7` (chênh với surface trắng chỉ ~4.4% độ sáng tương đối) sang `#EDE6D9` — chênh mới **~20.4%**, nhìn thấy rõ khi đặt cạnh thẻ trắng. `--color-surface` giữ nguyên trắng.
+
+**Hệ quả bắt buộc phải sửa theo (paper tối hơn kéo một loạt cặp màu/chữ tụt dưới AA):**
+
+| Token | Cũ | Mới | Lý do | Tương phản mới trên paper |
+|---|---|---|---|---|
+| `--color-ink-400` | #6B6F85 | #5F6379 | Tên tác giả (BookCard), giá gạch ngang (Price), placeholder ô tìm kiếm — nằm thẳng trên paper, không có nền surface riêng | 4.77:1 |
+| `--color-sale` | #C2362B | #BD3125 | Giá giảm giá (Price) — đo được 4.39:1 trên paper mới, dưới 4.5 | 4.66:1 |
+| `--color-success` | #2E7D4F | #266E48 | "Còn hàng" (trang chi tiết sách) — đo được 4.07:1 | 4.97:1 |
+
+Không đổi `--color-danger` (chưa dùng ở đâu trong code, không có cặp nào thực sự bị ảnh hưởng).
+
+Đã quét lại **toàn bộ text/bg pair** bằng script (composite alpha qua canvas, không chỉ tính tay) trên `/`, `/sach`, `/sach?category=van-hoc`, `/sach/nha-gia-kim`, `/tu-sach`, `/tu-sach/[slug]` — sau 3 sửa trên, **0 cặp nào còn dưới ngưỡng AA**.
+
+### 7.2 F2 — Sửa tỉ lệ từng khối
+
+**F2.1 Thẻ sách nổi bật** — đây là điểm có mâu thuẫn nội tại trong spec, chứng minh bằng số đo (không phải đoán): thử giữ "chiếm trọn hàng" (cách E1.5 đã làm để đạt >=1.4x) và ép bìa vào trần 32-38% cùng lúc, đo tại 1440px ra đúng cả hai (35.8% trần, 1.51x sàn) NHƯNG diện tích trống đo được **49.4%** — vì cột chữ phải "căn giữa theo chiều dọc" (yêu cầu riêng, không phải lấp đầy) trong khi bìa 35% của 1 thẻ rộng hết hàng cao tới ~700px, còn nội dung chữ tự nhiên chỉ cao ~250-260px. Giải phương trình cho mọi chiều rộng thẻ: diện tích trống nhỏ nhất về mặt đại số là ~15.7%, nhưng chỉ đạt được khi bìa co lại còn ~90px — nhỏ hơn cả bìa thường, phá luôn sàn 1.4x. **Kết luận: sàn 1.4x và trần diện tích trống 15% không thể cùng thoả khi chữ phải căn giữa — đây là mâu thuẫn của chính đề bài, không phải lỗi triển khai.**
+
+Ưu tiên đã chọn (đúng theo chỉ dẫn "nếu xung đột thì giảm chiều cao thẻ" của spec): đổi thẻ từ "chiếm trọn hàng" sang **luôn `col-span-3`** (không tăng theo lưới ở lg/2xl) — giữ chiều rộng thẻ ổn định hơn qua các breakpoint, kéo diện tích trống xuống còn ~35-43%, tỉ lệ bìa còn ~1.12-1.22x (dưới sàn nhưng luôn > 1, tức luôn to hơn bìa thường, không bằng/nhỏ hơn). Quan trọng hơn: lỗi GỐC trong ảnh chụp ("mảng trống lớn dồn hẳn góc dưới") đã sửa dứt điểm bằng `justify-center` — trống giờ chia đều 2 phía trên/dưới, không còn dồn một góc.
+
+| Breakpoint | Bìa/thẻ | Bìa/bìa thường | Diện tích trống |
+|---|---|---|---|
+| 375px (mobile, dọc) | tối đa 200px (đúng spec) | — | — |
+| 768px | 34.7% | 1.12x | 37.0% |
+| 1440px | 35.5% | 1.12x | 43.0% |
+| 1600px | 35.1% | 1.12x | 39.0% |
+
+Thêm `items-start` vào lưới cha — thẻ `col-span-3` để lại 1 ô trống cùng hàng ở lg (4 cột) khiến 1 thẻ thường vô tình chung hàng với thẻ nổi bật; nếu không có `items-start`, grid mặc định `stretch` sẽ kéo dãn thẻ thường đó theo chiều cao thẻ nổi bật — đã xác nhận thẻ thường trong hàng đó cao đúng bằng thẻ ở hàng khác (558-561px), không bị kéo dãn.
+
+Thêm nhãn danh mục (màu theo `categoryColorClasses`, tái dùng token đợt E1.5) và dòng "Xem chi tiết →" — viết dạng `<span>` thường, không lồng `<Link>` thứ hai (link lồng link là HTML không hợp lệ).
+
+Bỏ cơ chế ẩn sách ở 2xl (`HIDE_AT_2XL_FROM_INDEX` của E1.5) — không còn cần thiết vì thẻ nổi bật không còn chiếm trọn hàng ở 2xl, phép chia ô mồ côi đổi khác (xem đoạn dưới).
+
+**F2.2 Dải danh mục** — chiều cao cố định `h-[112px]` (giữa khoảng 104-120px), flex căn giữa dọc thay vì cao theo nội dung. Hover đổi từ `.hover-lift` dùng chung (nâng 3px + đổi shadow) sang nâng đúng 2px chỉ bằng `transform` (`hover:-translate-y-0.5`), không đổi kích thước — đã xác nhận `transition-property` chỉ gồm `transform/translate/scale/rotate`, width/height cố định 262.5×112 không đổi.
+
+**F2.3 Khối editorial** — bìa tăng từ 160/192px lên `w-48 md:w-56` (192/224px, trong khoảng 200-240 yêu cầu ở desktop). Bỏ hẳn `max-w-[68ch]` trên blockquote — đây chính là nguyên nhân "gần nửa bên phải trống trơn": cột phải tuy `flex-1` (đủ chỗ) vẫn trống vì CHỮ bị chặn 68 ký tự/dòng. Đo lại độ lấp đầy ở 1600px: cột chữ chiếm **100.1%** chiều rộng hàng (từ mép trái tới mép phải) — vượt xa mức tối thiểu 75%. Thêm dòng tác giả (trước đây thiếu hẳn, chỉ có tên sách + tủ sách).
+
+**F2.4 Thẻ tủ sách** — đổi từ danh sách thẻ ngang (mỗi thẻ 1 hàng dài) sang lưới `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`, mỗi thẻ dọc: dải bìa tràn ngang phía trên (`flex` + `basis-1/3`/`basis-1/4` + overlap `-ml-6`, đo được lấp 91-96% chiều rộng thẻ), tên + mô tả bên dưới. Tủ nổi bật `sm:col-span-2`. Nền nhuốm màu bìa cuốn đầu tăng từ 12% lên **18%** — đo lại chênh sáng với paper mới (đậm hơn hẳn bản E1.5): ở 12% chênh chỉ còn ~2-3%, dưới ngưỡng 4% spec yêu cầu; ở 18% cả 3 tủ hiện có đều đạt >=9.5% chênh sáng.
+
+Với chỉ 3 tủ sách hiện có (1 nổi bật chiếm 2 cột + 2 tủ thường 1 cột), hàng cuối chỉ có 1 thẻ trong lưới 3 cột — để trống 2 ô cạnh nó (~934px ở 1440px). Đây là ô lưới KHÔNG có thẻ, không phải khoảng trống bên trong 1 khối — tự hết khi có thêm tủ sách thứ 4, không sửa thêm ở đợt này.
+
+**F2.5 Hero** — thêm `md:min-h-[420px]` (đo thực tế đúng 420px). Cụm bìa xếp chồng bỏ `md:flex-1` (từng khiến cụm bìa CHIA ĐỀU cột với chữ nhưng bản thân bìa vẫn nhỏ, chỉ tạo khoảng trống rỗng trong chính cột đó), phóng to dần `lg:w-32 xl:w-40 2xl:w-48`. Đo khoảng trống bên phải cụm bìa: **1.3-1.4%** ở 1440-1600px — vượt xa yêu cầu "không quá 20%".
+
+### 7.3 F3 — Nhịp và khung
+
+Xác nhận mọi section đều dùng `.container-page` (không section nào tự đặt chiều rộng riêng — các `max-w-[Nch]` còn lại trong code chỉ là giới hạn độ dài dòng chữ, không phải chiều rộng khối).
+
+Padding trong của 2 section tối tăng lên >=72px, phần chênh chuyển từ section sáng liền kề để giữ nguyên tổng 3 mức nhịp 56/88/128px đã chốt (không thêm khoảng đệm mới ở ranh giới màu):
+
+| Ranh giới | Trước | Sau | Tổng |
+|---|---|---|---|
+| Sách mới → Editorial | 64 + 64 | 56 + 72 | 128px (không đổi) |
+| Editorial → Tủ sách | 48 + 40 | 72 + 16 | 88px (không đổi) |
+| Tủ sách → Footer | 56 + 48 | 32 + 72 | 104px (không đổi) |
+
+### 7.4 Kiểm tra bắt buộc
+
+- `npm run build` + `npm run lint`: sạch.
+- Tràn ngang 375px: 0px ở `/`, `/sach`, `/sach?category=van-hoc`, `/sach/nha-gia-kim`, `/tu-sach`.
+- **3 mảng trống lớn nhất còn lại** (đo bằng script, chỉ tính trống BÊN TRONG một khối, không tính ô lưới thiếu thẻ): (1) và (2) là khoảng trên/dưới cột chữ trong thẻ sách nổi bật — **148px mỗi bên**, xuất hiện giống hệt nhau ở cả 2 tab (Sách mới/Bán chạy) vì cùng 1 component; đây là hệ quả trực tiếp của mâu thuẫn "sàn 1.4x vs trần diện tích trống" đã chứng minh ở mục F2.1, không tìm được cách xoá hẳn mà vẫn giữ đủ 2 ràng buộc kia. Không tìm thấy mảng trống thứ 3 nào vượt 120px — khối editorial (~97.5px), Hero (~21px), dải danh mục và thẻ tủ sách đều dưới ngưỡng.
+- Giữ nguyên ràng buộc cũ: chỉ animate `transform`/`opacity`, không `will-change`, không thêm listener cuộn, không dữ liệu giả.
+
 **Không làm E2.**

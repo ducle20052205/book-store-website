@@ -161,18 +161,40 @@ export async function getNewestBooks(limit = 8): Promise<BookSummary[]> {
   return (data ?? []).map(mapBookRow);
 }
 
+export interface FeaturedBookExtra {
+  description: string | null;
+  categoryName: string | null;
+  categorySlug: string | null;
+}
+
 /**
  * Đợt E1: cuốn đầu tiên trong khối "Sách mới"/"Bán chạy" ở trang chủ hiển
  * thị to hơn kèm mô tả ngắn — `search_books` (RPC, dùng cho tab Bán chạy)
  * không trả `description`, sửa RPC chỉ để thêm 1 cột không đáng công một
  * migration. Lấy riêng qua bảng `books` theo đúng slug cần, chỉ 1-2 slug
  * mỗi lần gọi (chỉ dùng cho mục đầu tiên của mỗi tab).
+ *
+ * Đợt F [F2.1]: thẻ nổi bật giờ cần thêm nhãn danh mục — lấy kèm luôn
+ * category_id rồi đi lên tới danh mục CHA (`getCategoryChainById`, cùng
+ * hàm /sach dùng để tô màu dải danh mục) để nhãn dùng đúng 1 trong 5 màu
+ * danh mục đã có, không phải danh mục con (không có màu riêng).
  */
-export async function getBookDescriptionsBySlug(slugs: string[]): Promise<Record<string, string | null>> {
+export async function getFeaturedBookExtrasBySlug(slugs: string[]): Promise<Record<string, FeaturedBookExtra>> {
   if (slugs.length === 0) return {};
-  const { data } = await supabase.from("books").select("slug, description").in("slug", slugs);
-  const map: Record<string, string | null> = {};
-  for (const row of data ?? []) map[row.slug] = row.description;
+  const { data } = await supabase.from("books").select("slug, description, category_id").in("slug", slugs);
+  const rows = data ?? [];
+  const map: Record<string, FeaturedBookExtra> = {};
+  await Promise.all(
+    rows.map(async (row) => {
+      const chain = await getCategoryChainById(row.category_id);
+      const parent = chain[0];
+      map[row.slug] = {
+        description: row.description,
+        categoryName: parent?.name ?? null,
+        categorySlug: parent?.slug ?? null,
+      };
+    }),
+  );
   return map;
 }
 

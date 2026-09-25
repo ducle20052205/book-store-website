@@ -75,7 +75,7 @@ export function CategoryNav({ categories }: { categories: CategoryNode[] }) {
             type="button"
             aria-label="Đóng danh mục"
             onClick={() => setOpen(false)}
-            className="fixed inset-0 cursor-default bg-ink-900/20"
+            className="fixed inset-0 cursor-default bg-cham-900/20"
           />
           <div id={panelId} className="absolute inset-x-0 top-full border-b border-line bg-surface shadow-sm">
             {/*

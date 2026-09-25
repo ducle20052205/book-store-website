@@ -10,11 +10,12 @@ const GITHUB_REPO_URL = "https://github.com/ducle20052205/book-store-website";
  * vào vùng bấm (padding trên phần tử inline không đảm bảo điều này ở mọi
  * trình duyệt).
  *
- * D: nền footer đổi sang ink-900 — link dùng cham-50 (sắc xanh rất nhạt,
- * vẫn là màu có sẵn trong bảng, không phải trắng thuần) để phân biệt với
- * chữ thường (trắng mờ, xem các đoạn text bên dưới), sáng hẳn lên thành
- * trắng khi hover. Ring focus đổi sang trắng vì cham-600 gốc không đủ
- * tương phản trên nền ink-900.
+ * D: nền footer đổi sang tối (F: cham-900, trước là ink-900 — xem đợt F
+ * mục F1.1) — link dùng cham-50 (sắc xanh rất nhạt, vẫn là màu có sẵn
+ * trong bảng, không phải trắng thuần) để phân biệt với chữ thường (trắng
+ * mờ, xem các đoạn text bên dưới), sáng hẳn lên thành trắng khi hover.
+ * Ring focus đổi sang trắng vì cham-600 gốc không đủ tương phản trên nền
+ * tối.
  */
 const linkClass =
   "block rounded-control py-3 text-cham-50 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
@@ -28,8 +29,8 @@ export async function Footer() {
   const [categories, collections] = await Promise.all([getCategoryTree(), getCollections()]);
 
   return (
-    <footer className="mt-auto bg-ink-900">
-      <div className="container-page py-12">
+    <footer className="mt-auto bg-cham-900">
+      <div className="container-page py-18">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <p className="font-serif text-lg font-semibold text-white">NA Books</p>

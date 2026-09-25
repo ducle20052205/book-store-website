@@ -1,19 +1,48 @@
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #FBFAF7;      /* nền trang */
+  /* Đợt F [F1.2]: paper đậm hơn rõ rệt (trước #FBFAF7 — chênh với surface
+     chỉ ~4% độ sáng tương đối, gần như không phân biệt được khi đặt cạnh
+     nhau). Giữ nguyên sắc ấm (kênh đỏ > lục > lam), chỉ tối thêm — chênh
+     mới với surface ~20% độ sáng tương đối (đo bằng luminance WCAG), xem
+     báo cáo đợt F. surface giữ nguyên trắng thuần theo đúng spec F1.2. */
+  --color-paper: #EDE6D9;      /* nền trang */
   --color-surface: #FFFFFF;    /* nền thẻ, header */
   --color-line: #E4E2DC;       /* border hairline */
   --color-ink-900: #1A1C2E;    /* chữ chính */
   --color-ink-600: #4A4E66;    /* chữ phụ */
-  --color-ink-400: #6B6F85;    /* metadata: tác giả, giá gốc */
+  /* Đợt F [F1.2, hệ quả bắt buộc]: paper tối hơn làm ink-400 cũ (#6B6F85)
+     tụt dưới 4.5:1 ở mọi nơi ink-400 nằm trực tiếp trên nền paper (tên tác
+     giả trong BookCard, giá gạch ngang trong Price, ô tìm kiếm header —
+     những chỗ này không có nền surface riêng, ăn thẳng nền paper). Hạ nhẹ
+     ink-400 để lấy lại >= 4.5:1 trên paper mới, vẫn giữ đúng vai trò "nhạt
+     hơn ink-600" — không đổi từng chỗ dùng riêng lẻ vì dễ sót, đổi thẳng
+     token để chắc chắn nhất quán toàn site. Xem báo cáo đợt F mục F1 cho
+     bảng tương phản đầy đủ. */
+  --color-ink-400: #5F6379;    /* metadata: tác giả, giá gốc */
   --color-cham-700: #26306B;   /* màu thương hiệu: nút chính, link, header phụ */
   --color-cham-600: #3A4585;   /* hover */
   --color-cham-50: #EEF0F7;    /* nền tint: tab đang chọn, section nổi bật */
+  /* Đợt F [F1.1]: hợp nhất họ màu tối — trước đây Hero dùng cham-700 (chàm)
+     còn Footer/editorial dùng ink-900 (#1A1C2E, xanh đen ngả tím, khác họ
+     hẳn) khiến trang có 2 "kiểu tối" khác nhau. cham-900 cùng sắc/tông với
+     cham-700 (chỉ tối hơn — xem HSL trong báo cáo đợt F), dùng cho MỌI nền
+     đặc tối (Footer, editorial, lớp phủ mờ). ink-900 quay lại đúng vai trò
+     gốc: chỉ dùng cho CHỮ, không còn dùng làm nền ở đâu nữa. */
+  --color-cham-900: #171D40;   /* nền tối: Footer, editorial, lớp phủ mờ */
   --color-nghe-400: #D9A33A;   /* CHỈ badge giảm giá + số đếm giỏ hàng */
-  --color-sale: #C2362B;       /* giá bán khi có giảm giá */
+  /* Đợt F [F1.2, hệ quả bắt buộc]: sale cũ (#C2362B) đo được 4.39:1 trên
+     paper mới — dưới 4.5:1 (giá giảm giá nằm thẳng trên nền paper ở
+     BookCard/HomeTabs, không có nền surface riêng). Hạ nhẹ để đạt lại
+     4.66:1, mắt thường gần như không phân biệt được với màu cũ. Không đổi
+     danger (chưa dùng ở đâu trong code — không có cặp nào thực sự bị ảnh
+     hưởng để phải sửa). */
+  --color-sale: #BD3125;       /* giá bán khi có giảm giá */
   --color-danger: #C2362B;     /* lỗi form, cảnh báo */
-  --color-success: #2E7D4F;    /* thông báo thành công */
+  /* Đợt F [F1.2, hệ quả bắt buộc]: success cũ (#2E7D4F) đo được 4.07:1 trên
+     paper mới ("Còn hàng" ở trang chi tiết sách nằm thẳng trên nền paper).
+     Hạ nhẹ để đạt 4.97:1. */
+  --color-success: #266E48;    /* thông báo thành công */
 
   /* B.2: bảng 12 màu trầm cho <BookCover> (mở rộng từ 8) — nền bìa
      typographic khi không có cover_image_url. Tất cả đã kiểm tra đạt

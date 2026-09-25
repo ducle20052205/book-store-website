@@ -60,7 +60,7 @@ export function MobileFilterSheet({ activeCount, categories, current, totalCount
       <dialog
         ref={dialogRef}
         aria-label="Bộ lọc"
-        className="fixed inset-x-0 top-auto bottom-0 m-0 max-h-[85vh] w-full max-w-none flex-col rounded-t-card border-t border-line bg-surface p-0 open:flex [&::backdrop]:bg-ink-900/30"
+        className="fixed inset-x-0 top-auto bottom-0 m-0 max-h-[85vh] w-full max-w-none flex-col rounded-t-card border-t border-line bg-surface p-0 open:flex [&::backdrop]:bg-cham-900/30"
       >
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <h2 className="font-serif text-lg font-semibold text-ink-900">Bộ lọc</h2>
