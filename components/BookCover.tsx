@@ -34,6 +34,18 @@ function colorClassForSlug(slug: string): string {
   return COVER_COLORS[hashString(slug) % COVER_COLORS.length];
 }
 
+/**
+ * E1.5: dùng lại đúng hash chọn màu bìa (không tách rời) để nơi khác (thẻ
+ * tủ sách, xem app/page.tsx) tô nền theo màu bìa của cuốn đầu tiên trong
+ * tủ — trả về tên biến CSS thô (vd. "--color-cover-3") để dùng trong
+ * color-mix(), không phải class Tailwind vì giá trị nền ở đó tính động
+ * (làm nhạt 12%), Tailwind không tạo được utility cho tổ hợp động này.
+ */
+export function coverColorVarForSlug(slug: string): string {
+  const index = (hashString(slug) % COVER_COLORS.length) + 1;
+  return `--color-cover-${index}`;
+}
+
 const titleClass =
   "line-clamp-4 w-full font-serif font-semibold leading-snug text-[clamp(0.75rem,9cqw,1.125rem)]";
 const authorClass =
@@ -140,7 +152,7 @@ export function BookCover({
   if (coverImageUrl) {
     return (
       <div
-        className={`book-cover-shadow cover-zoom relative aspect-[2/3] overflow-hidden rounded-card border border-line bg-surface ${className ?? ""}`}
+        className={`book-cover-shadow cover-zoom relative aspect-[2/3] overflow-hidden rounded-cover border border-line bg-surface ${className ?? ""}`}
       >
         <Image src={coverImageUrl} alt={title} fill sizes={sizes} className="object-cover" />
       </div>
@@ -153,7 +165,7 @@ export function BookCover({
     <div
       role="img"
       aria-label={title}
-      className={`book-cover-shadow @container relative aspect-[2/3] overflow-hidden rounded-r-card rounded-l-spine border border-line text-white ${colorClassForSlug(slug)} ${className ?? ""}`}
+      className={`book-cover-shadow @container relative aspect-[2/3] overflow-hidden rounded-r-cover rounded-l-spine border border-line text-white ${colorClassForSlug(slug)} ${className ?? ""}`}
     >
       <span aria-hidden="true" className="absolute inset-y-0 left-0 w-[7%] bg-black/12" />
       <span aria-hidden="true" className="paper-grain absolute inset-0" />

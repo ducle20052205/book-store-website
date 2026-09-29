@@ -1,19 +1,48 @@
 @import "tailwindcss";
 
 @theme {
-  --color-paper: #FBFAF7;      /* nền trang */
+  /* Đợt F [F1.2]: paper đậm hơn rõ rệt (trước #FBFAF7 — chênh với surface
+     chỉ ~4% độ sáng tương đối, gần như không phân biệt được khi đặt cạnh
+     nhau). Giữ nguyên sắc ấm (kênh đỏ > lục > lam), chỉ tối thêm — chênh
+     mới với surface ~20% độ sáng tương đối (đo bằng luminance WCAG), xem
+     báo cáo đợt F. surface giữ nguyên trắng thuần theo đúng spec F1.2. */
+  --color-paper: #EDE6D9;      /* nền trang */
   --color-surface: #FFFFFF;    /* nền thẻ, header */
   --color-line: #E4E2DC;       /* border hairline */
   --color-ink-900: #1A1C2E;    /* chữ chính */
   --color-ink-600: #4A4E66;    /* chữ phụ */
-  --color-ink-400: #6B6F85;    /* metadata: tác giả, giá gốc */
+  /* Đợt F [F1.2, hệ quả bắt buộc]: paper tối hơn làm ink-400 cũ (#6B6F85)
+     tụt dưới 4.5:1 ở mọi nơi ink-400 nằm trực tiếp trên nền paper (tên tác
+     giả trong BookCard, giá gạch ngang trong Price, ô tìm kiếm header —
+     những chỗ này không có nền surface riêng, ăn thẳng nền paper). Hạ nhẹ
+     ink-400 để lấy lại >= 4.5:1 trên paper mới, vẫn giữ đúng vai trò "nhạt
+     hơn ink-600" — không đổi từng chỗ dùng riêng lẻ vì dễ sót, đổi thẳng
+     token để chắc chắn nhất quán toàn site. Xem báo cáo đợt F mục F1 cho
+     bảng tương phản đầy đủ. */
+  --color-ink-400: #5F6379;    /* metadata: tác giả, giá gốc */
   --color-cham-700: #26306B;   /* màu thương hiệu: nút chính, link, header phụ */
   --color-cham-600: #3A4585;   /* hover */
   --color-cham-50: #EEF0F7;    /* nền tint: tab đang chọn, section nổi bật */
+  /* Đợt F [F1.1]: hợp nhất họ màu tối — trước đây Hero dùng cham-700 (chàm)
+     còn Footer/editorial dùng ink-900 (#1A1C2E, xanh đen ngả tím, khác họ
+     hẳn) khiến trang có 2 "kiểu tối" khác nhau. cham-900 cùng sắc/tông với
+     cham-700 (chỉ tối hơn — xem HSL trong báo cáo đợt F), dùng cho MỌI nền
+     đặc tối (Footer, editorial, lớp phủ mờ). ink-900 quay lại đúng vai trò
+     gốc: chỉ dùng cho CHỮ, không còn dùng làm nền ở đâu nữa. */
+  --color-cham-900: #171D40;   /* nền tối: Footer, editorial, lớp phủ mờ */
   --color-nghe-400: #D9A33A;   /* CHỈ badge giảm giá + số đếm giỏ hàng */
-  --color-sale: #C2362B;       /* giá bán khi có giảm giá */
+  /* Đợt F [F1.2, hệ quả bắt buộc]: sale cũ (#C2362B) đo được 4.39:1 trên
+     paper mới — dưới 4.5:1 (giá giảm giá nằm thẳng trên nền paper ở
+     BookCard/HomeTabs, không có nền surface riêng). Hạ nhẹ để đạt lại
+     4.66:1, mắt thường gần như không phân biệt được với màu cũ. Không đổi
+     danger (chưa dùng ở đâu trong code — không có cặp nào thực sự bị ảnh
+     hưởng để phải sửa). */
+  --color-sale: #BD3125;       /* giá bán khi có giảm giá */
   --color-danger: #C2362B;     /* lỗi form, cảnh báo */
-  --color-success: #2E7D4F;    /* thông báo thành công */
+  /* Đợt F [F1.2, hệ quả bắt buộc]: success cũ (#2E7D4F) đo được 4.07:1 trên
+     paper mới ("Còn hàng" ở trang chi tiết sách nằm thẳng trên nền paper).
+     Hạ nhẹ để đạt 4.97:1. */
+  --color-success: #266E48;    /* thông báo thành công */
 
   /* B.2: bảng 12 màu trầm cho <BookCover> (mở rộng từ 8) — nền bìa
      typographic khi không có cover_image_url. Tất cả đã kiểm tra đạt
@@ -32,14 +61,42 @@
   --color-cover-11: #24402C;   /* xanh lá rừng */
   --color-cover-12: #5A3D1E;   /* nâu hổ phách */
 
-  --font-sans: var(--font-be-vietnam-pro), system-ui, sans-serif;
-  --font-serif: var(--font-lora), Georgia, serif;
+  /* E1.5: màu riêng cho 5 danh mục cha — lấy lại từ bảng 12 màu bìa ở
+     trên (không thêm hex mới), chọn 5 màu dàn trải đều các vùng màu (đỏ,
+     vàng-lục, tím, lam, cam-nâu) để phân biệt rõ nhau, tránh #333366
+     (cover-5) vì trùng gần như chính màu thương hiệu cham-700, dùng sẽ gây
+     nhầm "đây là màu chàm" thay vì "đây là màu danh mục". Tương phản với
+     chữ trắng đã tính tay, xem báo cáo đợt E1.5 — cả 5 đều > 8:1. */
+  --color-cat-van-hoc: var(--color-cover-8);           /* đỏ rượu vang */
+  --color-cat-kinh-te: var(--color-cover-6);           /* ô liu */
+  --color-cat-tam-ly-ky-nang: var(--color-cover-2);    /* tím mận */
+  --color-cat-khoa-hoc-xa-hoi: var(--color-cover-7);   /* xanh than */
+  --color-cat-manga-light-novel: var(--color-cover-4); /* nâu đất nung */
 
-  /* Bước 1.5 — A.1: --radius-card đổi từ 4px, --radius-control đổi từ 6px. */
-  --radius-card: 10px;
-  --radius-control: 8px;
+  --font-sans: var(--font-be-vietnam-pro), system-ui, sans-serif;
+  --font-serif: var(--font-newsreader), Georgia, serif; /* Đợt E: thay Lora, xem app/layout.tsx */
+
+  /*
+   * Đợt E1: bo góc phân theo thứ bậc — mỗi loại một giá trị, không dùng
+   * chung một số cho tất cả như trước (--radius-card từng dùng cho cả bìa
+   * lẫn thẻ, --radius-control từng dùng cho cả nút lẫn ô nhập).
+   *   6  ô nhập   — nơi gõ số chính xác (khoảng giá, tìm kiếm), bo ít nhất
+   *                 trong thang để có cảm giác "chuẩn, kỹ thuật".
+   *   8  bìa sách — bìa là một VẬT THỂ (cuốn sách thật gần như không bo
+   *                 góc), giữ cứng cáp hơn hẳn các khối giao diện thuần
+   *                 tuý bên cạnh nó.
+   *  10  nút      — bo vừa, đủ mềm để mời bấm nhưng không tròn xoe.
+   *  14  thẻ      — khối chứa giao diện thuần tuý (không phải vật thể),
+   *                 được phép mềm mại nhất trong các hình chữ nhật.
+   * 999  chip/pill — hình con nhộng, khác thể loại hoàn toàn, không tính
+   *                 vào thang số bên trên.
+   */
+  --radius-input: 6px;
+  --radius-cover: 8px;
+  --radius-control: 10px;
+  --radius-card: 14px;
   --radius-pill: 999px;
-  --radius-spine: 2px; /* B.2: mép gáy sách trong <BookCover>, bo nhỏ hơn --radius-card */
+  --radius-spine: 2px; /* mép gáy sách trong <BookCover>, bo nhỏ hơn cả --radius-cover */
 
   --shadow-sm: 0 1px 2px rgba(26, 28, 46, 0.06);
   --shadow-md: 0 8px 24px -10px rgba(26, 28, 46, 0.22);
@@ -54,7 +111,12 @@
      --text-{tên}--line-height / --letter-spacing để 1 class gộp đủ 3 thuộc
      tính (vd. `text-display` = cỡ chữ + line-height + letter-spacing). */
   --text-display: clamp(2.25rem, 5vw, 3.75rem); /* 36px -> 60px */
-  --text-display--line-height: 1.05;
+  /* Đợt E1: 1.05 -> 1.15 tối thiểu. Đo tại 64px (Newsreader 600, chuỗi
+     "Điệp Ừ Ỡ Ặ Ỹ Đ ữ ộ ằ ẫ", 2 dòng liên tiếp, đo mép chữ thật bằng
+     Range.getBoundingClientRect — không suy từ line-height): 1.05 chỉ chừa
+     3.19px giữa 2 dòng, 1.15 chừa 9.59px. Xem docs/specs/dot-e-design-plan.md
+     mục 2 cho bảng đo đầy đủ. */
+  --text-display--line-height: 1.15;
   --text-display--letter-spacing: -0.02em;
 
   --text-h1: clamp(1.875rem, 3.4vw, 2.625rem); /* 30px -> 42px */
@@ -220,6 +282,83 @@
       top: 80px;
     }
   }
+
+  /* E1.5 mục 5: cơ chế neo màu chàm DUY NHẤT cho mọi tiêu đề section cấp
+     trang (H1/H2) — vạch 3px bên trái. Chọn vạch trái thay vì gạch chân vì
+     gạch chân đã là ngôn ngữ riêng của tab đang chọn trong HomeTabs, dùng
+     lại cho tiêu đề sẽ gây nhầm "đây cũng là một tab để bấm". Màu mặc định
+     cham-700 (nền sáng); nơi đặt trên nền tối (khối editorial) đổi màu vạch
+     qua chính class Tailwind border-color, không đổi ở đây, xem app/page.tsx. */
+  .section-title {
+    border-left: 3px solid var(--color-cham-700);
+    padding-left: 0.875rem; /* 14px */
+  }
+
+  /* E2 mục 2: phản hồi tức thì khi bấm — mọi nút/link dạng nút co nhẹ lúc
+     :active. Chỉ animate transform (scale), không đụng bố cục -> không góp
+     phần vào CLS. */
+  .pressable {
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .pressable:active {
+    transform: scale(0.96);
+  }
+
+  /* E2 mục 2: chip lọc co lại rồi mờ dần khi bị bỏ thay vì mất đột ngột —
+     xem FilterChips.tsx (gắn data-removing="true" rồi mới điều hướng, trễ
+     đúng bằng thời lượng transition bên dưới nên lúc điều hướng thật sự
+     xảy ra thì chip đã mờ hẳn, không có bước "biến mất" nào lộ ra). */
+  .filter-chip {
+    transition-property: transform, opacity;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
+  }
+  .filter-chip[data-removing="true"] {
+    transform: scale(0.75);
+    opacity: 0;
+  }
+}
+
+/* E2 mục 1: khoảnh khắc mở trang ở Hero — chỉ lần đầu mỗi phiên (cờ trong
+   sessionStorage, xem script nội tuyến trong Hero.tsx). MẶC ĐỊNH (không có
+   data-hero-intro="pending" trên section cha) mọi phần tử .hero-intro-el
+   hiện đủ ngay lập tức, opacity 1 — tắt JS thì không có gì để bật hoạt ảnh,
+   nội dung vẫn hiện đầy đủ. Script nội tuyến đặt thuộc tính TRƯỚC lần vẽ
+   đầu tiên của trình duyệt (cùng kỹ thuật chống nháy dùng cho dark-mode),
+   nên không có khung hình nào lộ ra trạng thái "đã hiện xong" rồi bị ẩn lại
+   để chạy hoạt ảnh từ đầu. */
+@keyframes hero-intro-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+[data-hero-intro="pending"] .hero-intro-el {
+  opacity: 0;
+  animation: hero-intro-in 280ms var(--ease-out) var(--intro-delay, 0ms) both;
+}
+
+/* E2 mục 2: số lượng nảy nhẹ khi đổi — PurchasePanel.tsx gắn key={quantity}
+   nên React tạo lại đúng phần tử này mỗi lần đổi số; trình duyệt tự chạy
+   lại animation mỗi lần một phần tử mới được gắn vào DOM, không cần theo
+   dõi thêm sự kiện nào. */
+@keyframes qty-bounce {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.qty-bounce {
+  animation: qty-bounce 220ms var(--ease-out);
 }
 
 /* A.4: bắt buộc tắt mọi chuyển động (transition + transform) khi người
@@ -230,13 +369,30 @@
   .book-card-lift,
   .book-cover-shadow,
   .cover-zoom img,
-  .header-surface {
+  .header-surface,
+  .pressable,
+  .filter-chip {
     transition: none !important;
   }
   .hover-lift:hover,
   .book-card-lift:hover,
-  .book-card-lift:hover .cover-zoom img {
+  .book-card-lift:hover .cover-zoom img,
+  .pressable:active {
     transform: none !important;
+  }
+  .filter-chip[data-removing="true"] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  /* E2: khoảnh khắc mở Hero và hiệu ứng nảy số lượng đều chỉ dùng
+     transform/opacity — tắt hẳn animation, hiện thẳng trạng thái cuối. */
+  [data-hero-intro="pending"] .hero-intro-el {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .qty-bounce {
+    animation: none !important;
   }
   /* B.4: skeleton dùng animate-pulse (utility có sẵn của Tailwind) — tắt
      luôn hiệu ứng nhấp nháy khi người dùng giảm chuyển động. */

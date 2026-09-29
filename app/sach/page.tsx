@@ -9,11 +9,20 @@ import { Pagination } from "@/components/Pagination";
 import { SortSelect } from "@/components/SortSelect";
 import { TrackEvent } from "@/components/TrackEvent";
 import { type ParsedCatalogParams, countActiveFilters, parseCatalogSearchParams } from "@/lib/catalog";
-import { type CategoryBasic, getCategoryChainBySlug, getCategoryTree, searchBooks } from "@/lib/queries";
+import { categoryColorClasses } from "@/lib/categoryColors";
+import {
+  type CategoryBasic,
+  enrichBooksForCard,
+  getBookCollectionRefMap,
+  getCategoryChainBySlug,
+  getCategoryNameMap,
+  getCategoryTree,
+  searchBooks,
+} from "@/lib/queries";
 
 async function resolveCatalogContext(
   parsed: ParsedCatalogParams,
-): Promise<{ heading: string; categoryName?: string; categoryChain: CategoryBasic[] }> {
+): Promise<{ heading: string; categoryName?: string; categoryChain: CategoryBasic[]; parentDescription: string | null }> {
   const categoryChain = parsed.category ? await getCategoryChainBySlug(parsed.category) : [];
   const leaf = categoryChain[categoryChain.length - 1];
 
@@ -23,7 +32,13 @@ async function resolveCatalogContext(
   else if (parsed.category) heading = "Không tìm thấy danh mục";
   else heading = "Tất cả sách";
 
-  return { heading, categoryName: leaf?.name, categoryChain };
+  // E3: chỉ hiện dòng giới thiệu khi đang lọc ĐÚNG 1 danh mục CHA (chain
+  // dài 1 — leaf chính là cha, không có cấp trên nó) — ẩn khi lọc theo
+  // danh mục con (chain dài 2) dù con đó cũng "thuộc về" 1 cha có mô tả,
+  // và ẩn khi không lọc theo danh mục nào cả (categoryChain rỗng).
+  const parentDescription = categoryChain.length === 1 ? (categoryChain[0].description ?? null) : null;
+
+  return { heading, categoryName: leaf?.name, categoryChain, parentDescription };
 }
 
 export async function generateMetadata({ searchParams }: PageProps<"/sach">): Promise<Metadata> {
@@ -41,13 +56,25 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
   const sp = await searchParams;
   const parsed = parseCatalogSearchParams(sp);
 
-  const [{ heading, categoryName, categoryChain }, categories, { books, totalCount }] = await Promise.all([
+  const [
+    { heading, categoryName, categoryChain, parentDescription },
+    categories,
+    { books: rawBooks, totalCount },
+    categoryNames,
+    collectionRefs,
+  ] = await Promise.all([
     resolveCatalogContext(parsed),
     getCategoryTree(),
     searchBooks(parsed),
+    getCategoryNameMap(),
+    getBookCollectionRefMap(),
   ]);
+  const books = enrichBooksForCard(rawBooks, categoryNames, collectionRefs);
 
   const activeFilterCount = countActiveFilters(parsed);
+  // E1.5 mục 2: màu theo danh mục CHA (đầu chuỗi categoryChain), kể cả khi
+  // đang lọc theo danh mục con — chỉ 5 danh mục cha có màu riêng.
+  const topCategorySlug = categoryChain[0]?.slug;
 
   return (
     <div className="container-page py-8">
@@ -67,9 +94,31 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
         từ header xuống tiêu đề không quá 32px.
       */}
       <div className="mt-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-3">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h1 className="font-serif text-h1 text-ink-900">{heading}</h1>
-          <p className="text-sm text-ink-600">{totalCount} cuốn sách</p>
+        {/*
+          E1.5 mục 5: section-title (vạch chàm trái) bọc quanh CẢ khối tiêu
+          đề + số kết quả + dải màu danh mục bên dưới — để vạch chạy hết
+          chiều cao khối, không chỉ riêng dòng H1. mục 2: dải màu ngắn dưới
+          H1 chỉ hiện khi đang lọc theo 1 trong 5 danh mục cha (không hiện ở
+          "Tất cả sách" / kết quả tìm kiếm chữ, vì khi đó không có danh mục
+          nào đang chọn để tô màu).
+        */}
+        <div className="section-title">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h1 className="font-serif text-h1 text-ink-900">{heading}</h1>
+            <p className="text-sm text-ink-600">{totalCount} cuốn sách</p>
+          </div>
+          {/*
+            E3: dòng giới thiệu ngắn — chỉ hiện khi lọc đúng 1 danh mục CHA
+            (parentDescription đã tự null hoá ở resolveCatalogContext cho
+            mọi trường hợp khác: danh mục con, không lọc, tìm kiếm chữ).
+          */}
+          {parentDescription && <p className="mt-2 max-w-[65ch] text-sm text-ink-600">{parentDescription}</p>}
+          {topCategorySlug && (
+            <div
+              aria-hidden="true"
+              className={`mt-2 h-1 w-12 rounded-pill ${categoryColorClasses(topCategorySlug).bg}`}
+            />
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -86,14 +135,30 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
         </div>
       </div>
 
-      <div className="mt-12 grid grid-cols-1 gap-10 lg:grid-cols-[240px_1fr]">
+      {/*
+        E1: mt-12(48px) -> mt-16(64px) — ranh giới "chuyển từ điều hướng
+        sang duyệt hàng hoá" cần rõ hơn mức đồng đều 24-32px hiện có ở các
+        khoảng cách khác trên trang này (trang tác vụ cố tình giữ ít nhịp,
+        xem docs/specs/dot-e-design-plan.md mục 3 — đây là điểm nhịp DUY
+        NHẤT được thêm ở trang catalog).
+      */}
+      <div className="mt-16 grid grid-cols-1 gap-10 lg:grid-cols-[240px_1fr]">
         {/*
           Sửa lỗi đợt B: bỏ max-h/overflow-y-auto (từng tạo vùng cuộn riêng
           bên trong cột lọc — xem .filter-sidebar ở globals.css). Sticky
           (top: 80px) chỉ bật qua media query chiều cao trong đó, không
           còn set trực tiếp bằng class Tailwind ở đây.
+
+          E1: viền phải mảnh tách cột lọc khỏi lưới sách — trước chỉ dựa
+          vào khoảng trắng gap-10, giờ thêm 1 đường kẻ để ranh giới rõ hơn
+          là chỉ dựa vào mắt đo khoảng cách.
+
+          E1.5 mục 5: viền đổi từ border-line (xám trung tính) sang
+          cham-700/15 — viền vẫn rất mảnh/nhạt (15% alpha) nên không cạnh
+          tranh với nội dung, nhưng là một điểm neo màu chàm nữa thay vì
+          trung tính, nhất quán với "chàm xuất hiện ở mọi phần trang".
         */}
-        <aside className="filter-sidebar hidden lg:block">
+        <aside className="filter-sidebar hidden lg:block lg:border-r lg:border-cham-700/15 lg:pr-8">
           <CatalogFilters categories={categories} current={parsed} />
         </aside>
 

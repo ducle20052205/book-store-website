@@ -79,7 +79,7 @@ function BagIcon() {
 }
 
 const iconLinkClass =
-  "flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-control px-2 text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600";
+  "pressable flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-control px-2 text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600";
 
 interface HeaderProps {
   cartCount?: number;
@@ -117,7 +117,7 @@ export async function Header({ cartCount = 0 }: HeaderProps) {
                 name="q"
                 type="search"
                 placeholder="Tìm tên sách, tác giả…"
-                className="w-full min-w-0 rounded-control border border-line bg-paper py-2 pl-9 pr-3 text-sm text-ink-900 placeholder:text-ink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+                className="w-full min-w-0 rounded-input border border-line bg-paper py-2 pl-9 pr-3 text-sm text-ink-900 placeholder:text-ink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
               />
             </div>
           </form>

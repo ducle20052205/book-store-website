@@ -39,7 +39,7 @@ export function CategoryNav({ categories }: { categories: CategoryNode[] }) {
           aria-haspopup="true"
           aria-controls={panelId}
           onClick={() => setOpen((v) => !v)}
-          className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-control px-2 font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${open ? "bg-cham-600" : ""}`}
+          className={`pressable flex min-h-11 shrink-0 items-center gap-1.5 rounded-control px-2 font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${open ? "bg-cham-600" : ""}`}
         >
           Danh mục
           <svg
@@ -75,7 +75,7 @@ export function CategoryNav({ categories }: { categories: CategoryNode[] }) {
             type="button"
             aria-label="Đóng danh mục"
             onClick={() => setOpen(false)}
-            className="fixed inset-0 cursor-default bg-ink-900/20"
+            className="fixed inset-0 cursor-default bg-cham-900/20"
           />
           <div id={panelId} className="absolute inset-x-0 top-full border-b border-line bg-surface shadow-sm">
             {/*
