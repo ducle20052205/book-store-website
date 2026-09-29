@@ -75,7 +75,7 @@ alter table public.events add constraint events_event_type_check
     'sign_up','login'
   ]));
 
--- 4. Khoá cột email: cùng cơ chế đang dùng cho role
+-- 4. Khoá cột email: role khoá có điều kiện, email khoá vô điều kiện
 create or replace function public.protect_profile_role()
 returns trigger
 language plpgsql
@@ -86,13 +86,40 @@ begin
   if not public.is_admin() then
     new.role := old.role;
   end if;
-  new.email := old.email;
+  if coalesce(current_setting('app.sync_auth_email', true), '') <> 'on' then
+    new.email := old.email;
+  end if;
   return new;
 end;
 $function$;
+
+-- 5. Đồng bộ email xuống profiles khi người dùng đổi ở tầng Auth
+create or replace function public.sync_profile_email()
+returns trigger
+language plpgsql
+security definer
+set search_path to ''
+as $function$
+begin
+  if new.email is distinct from old.email then
+    perform set_config('app.sync_auth_email', 'on', true);
+    update public.profiles set email = new.email where id = new.id;
+  end if;
+  return new;
+end;
+$function$;
+
+create trigger on_auth_user_email_updated
+  after update of email on auth.users
+  for each row execute function public.sync_profile_email();
+
+revoke execute on function public.sync_profile_email()
+  from public, anon, authenticated;
 ```
 
-Ghi chú phần 4: `role` chỉ bị khoá với người không phải Admin, còn `email` bị khoá với mọi người vì nó là bản sao của `auth.users.email`. Hệ quả có chủ đích: mọi câu `UPDATE` đổi `email` — kể cả từ SQL Editor, migration hay Edge Function dùng service role — đều bị ép về giá trị cũ. Muốn sửa thật thì tạm tắt trigger trong một transaction, cùng cách làm với runbook tạo admin. Lệnh backfill ở phần 1 chạy trước phần 4 nên không bị ảnh hưởng.
+Ghi chú phần 4: `role` chỉ bị khoá với người không phải Admin, còn `email` bị khoá với mọi người vì nó là bản sao của `auth.users.email`. Hệ quả có chủ đích: mọi câu `UPDATE` đổi `email` — kể cả từ SQL Editor, migration hay Edge Function dùng service role — đều bị ép về giá trị cũ. Muốn sửa thật thì tạm tắt trigger trong một transaction, cùng cách làm với runbook tạo admin. Lệnh backfill ở phần 1 chạy trước phần 4 nên không bị ảnh hưởng. Giữ nguyên tên hàm `protect_profile_role` dù nay bảo vệ hai cột, để khỏi phải `drop` và tạo lại trigger `profiles_protect_role`. Lý do phải khoá: policy `profiles_update_own` cho sửa mọi cột của dòng mình, nên nếu không khoá thì người dùng đổi được `profiles.email` qua API và FR-4.4 sẽ gửi email xác nhận đơn tới địa chỉ sai.
+
+Ghi chú phần 5: `set_config` với tham số thứ ba là `true` nên biến chỉ sống trong transaction hiện tại, không rò sang request khác. Đây là đường duy nhất được phép ghi vào `profiles.email` sau khi dòng đó đã được tạo.
 
 Ràng buộc:
 - **Không** đặt UNIQUE trên `profiles.email`. `auth.users.email` đã unique; thêm ràng buộc nữa chỉ tạo thêm một đường làm trigger fail, mà trigger fail nghĩa là đăng ký fail.
@@ -176,21 +203,23 @@ Mỗi mục phải kèm số đo hoặc kết quả lệnh trong báo cáo.
 11. `select has_function_privilege('anon', 'public.handle_new_user()', 'execute');` trả về **false**; lặp lại với `authenticated` và `public`.
 12. `select has_function_privilege('anon', 'public.protect_profile_role()', 'execute');` trả về **false**; lặp lại với `authenticated` và `public` — cả ba phải là **false**. `create or replace` không khôi phục quyền đã revoke ở migration `0002`, nhưng phải kiểm chứng chứ không tin lý thuyết.
 13. Đăng nhập bằng một tài khoản role `customer`, gọi `update profiles set email = '...'` cho chính dòng của mình qua API, đọc lại: giá trị `email` **không** đổi.
+14. Đăng nhập bằng một tài khoản role `admin`, gọi `update profiles set email = '...'` cho chính dòng của mình qua API, đọc lại: giá trị `email` **không** đổi. Tiêu chí trước chỉ thử bằng `customer`, trong khi điểm cốt lõi của quyết định là Admin cũng không sửa được.
+15. Gọi `supabase.auth.updateUser({ email: '<địa chỉ mới>' })` bằng một tài khoản thật, rồi đọc lại `profiles`: cột `email` khớp `auth.users.email`. Ghi rõ hành vi quan sát được khi email confirmation đang tắt (đổi áp dụng ngay hay cần xác nhận), vì FR-5.1 tắt xác thực email.
 
 **Header**
-14. Ở viewport 1280px: nhóm liên kết bên phải gồm đúng **2 mục**, tổng chiều rộng trong khoảng **200–235px**; ô tìm kiếm rộng trong khoảng **855–905px**; không có cuộn ngang. Ghi số đo thực.
-15. Ở viewport 375px: không có cuộn ngang; mọi mục chạm ≥ **44×44px**.
-16. Dropdown mở ở 1280px: chụp ảnh cho thấy **không** đọc được chữ nào của thanh CategoryNav xuyên qua panel. Ghi giá trị `z-index` của panel và của nav.
-17. Nhấn Esc khi dropdown đang mở thì panel đóng và focus quay về nút Tài khoản.
-18. `grep -rn "yeu-thich" app components` trả về **0 dòng**.
+16. Ở viewport 1280px: nhóm liên kết bên phải gồm đúng **2 mục**, tổng chiều rộng trong khoảng **200–235px**; ô tìm kiếm rộng trong khoảng **855–905px**; không có cuộn ngang. Ghi số đo thực.
+17. Ở viewport 375px: không có cuộn ngang; mọi mục chạm ≥ **44×44px**.
+18. Dropdown mở ở 1280px: chụp ảnh cho thấy **không** đọc được chữ nào của thanh CategoryNav xuyên qua panel. Ghi giá trị `z-index` của panel và của nav.
+19. Nhấn Esc khi dropdown đang mở thì panel đóng và focus quay về nút Tài khoản.
+20. `grep -rn "yeu-thich" app components` trả về **0 dòng**.
 
 **Route**
-19. Mở `/tai-khoan` khi chưa đăng nhập: chuyển hướng tới `/dang-nhap?next=%2Ftai-khoan` (trang đích trả 404 ở đợt này — chấp nhận được, ghi rõ trong báo cáo).
-20. Mở `/admin` khi đã đăng nhập bằng tài khoản `customer`: chuyển hướng, **không** render giao diện quản trị.
+21. Mở `/tai-khoan` khi chưa đăng nhập: chuyển hướng tới `/dang-nhap?next=%2Ftai-khoan` (trang đích trả 404 ở đợt này — chấp nhận được, ghi rõ trong báo cáo).
+22. Mở `/admin` khi đã đăng nhập bằng tài khoản `customer`: chuyển hướng, **không** render giao diện quản trị.
 
 **Ảnh kiểm tra**
-21. Ảnh chụp **toàn trang thu nhỏ** (không phải ảnh cận cảnh) của `/` và `/sach` ở 1280px và 375px, trước và sau đợt này, để đối chiếu không có gì xô lệch.
-22. Ảnh dropdown mở ở 1280px và sheet tài khoản mở ở 375px.
+23. Ảnh chụp **toàn trang thu nhỏ** (không phải ảnh cận cảnh) của `/` và `/sach` ở 1280px và 375px, trước và sau đợt này, để đối chiếu không có gì xô lệch.
+24. Ảnh dropdown mở ở 1280px và sheet tài khoản mở ở 375px.
 
 ## 9. Điều cần làm rõ trước khi code
 
