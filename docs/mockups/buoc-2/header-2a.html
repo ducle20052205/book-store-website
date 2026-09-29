@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup đợt 2A — Header và menu tài khoản · NA Books</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,16..72,400;0,16..72,500;0,16..72,600;1,16..72,400&display=swap">
+<style>
+  :root { color-scheme: light; }
+  body { margin: 0; background: #EDE6D9; font-family: 'Be Vietnam Pro', system-ui, sans-serif; color: #1A1C2E; }
+  .page { max-width: 1400px; margin: 0 auto; padding: 40px 40px 80px; }
+  .caption { font-size: 12.5px; color: #5F6379; margin: 0 0 8px; }
+  .frame { border: 1px solid #E3DCCE; border-radius: 4px; background: #FFFFFF; }
+  h1 { font-family: Newsreader, Georgia, serif; font-size: 28px; font-weight: 600; margin: 0 0 6px; }
+  h2 { font-family: Newsreader, Georgia, serif; font-size: 20px; font-weight: 600; margin: 40px 0 10px; }
+  .lead { font-size: 13.5px; color: #5F6379; margin: 0 0 8px; }
+  .topbar { height: 64px; box-sizing: border-box; padding: 0 24px; background: #FFFFFF; display: flex; align-items: center; gap: 16px; border-radius: 4px 4px 0 0; }
+  .logo { font-family: Newsreader, Georgia, serif; font-size: 20px; font-weight: 600; color: #26306B; }
+  .search { flex-grow: 1; display: flex; align-items: center; gap: 10px; height: 40px; padding: 0 14px; background: #F6F2E9; border: 1px solid #E3DCCE; border-radius: 3px; font-size: 14px; color: #8A8676; }
+  .navlink { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; text-decoration: none; color: #1A1C2E; font-size: 14px; border: 0; background: transparent; font-family: inherit; cursor: pointer; }
+  .navlink.active { background: #F4F2F8; color: #26306B; font-weight: 500; border-radius: 3px; }
+  .catnav { height: 52px; background: #26306B; display: flex; align-items: center; gap: 4px; padding: 0 24px; border-radius: 0 0 4px 4px; }
+  .catnav span { height: 36px; padding: 0 14px; color: #FFFFFF; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+  .menu { width: 272px; box-sizing: border-box; background: #FFFFFF; border: 1px solid #DCD4C4; border-radius: 4px; box-shadow: 0 16px 34px rgba(23,29,64,0.22); padding: 8px 0; }
+  .menu a { display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 18px; text-decoration: none; color: #1A1C2E; font-size: 14px; }
+  .sep { height: 1px; background: #EFE9DD; }
+  .note { font-size: 12.5px; line-height: 1.65; color: #5F6379; max-width: 760px; }
+  .phone { width: 390px; height: 720px; box-sizing: border-box; border: 1px solid #E3DCCE; border-radius: 6px; overflow: hidden; background: #171D40; display: flex; flex-direction: column; justify-content: space-between; }
+  .sheet { background: #FFFFFF; border-radius: 12px 12px 0 0; padding: 10px 0 24px; box-shadow: 0 -12px 34px rgba(0,0,0,0.34); }
+  .sheet a { display: flex; align-items: center; gap: 14px; height: 56px; padding: 0 16px; text-decoration: none; color: #1A1C2E; font-size: 15.5px; }
+  table { border-collapse: collapse; font-size: 13.5px; margin-top: 10px; }
+  th, td { border: 1px solid #E3DCCE; padding: 8px 12px; text-align: left; background: #FFFFFF; }
+  th { background: #F6F2E9; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>Mockup đợt 2A — Header và menu tài khoản</h1>
+  <p class="lead">Mở file này bằng trình duyệt để xem đúng kích thước, hoặc đọc thẳng mã nguồn để lấy giá trị màu và số đo. Bố cục desktop dựng ở bề ngang 1280px.</p>
+
+  <h2>1. Header khi chưa đăng nhập</h2>
+  <p class="caption">Mục tài khoản là một liên kết, nhãn “Đăng nhập”, dẫn tới /dang-nhap</p>
+  <div class="frame" style="width: 1280px;">
+    <div class="topbar">
+      <span class="logo">NA Books</span>
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5F6379" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.6-3.6" stroke-linecap="round"></path></svg>
+        Tìm tên sách, tác giả…
+      </div>
+      <a class="navlink" href="#">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#26306B" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="8" r="3.6"></circle><path d="M4.5 20c1.6-3.6 4.3-5.4 7.5-5.4s5.9 1.8 7.5 5.4" stroke-linecap="round"></path></svg>
+        Đăng nhập
+      </a>
+      <a class="navlink" href="#">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#26306B" stroke-width="1.7" aria-hidden="true"><path d="M6 8h12l-1.2 11H7.2L6 8z"></path><path d="M9 8a3 3 0 0 1 6 0" stroke-linecap="round"></path></svg>
+        Giỏ hàng
+      </a>
+    </div>
+    <div class="catnav">
+      <span>Danh mục <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-linecap="round"></path></svg></span>
+      <span>Sách mới</span><span>Bán chạy</span><span>Tủ sách</span>
+    </div>
+  </div>
+
+  <h2>2. Header khi đã đăng nhập, menu đang mở</h2>
+  <p class="caption">Nhãn vẫn là “Tài khoản”, tên người dùng nằm trong menu. Menu đè lên thanh danh mục, nền đặc.</p>
+  <div class="frame" style="width: 1280px;">
+    <div class="topbar">
+      <span class="logo">NA Books</span>
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5F6379" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.6-3.6" stroke-linecap="round"></path></svg>
+        Tìm tên sách, tác giả…
+      </div>
+      <button class="navlink active" type="button" aria-expanded="true">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#26306B" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="8" r="3.6"></circle><path d="M4.5 20c1.6-3.6 4.3-5.4 7.5-5.4s5.9 1.8 7.5 5.4" stroke-linecap="round"></path></svg>
+        Tài khoản
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#26306B" stroke-width="2.2" aria-hidden="true"><path d="M6 15l6-6 6 6" stroke-linecap="round"></path></svg>
+      </button>
+      <a class="navlink" href="#">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#26306B" stroke-width="1.7" aria-hidden="true"><path d="M6 8h12l-1.2 11H7.2L6 8z"></path><path d="M9 8a3 3 0 0 1 6 0" stroke-linecap="round"></path></svg>
+        Giỏ hàng
+      </a>
+    </div>
+    <div class="catnav">
+      <span>Danh mục <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke-linecap="round"></path></svg></span>
+      <span>Sách mới</span><span>Bán chạy</span><span>Tủ sách</span>
+    </div>
+    <div style="display: flex; justify-content: flex-end; padding-right: 136px; margin-top: -48px; position: relative;">
+      <div class="menu">
+        <div style="padding: 12px 18px 14px;">
+          <div style="font-size: 14.5px; font-weight: 600;">Lê Minh Đức</div>
+          <div style="font-size: 12.5px; color: #5F6379; margin-top: 2px;">ban.doc@example.com</div>
+        </div>
+        <div class="sep"></div>
+        <a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5F6379" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="8" r="3.6"></circle><path d="M4.5 20c1.6-3.6 4.3-5.4 7.5-5.4s5.9 1.8 7.5 5.4" stroke-linecap="round"></path></svg> Hồ sơ của bạn</a>
+        <a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5F6379" stroke-width="1.7" aria-hidden="true"><path d="M6 7h12v13H6z"></path><path d="M9 11h6M9 15h4" stroke-linecap="round"></path></svg> Đơn hàng của tôi</a>
+        <div class="sep" style="margin: 6px 0;"></div>
+        <a href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5F6379" stroke-width="1.7" aria-hidden="true"><path d="M10 20H6V4h4M15 8l4 4-4 4M19 12H10" stroke-linecap="round" stroke-linejoin="round"></path></svg> Đăng xuất</a>
+      </div>
+    </div>
+  </div>
+
+  <h2>3. Menu tài khoản trên mobile (390px)</h2>
+  <p class="caption">Mở dạng sheet trượt từ đáy, không phải dropdown. Nền phía sau bị làm mờ.</p>
+  <div class="phone">
+    <div style="opacity: 0.32;">
+      <div style="background: #FFFFFF; height: 56px; box-sizing: border-box; padding: 0 12px 0 16px; display: flex; align-items: center; justify-content: space-between;">
+        <span class="logo" style="font-size: 18px;">NA Books</span>
+        <div style="display: flex; gap: 4px;">
+          <div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#26306B" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="8" r="3.6"></circle><path d="M4.5 20c1.6-3.6 4.3-5.4 7.5-5.4s5.9 1.8 7.5 5.4" stroke-linecap="round"></path></svg></div>
+          <div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#26306B" stroke-width="1.7" aria-hidden="true"><path d="M6 8h12l-1.2 11H7.2L6 8z"></path><path d="M9 8a3 3 0 0 1 6 0" stroke-linecap="round"></path></svg></div>
+        </div>
+      </div>
+      <div style="height: 48px; background: #26306B;"></div>
+      <div style="padding: 20px 16px; background: #EDE6D9; height: 170px;">
+        <div style="height: 22px; width: 62%; background: #DFD8CA; border-radius: 2px;"></div>
+        <div style="height: 14px; width: 84%; background: #E4DDD0; border-radius: 2px; margin-top: 14px;"></div>
+        <div style="height: 14px; width: 74%; background: #E4DDD0; border-radius: 2px; margin-top: 10px;"></div>
+      </div>
+    </div>
+    <div class="sheet">
+      <div style="display: flex; justify-content: center; padding: 6px 0 10px;"><div style="width: 44px; height: 4px; border-radius: 2px; background: #DFD8CA;"></div></div>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 6px 16px 16px;">
+        <div>
+          <div style="font-size: 16px; font-weight: 600;">Lê Minh Đức</div>
+          <div style="font-size: 13px; color: #5F6379; margin-top: 2px;">ban.doc@example.com</div>
+        </div>
+        <button type="button" aria-label="Đóng" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border: 0; background: #F6F2E9; border-radius: 22px; cursor: pointer;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3A3E55" stroke-width="2" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" stroke-linecap="round"></path></svg>
+        </button>
+      </div>
+      <div class="sep"></div>
+      <a href="#"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#5F6379" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="8" r="3.6"></circle><path d="M4.5 20c1.6-3.6 4.3-5.4 7.5-5.4s5.9 1.8 7.5 5.4" stroke-linecap="round"></path></svg> Hồ sơ của bạn</a>
+      <a href="#"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#5F6379" stroke-width="1.7" aria-hidden="true"><path d="M6 7h12v13H6z"></path><path d="M9 11h6M9 15h4" stroke-linecap="round"></path></svg> Đơn hàng của tôi</a>
+      <div class="sep" style="margin: 8px 0;"></div>
+      <a href="#"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#5F6379" stroke-width="1.7" aria-hidden="true"><path d="M10 20H6V4h4M15 8l4 4-4 4M19 12H10" stroke-linecap="round" stroke-linejoin="round"></path></svg> Đăng xuất</a>
+    </div>
+  </div>
+
+  <h2>Số đo bắt buộc</h2>
+  <table>
+    <tr><th>Thành phần</th><th>Giá trị</th></tr>
+    <tr><td>Topbar</td><td>cao 64px, nền #FFFFFF, viền dưới 1px #E3DCCE, đệm ngang 24px</td></tr>
+    <tr><td>Thanh danh mục</td><td>cao 52px, nền #26306B</td></tr>
+    <tr><td>Nhóm liên kết phải</td><td>đúng 2 mục, mỗi mục cao 44px, tổng rộng 200–235px ở viewport 1280px</td></tr>
+    <tr><td>Ô tìm kiếm</td><td>cao 40px, nền #F6F2E9, viền #E3DCCE, bo 3px, rộng 855–905px ở 1280px</td></tr>
+    <tr><td>Menu tài khoản</td><td>rộng 272px, mục cao 46px, nền #FFFFFF, viền #DCD4C4, bóng 0 16px 34px rgba(23,29,64,.22), bo 4px</td></tr>
+    <tr><td>Menu canh lề</td><td>mép phải menu trùng mép phải nút Tài khoản</td></tr>
+    <tr><td>Mục đang chọn</td><td>nền #F4F2F8, chữ #26306B, đậm 500</td></tr>
+    <tr><td>Sheet mobile</td><td>bo trên 12px, mục cao 56px, nút đóng 44×44px, lớp phủ opacity 0.32</td></tr>
+  </table>
+
+  <h2>Ba điểm khác production hiện tại</h2>
+  <p class="note">
+    1. Menu có nền đặc, viền và đổ bóng, z-index cao hơn thanh danh mục. Mega-menu hiện tại đang nhìn xuyên thấy nội dung phía sau — không lặp lại.<br>
+    2. Gỡ mục “Yêu thích” khỏi header ở cả desktop và mobile, vì trang /yeu-thich chưa tồn tại.<br>
+    3. Trang khai báo <code>color-scheme: light</code> để Chrome trên Android không tự ép sang dark mode và đảo bảng màu.
+  </p>
+
+</div>
+</body>
+</html>
