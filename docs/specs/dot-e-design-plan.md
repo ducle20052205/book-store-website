@@ -382,4 +382,56 @@ Padding trong của 2 section tối tăng lên >=72px, phần chênh chuyển t�
 - **Mảng trống >120px bên trong 1 khối**: sau khi đổi thẻ nổi bật sang bố cục dọc (round 2), khoảng trống 148px/bên từng ghi nhận ở round 1 (trên/dưới cột chữ, do bố cục ngang) **đã hết hẳn** — bố cục dọc không còn cột chữ nào cần "căn giữa" theo chiều cao bìa. Quét lại toàn bộ trang: không tìm thấy mảng trống nào vượt 120px ở bất kỳ khối nào (editorial ~97.5px, Hero ~21px, dải danh mục và thẻ tủ sách đều dưới ngưỡng, thẻ nổi bật giờ chỉ còn diện tích trống 2.1-3.3% tổng thể, không tập trung thành 1 mảng lớn ở đâu).
 - Giữ nguyên ràng buộc cũ: chỉ animate `transform`/`opacity`, không `will-change`, không thêm listener cuộn, không dữ liệu giả.
 
-**Không làm E2.**
+---
+
+## 8. Đợt E2 — Chuyển động có mục đích
+
+Nguyên tắc: motion trả lời hành động của người dùng, không trang trí. Không làm fade-in theo section khi cuộn.
+
+### 8.1 Khoảnh khắc mở trang (chỉ Hero, chỉ lần đầu mỗi phiên)
+
+Các phần tử Hero (tiêu đề, mô tả, nút, 4 bìa xếp chồng) xuất hiện theo trình tự: tiêu đề (0ms) → mô tả (60ms) → nút (120ms) → bìa 1-4 (180/220/260/300ms), mỗi phần tử 280ms, tổng kết thúc ở **580ms** (trong khoảng 400-600ms yêu cầu).
+
+Cờ lưu ở `sessionStorage` (`na-hero-intro-seen`) — đã xác nhận: lần đầu trong tab mới, cờ được set VÀ thuộc tính `data-hero-intro="pending"` xuất hiện trên section; điều hướng lại trong CÙNG tab (cùng phiên), thuộc tính không xuất hiện nữa — không lặp lại animation.
+
+**Cơ chế kỹ thuật quan trọng** (để không vi phạm "tắt JS vẫn hiện đủ nội dung"): mọi phần tử `.hero-intro-el` mặc định `opacity: 1` (hiện đủ) — CHỈ khi section cha có `data-hero-intro="pending"` thì mới về `opacity: 0` rồi chạy animation vào lại 1. Thuộc tính đó do một `<script>` nội tuyến gắn thẳng vào DOM (không qua React, không qua `useEffect`) — chạy đồng bộ trong lúc trình duyệt còn đang phân tích HTML, nên có mặt TRƯỚC khung hình vẽ đầu tiên (giống kỹ thuật chống nháy dark-mode). Không có JS → script không chạy → thuộc tính không bao giờ xuất hiện → nội dung hiện đủ ngay từ đầu, không phụ thuộc gì vào JS.
+
+**Lỗi phát hiện khi kiểm tra, đã sửa**: cách làm trên khiến React hydrate thấy DOM thật (có `data-hero-intro="pending"`) khác với cây SSR nó tự tính (không có thuộc tính đó) → cảnh báo hydration mismatch trên console mỗi lần tải trang. Thêm `suppressHydrationWarning` vào đúng phần tử `<section>` để tắt cảnh báo giả này (React vẫn hoạt động đúng, chỉ là cảnh báo không cần thiết).
+
+**CLS đo được: 0** trên mọi trang có kiểm tra (`/`, `/sach/nha-gia-kim`) — dùng `performance.getEntriesByType('layout-shift')` (buffered, bắt được mọi dịch chuyển từ lúc điều hướng, kể cả khi script đo chạy sau khi trang đã tải xong): 0 bản ghi. Đây là kết quả CHẮC CHẮN theo cấu trúc, không chỉ đo may mắn — animation chỉ đổi `opacity`/`transform`, hai thuộc tính này không bao giờ sinh ra layout-shift (chúng chạy ở tầng compositor, không đụng tới bố cục).
+
+### 8.2 Phản hồi tức thì khi tương tác
+
+- **`:active` cho nút**: class dùng chung `.pressable` (`transform: scale(0.96)` lúc `:active`, transition chỉ trên `transform`) — áp cho toàn bộ nút hành động chính trên site: nút số lượng (+/−), "Thêm vào giỏ hàng"/"Mua ngay", "Áp dụng"/"Xóa bộ lọc", nút "Danh mục" (mega-menu), mở/đóng bộ lọc mobile, đóng Toast, các link trang (Pagination), icon Yêu thích/Tài khoản/Giỏ hàng (Header), 2 tab Sách mới/Bán chạy, nút "Xem tủ sách" (Hero). Không áp cho `<select>` (SortSelect) vì đó là điều khiển gốc trình duyệt, tự có phản hồi riêng theo hệ điều hành.
+- **Số lượng nảy nhẹ khi đổi**: `key={quantity}` trên `<span>` hiển thị số — React tạo lại đúng phần tử này mỗi lần đổi số, class `.qty-bounce` (`scale(1) → scale(1.18) → scale(1)`, 220ms) tự chạy lại mỗi lần mount, không cần theo dõi thêm sự kiện nào. Đã xác nhận bằng Web Animations API (`getAnimations()`) sau một cú bấm thật: đúng 1 animation `qty-bounce` đang chạy, `.finish()` cho kết quả `transform: none` (scale 1) đúng như thiết kế.
+- **Chip lọc co lại + mờ dần khi bị bỏ**: `FilterChips.tsx` đổi thành Client Component, mỗi chip tự quản trạng thái `removing` cục bộ — bấm vào chip chặn điều hướng mặc định, bật `data-removing="true"` (CSS `.filter-chip[data-removing="true"]` chạy `scale(0.75)` + `opacity: 0`, 150ms), rồi mới điều hướng thật sau đúng 150ms (bỏ qua độ trễ nếu `prefers-reduced-motion: reduce`, vì lúc đó animation đã tắt hẳn, chờ thêm vô nghĩa). Đã xác nhận bằng thao tác thật: bấm chip "Văn học" → URL đổi đúng từ `?category=van-hoc&min=50000` thành `?min=50000` (gỡ đúng tham số, giữ nguyên tham số còn lại).
+- **Thẻ sách nhấc nhẹ**: giữ nguyên `.book-card-lift`/`.hover-lift` đã có từ đợt A, không đổi gì.
+
+### 8.3 View Transitions API — kết luận: KHÔNG dùng được, đã kiểm tra trực tiếp (không suy đoán)
+
+Đọc tài liệu Next.js đóng gói sẵn trong `node_modules/next/dist/docs/01-app/02-guides/view-transitions.md` (bắt buộc theo AGENTS.md — bản Next.js này có thể khác bản đã huấn luyện): tài liệu mô tả `<ViewTransition>` "hoạt động trong App Router không cần cấu hình gì" và React dùng "bản canary" đi kèm Next.js.
+
+Kiểm tra thực tế thay vì tin theo mô tả: `node -e "console.log('ViewTransition' in require('react'))"` → **`false`**. Bản `react` cài trong dự án là `19.2.8` (bản phát hành chuẩn, không phải canary) — không có export `ViewTransition` hay `unstable_ViewTransition` nào cả (chỉ có `startTransition`/`useTransition`, hai API concurrent-rendering khác, không liên quan View Transitions API). `next.config.ts` cũng chưa bật cờ experimental nào.
+
+Kết luận: **bỏ qua View Transitions**, không cài `react@canary` hay bất kỳ bản react thử nghiệm nào (đúng ràng buộc "không tự cài thư viện ngoài" — nâng cấp lên 1 bản react khác, dù chính chủ, vẫn là thay đổi dependency lớn hơn phạm vi đợt này). Ghi nhận lại đây để lần sau không mất công tra lại: nếu tương lai nâng cấp `react`/`next` và `'ViewTransition' in require('react')` trả về `true`, có thể revisit.
+
+### 8.4 Skeleton khớp hình dạng nội dung thật
+
+`app/sach/loading.tsx` là skeleton duy nhất hiện có trong repo (route `/sach` và `/sach/[slug]` đều là dynamic `ƒ`, nhưng chỉ `/sach` có loading state riêng). Rà lại thấy lệch 3 chỗ so với trang thật hiện tại (đã qua nhiều lần đổi ở D/E1/E1.5/F):
+1. `py-8 md:py-12` — trang thật chỉ còn `py-8` từ E1.
+2. Bìa skeleton dùng `rounded-card` (14px, dành cho THẺ) thay vì `rounded-cover` (8px, đúng bo góc của chính bìa sách theo thang bo góc phân theo thứ bậc).
+3. Tiêu đề chưa có vạch trái mô phỏng `.section-title` (thêm ở E1.5).
+
+Đã sửa cả 3. Không thêm skeleton mới cho `/sach/[slug]` (trang chi tiết sách) — route này hiện chưa có loading.tsx nào từ trước, thêm mới là mở rộng phạm vi ngoài yêu cầu "cập nhật skeleton cho khớp hình dạng", không phải sửa cái đã lệch.
+
+### 8.5 Kiểm tra bắt buộc
+
+- `npm run build` + `npm run lint`: sạch.
+- `grep -rn "will-change"`: không có kết quả nào trong `app`/`components`/`lib`.
+- Không có `transition`/animation nào nhắm vào `height`/`width`/`padding`/`margin`/`top` trong `globals.css`.
+- `grep addEventListener('scroll'`: đúng 1 kết quả, ở `HeaderShell.tsx` — có TỪ TRƯỚC đợt E2 (đợt A2, dùng cho hiệu ứng viền/bóng header khi cuộn), không phải listener mới thêm ở đợt này.
+- Tràn ngang 375px: 0px ở `/`, `/sach?category=van-hoc&min=50000`, `/sach/nha-gia-kim`.
+- Quét lại toàn bộ text/bg pair (canvas composite): không phát sinh lỗi tương phản mới.
+- `prefers-reduced-motion: reduce`: đã thêm override cho cả 4 cơ chế mới (`.pressable`, `.filter-chip`, `[data-hero-intro]`, `.qty-bounce`) vào đúng khối `@media` đã có sẵn từ đợt A.
+
+**Không làm E3.**

@@ -7,7 +7,7 @@ interface PaginationProps {
 }
 
 const pageLinkClass =
-  "flex min-h-11 min-w-11 items-center justify-center rounded-control px-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600";
+  "pressable flex min-h-11 min-w-11 items-center justify-center rounded-control px-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600";
 
 /** 1b.2: thẻ <a> thật (Next Link render ra <a>), giữ nguyên mọi tham số lọc khi chuyển trang. */
 export function Pagination({ current, totalCount }: PaginationProps) {

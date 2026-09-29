@@ -29,7 +29,7 @@ export function Toast({ open, message, onClose }: ToastProps) {
         type="button"
         onClick={onClose}
         aria-label="Đóng thông báo"
-        className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-control text-lg text-ink-600 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+        className="pressable flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-control text-lg text-ink-600 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
       >
         ×
       </button>

@@ -51,7 +51,7 @@ export function MobileFilterSheet({ activeCount, categories, current, totalCount
       <button
         type="button"
         onClick={() => dialogRef.current?.showModal()}
-        className="inline-flex min-h-11 items-center gap-2 rounded-control border border-line bg-surface px-3 text-sm font-medium text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+        className="pressable inline-flex min-h-11 items-center gap-2 rounded-control border border-line bg-surface px-3 text-sm font-medium text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
       >
         <FilterIcon />
         Bộ lọc{activeCount > 0 ? ` (${activeCount})` : ""}
@@ -68,7 +68,7 @@ export function MobileFilterSheet({ activeCount, categories, current, totalCount
             type="button"
             onClick={() => dialogRef.current?.close()}
             aria-label="Đóng bộ lọc"
-            className="flex min-h-11 min-w-11 items-center justify-center rounded-control text-xl text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+            className="pressable flex min-h-11 min-w-11 items-center justify-center rounded-control text-xl text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
           >
             ×
           </button>

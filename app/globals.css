@@ -293,6 +293,72 @@
     border-left: 3px solid var(--color-cham-700);
     padding-left: 0.875rem; /* 14px */
   }
+
+  /* E2 mục 2: phản hồi tức thì khi bấm — mọi nút/link dạng nút co nhẹ lúc
+     :active. Chỉ animate transform (scale), không đụng bố cục -> không góp
+     phần vào CLS. */
+  .pressable {
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .pressable:active {
+    transform: scale(0.96);
+  }
+
+  /* E2 mục 2: chip lọc co lại rồi mờ dần khi bị bỏ thay vì mất đột ngột —
+     xem FilterChips.tsx (gắn data-removing="true" rồi mới điều hướng, trễ
+     đúng bằng thời lượng transition bên dưới nên lúc điều hướng thật sự
+     xảy ra thì chip đã mờ hẳn, không có bước "biến mất" nào lộ ra). */
+  .filter-chip {
+    transition-property: transform, opacity;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
+  }
+  .filter-chip[data-removing="true"] {
+    transform: scale(0.75);
+    opacity: 0;
+  }
+}
+
+/* E2 mục 1: khoảnh khắc mở trang ở Hero — chỉ lần đầu mỗi phiên (cờ trong
+   sessionStorage, xem script nội tuyến trong Hero.tsx). MẶC ĐỊNH (không có
+   data-hero-intro="pending" trên section cha) mọi phần tử .hero-intro-el
+   hiện đủ ngay lập tức, opacity 1 — tắt JS thì không có gì để bật hoạt ảnh,
+   nội dung vẫn hiện đầy đủ. Script nội tuyến đặt thuộc tính TRƯỚC lần vẽ
+   đầu tiên của trình duyệt (cùng kỹ thuật chống nháy dùng cho dark-mode),
+   nên không có khung hình nào lộ ra trạng thái "đã hiện xong" rồi bị ẩn lại
+   để chạy hoạt ảnh từ đầu. */
+@keyframes hero-intro-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+[data-hero-intro="pending"] .hero-intro-el {
+  opacity: 0;
+  animation: hero-intro-in 280ms var(--ease-out) var(--intro-delay, 0ms) both;
+}
+
+/* E2 mục 2: số lượng nảy nhẹ khi đổi — PurchasePanel.tsx gắn key={quantity}
+   nên React tạo lại đúng phần tử này mỗi lần đổi số; trình duyệt tự chạy
+   lại animation mỗi lần một phần tử mới được gắn vào DOM, không cần theo
+   dõi thêm sự kiện nào. */
+@keyframes qty-bounce {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.qty-bounce {
+  animation: qty-bounce 220ms var(--ease-out);
 }
 
 /* A.4: bắt buộc tắt mọi chuyển động (transition + transform) khi người
@@ -303,13 +369,30 @@
   .book-card-lift,
   .book-cover-shadow,
   .cover-zoom img,
-  .header-surface {
+  .header-surface,
+  .pressable,
+  .filter-chip {
     transition: none !important;
   }
   .hover-lift:hover,
   .book-card-lift:hover,
-  .book-card-lift:hover .cover-zoom img {
+  .book-card-lift:hover .cover-zoom img,
+  .pressable:active {
     transform: none !important;
+  }
+  .filter-chip[data-removing="true"] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  /* E2: khoảnh khắc mở Hero và hiệu ứng nảy số lượng đều chỉ dùng
+     transform/opacity — tắt hẳn animation, hiện thẳng trạng thái cuối. */
+  [data-hero-intro="pending"] .hero-intro-el {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .qty-bounce {
+    animation: none !important;
   }
   /* B.4: skeleton dùng animate-pulse (utility có sẵn của Tailwind) — tắt
      luôn hiệu ứng nhấp nháy khi người dùng giảm chuyển động. */

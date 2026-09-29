@@ -25,10 +25,10 @@ const MAX_QTY_CAP = 99;
 // dòng giữa chừng. flex-1 (mobile, chia đều thanh đáy) và shrink-0 (desktop,
 // giữ độ rộng tự nhiên — xem lý do ở className nơi dùng) áp riêng từng nơi.
 const primaryButtonClass =
-  "inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-control bg-cham-700 px-6 text-button font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-cham-700";
+  "pressable inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-control bg-cham-700 px-6 text-button font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-cham-700";
 
 const secondaryButtonClass =
-  "inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-control border border-line px-6 text-button font-medium text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 disabled:cursor-not-allowed disabled:opacity-40";
+  "pressable inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-control border border-line px-6 text-button font-medium text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 disabled:cursor-not-allowed disabled:opacity-40";
 
 interface PurchasePanelProps {
   stockQuantity: number;
@@ -60,11 +60,21 @@ export function PurchasePanel({ stockQuantity }: PurchasePanelProps) {
             aria-label="Giảm số lượng"
             disabled={outOfStock || quantity <= 1}
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            className="flex min-h-11 min-w-11 items-center justify-center text-lg text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 disabled:cursor-not-allowed disabled:opacity-40"
+            className="pressable flex min-h-11 min-w-11 items-center justify-center text-lg text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 disabled:cursor-not-allowed disabled:opacity-40"
           >
             −
           </button>
-          <span aria-live="polite" className="min-w-8 text-center text-sm font-medium text-ink-900">
+          {/*
+            E2 mục 2: số lượng nảy nhẹ khi đổi — key={quantity} buộc React
+            tạo phần tử DOM mới mỗi lần đổi số thay vì cập nhật text trong
+            phần tử cũ, nên animation (chạy lúc mount) tự lặp lại mỗi lần
+            đổi mà không cần theo dõi thêm sự kiện nào.
+          */}
+          <span
+            key={quantity}
+            aria-live="polite"
+            className="qty-bounce inline-block min-w-8 text-center text-sm font-medium text-ink-900"
+          >
             {quantity}
           </span>
           <button
@@ -72,7 +82,7 @@ export function PurchasePanel({ stockQuantity }: PurchasePanelProps) {
             aria-label="Tăng số lượng"
             disabled={outOfStock || quantity >= maxQty}
             onClick={() => setQuantity((q) => Math.min(maxQty, q + 1))}
-            className="flex min-h-11 min-w-11 items-center justify-center text-lg text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 disabled:cursor-not-allowed disabled:opacity-40"
+            className="pressable flex min-h-11 min-w-11 items-center justify-center text-lg text-ink-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 disabled:cursor-not-allowed disabled:opacity-40"
           >
             +
           </button>

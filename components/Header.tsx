@@ -79,7 +79,7 @@ function BagIcon() {
 }
 
 const iconLinkClass =
-  "flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-control px-2 text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600";
+  "pressable flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-control px-2 text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600";
 
 interface HeaderProps {
   cartCount?: number;

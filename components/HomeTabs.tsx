@@ -138,7 +138,7 @@ export function HomeTabs({ newest, bestselling, featuredExtras }: HomeTabsProps)
           aria-selected={active === "moi-nhat"}
           aria-controls="panel-sach-tab"
           onClick={() => setActive("moi-nhat")}
-          className={`min-h-11 border-b-[3px] px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 ${
+          className={`pressable min-h-11 border-b-[3px] px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 ${
             active === "moi-nhat" ? "border-cham-700 text-cham-700" : "border-transparent text-ink-600 hover:text-ink-900"
           }`}
         >
@@ -151,7 +151,7 @@ export function HomeTabs({ newest, bestselling, featuredExtras }: HomeTabsProps)
           aria-selected={active === "ban-chay"}
           aria-controls="panel-sach-tab"
           onClick={() => setActive("ban-chay")}
-          className={`min-h-11 border-b-[3px] px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 ${
+          className={`pressable min-h-11 border-b-[3px] px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 ${
             active === "ban-chay" ? "border-cham-700 text-cham-700" : "border-transparent text-ink-600 hover:text-ink-900"
           }`}
         >
