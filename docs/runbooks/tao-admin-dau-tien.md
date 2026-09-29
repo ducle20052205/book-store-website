@@ -6,9 +6,9 @@ Quy trình thủ công, chạy **một lần** duy nhất khi dựng môi trư�
 
 Migration nằm trong `supabase/migrations/` và được commit vào repo public. Một migration thăng cấp admin buộc phải chứa email thật của người dùng — email cá nhân không nên nằm trong repo public. Vì vậy thao tác này chạy tay, ngoài repo.
 
-## Vì sao không sửa `protect_profile_role`
+## Vì sao không nới lỏng `protect_profile_role`
 
-Hàm `public.protect_profile_role()` (trigger `profiles_protect_role`) đang đúng: người không phải admin không đổi được `role` của chính mình. Ở migration `0002`, quyền `EXECUTE` của nó đã được thu hồi khỏi `anon` và `authenticated`. Nới lỏng hàm này để tiện cho một thao tác chỉ chạy một lần là đánh đổi tệ: lỗ hổng tự nâng quyền sẽ nằm lại vĩnh viễn trong hệ thống để phục vụ một việc chỉ cần làm một lần. Cách làm dưới đây tắt trigger tạm thời, trong đúng một transaction, rồi bật lại — hàm không bị đụng tới.
+Hàm `public.protect_profile_role()` (trigger `profiles_protect_role`) có được mở rộng ở đợt 2A để khoá thêm cột `email`, nhưng điều kiện `is_admin()` của nó giữ nguyên: người không phải admin không đổi được `role` của chính mình. Ở migration `0002`, quyền `EXECUTE` của nó đã được thu hồi khỏi `anon` và `authenticated`. Nới lỏng điều kiện này để tiện cho một thao tác chỉ chạy một lần là đánh đổi tệ: lỗ hổng tự nâng quyền sẽ nằm lại vĩnh viễn trong hệ thống để phục vụ một việc chỉ cần làm một lần. Cách làm dưới đây tắt trigger tạm thời, trong đúng một transaction, rồi bật lại — hàm không bị sửa để phục vụ thao tác này.
 
 ## Điều kiện trước khi chạy
 
