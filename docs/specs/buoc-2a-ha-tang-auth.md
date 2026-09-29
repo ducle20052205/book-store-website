@@ -74,11 +74,29 @@ alter table public.events add constraint events_event_type_check
     'page_view','search','add_to_cart','checkout_started','order_placed',
     'sign_up','login'
   ]));
+
+-- 4. Khoá cột email: cùng cơ chế đang dùng cho role
+create or replace function public.protect_profile_role()
+returns trigger
+language plpgsql
+security definer
+set search_path to ''
+as $function$
+begin
+  if not public.is_admin() then
+    new.role := old.role;
+    new.email := old.email;
+  end if;
+  return new;
+end;
+$function$;
 ```
+
+Ghi chú phần 4: giữ nguyên tên hàm dù nay bảo vệ hai cột, để khỏi phải `drop` và tạo lại trigger `profiles_protect_role`. Lý do phải làm: policy `profiles_update_own` cho sửa mọi cột của dòng mình, nên nếu không khoá thì người dùng đổi được `profiles.email` qua API và FR-4.4 sẽ gửi email xác nhận đơn tới địa chỉ sai.
 
 Ràng buộc:
 - **Không** đặt UNIQUE trên `profiles.email`. `auth.users.email` đã unique; thêm ràng buộc nữa chỉ tạo thêm một đường làm trigger fail, mà trigger fail nghĩa là đăng ký fail.
-- **Không** sửa `protect_profile_role()`. Hàm đang đúng và đã bị thu hồi quyền EXECUTE ở migration `0002`.
+- Chỉ sửa `protect_profile_role()` đúng như phần 4 ở trên (thêm dòng khoá `email`). **Không** đụng vào điều kiện `is_admin()` và **không** nới lỏng hàm theo bất kỳ hướng nào khác.
 - Sau khi apply, chạy `\df+ public.handle_new_user` (hoặc truy vấn `information_schema.routine_privileges`) xác nhận `public`, `anon`, `authenticated` vẫn **không** có quyền EXECUTE — `create or replace` không khôi phục quyền đã revoke, nhưng phải kiểm chứng chứ không tin lý thuyết.
 - Đồng bộ email là một chiều, chỉ tại thời điểm tạo. FR-5.5 cấm đổi email qua giao diện nên không phát sinh lệch.
 
@@ -156,21 +174,22 @@ Mỗi mục phải kèm số đo hoặc kết quả lệnh trong báo cáo.
 9. `select pg_get_constraintdef(oid) from pg_constraint where conname = 'events_event_type_check';` chứa đúng **7 giá trị**.
 10. Tạo một user thử qua Supabase Studio với `raw_user_meta_data` chứa `full_name`: dòng `profiles` tương ứng có **cả** `email` và `full_name` khác null. Xoá user thử sau khi kiểm.
 11. `select has_function_privilege('anon', 'public.handle_new_user()', 'execute');` trả về **false**; lặp lại với `authenticated` và `public`.
+12. Đăng nhập bằng một tài khoản role `customer`, gọi `update profiles set email = '...'` cho chính dòng của mình qua API, đọc lại: giá trị `email` **không** đổi.
 
 **Header**
-12. Ở viewport 1280px: nhóm liên kết bên phải gồm đúng **2 mục**, tổng chiều rộng trong khoảng **200–235px**; ô tìm kiếm rộng trong khoảng **855–905px**; không có cuộn ngang. Ghi số đo thực.
-13. Ở viewport 375px: không có cuộn ngang; mọi mục chạm ≥ **44×44px**.
-14. Dropdown mở ở 1280px: chụp ảnh cho thấy **không** đọc được chữ nào của thanh CategoryNav xuyên qua panel. Ghi giá trị `z-index` của panel và của nav.
-15. Nhấn Esc khi dropdown đang mở thì panel đóng và focus quay về nút Tài khoản.
-16. `grep -rn "yeu-thich" app components` trả về **0 dòng**.
+13. Ở viewport 1280px: nhóm liên kết bên phải gồm đúng **2 mục**, tổng chiều rộng trong khoảng **200–235px**; ô tìm kiếm rộng trong khoảng **855–905px**; không có cuộn ngang. Ghi số đo thực.
+14. Ở viewport 375px: không có cuộn ngang; mọi mục chạm ≥ **44×44px**.
+15. Dropdown mở ở 1280px: chụp ảnh cho thấy **không** đọc được chữ nào của thanh CategoryNav xuyên qua panel. Ghi giá trị `z-index` của panel và của nav.
+16. Nhấn Esc khi dropdown đang mở thì panel đóng và focus quay về nút Tài khoản.
+17. `grep -rn "yeu-thich" app components` trả về **0 dòng**.
 
 **Route**
-17. Mở `/tai-khoan` khi chưa đăng nhập: chuyển hướng tới `/dang-nhap?next=%2Ftai-khoan` (trang đích trả 404 ở đợt này — chấp nhận được, ghi rõ trong báo cáo).
-18. Mở `/admin` khi đã đăng nhập bằng tài khoản `customer`: chuyển hướng, **không** render giao diện quản trị.
+18. Mở `/tai-khoan` khi chưa đăng nhập: chuyển hướng tới `/dang-nhap?next=%2Ftai-khoan` (trang đích trả 404 ở đợt này — chấp nhận được, ghi rõ trong báo cáo).
+19. Mở `/admin` khi đã đăng nhập bằng tài khoản `customer`: chuyển hướng, **không** render giao diện quản trị.
 
 **Ảnh kiểm tra**
-19. Ảnh chụp **toàn trang thu nhỏ** (không phải ảnh cận cảnh) của `/` và `/sach` ở 1280px và 375px, trước và sau đợt này, để đối chiếu không có gì xô lệch.
-20. Ảnh dropdown mở ở 1280px và sheet tài khoản mở ở 375px.
+20. Ảnh chụp **toàn trang thu nhỏ** (không phải ảnh cận cảnh) của `/` và `/sach` ở 1280px và 375px, trước và sau đợt này, để đối chiếu không có gì xô lệch.
+21. Ảnh dropdown mở ở 1280px và sheet tài khoản mở ở 375px.
 
 ## 9. Điều cần làm rõ trước khi code
 
