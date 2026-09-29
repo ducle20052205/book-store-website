@@ -48,11 +48,20 @@ type TabKey = "moi-nhat" | "ban-chay";
  * categoryColorClasses). Bỏ dòng "Xem chi tiết" của round 1 — round 2 chỉ
  * yêu cầu đúng 5 mục dưới bìa (nhãn, tên, tác giả, giá, mô tả), không có
  * CTA riêng; toàn thẻ đã là 1 link lớn, CTA riêng là thừa.
+ *
+ * [Khép lại đợt E]: thêm chip "Trong tủ sách" — lấy từ `book.collectionRef`
+ * (đã có sẵn trên WithCardExtras, đợt E3), không qua `extra` như
+ * categoryName (extra lấy riêng danh mục CHA cho thẻ này, collectionRef thì
+ * dùng chung đúng map với BookCard). Đặt cùng 1 dòng với nhãn danh mục,
+ * dùng `truncate` (không phải flex-wrap) — cùng lý do đã áp dụng ở
+ * BookCard.tsx: buộc dòng này luôn 1 dòng, cắt bằng "…" thay vì đẩy chiều
+ * cao khi cả nhãn danh mục lẫn "Trong tủ sách" cùng xuất hiện.
  */
-function FeaturedBook({ book, extra }: { book: BookSummary; extra: FeaturedBookExtra | undefined }) {
+function FeaturedBook({ book, extra }: { book: WithCardExtras<BookSummary>; extra: FeaturedBookExtra | undefined }) {
   const description = extra?.description ?? null;
   const categoryName = extra?.categoryName ?? null;
   const categorySlug = extra?.categorySlug ?? null;
+  const collectionRef = book.collectionRef;
 
   return (
     <Link
@@ -67,12 +76,22 @@ function FeaturedBook({ book, extra }: { book: BookSummary; extra: FeaturedBookE
         className="shadow-md"
       />
       <div className="mt-4">
-        {categoryName && (
-          <span
-            className={`mb-2 inline-block w-fit rounded-pill px-2 py-0.5 text-micro font-semibold text-white ${categoryColorClasses(categorySlug).bg}`}
-          >
-            {categoryName}
-          </span>
+        {(categoryName || collectionRef) && (
+          <p className="mb-2 truncate text-micro">
+            {categoryName && (
+              <span
+                className={`inline-block rounded-pill px-2 py-0.5 font-semibold text-white ${categoryColorClasses(categorySlug).bg}`}
+              >
+                {categoryName}
+              </span>
+            )}
+            {categoryName && collectionRef && " "}
+            {collectionRef && (
+              <span title={`Trong tủ sách: ${collectionRef.title}`} className="font-semibold text-cham-700">
+                Trong tủ sách
+              </span>
+            )}
+          </p>
         )}
         <p className="font-serif text-book-title font-semibold text-ink-900">{book.title}</p>
         <p className="mt-1 text-meta text-ink-400">{book.author}</p>

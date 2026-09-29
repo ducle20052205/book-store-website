@@ -434,4 +434,39 @@ Kết luận: **bỏ qua View Transitions**, không cài `react@canary` hay bấ
 - Quét lại toàn bộ text/bg pair (canvas composite): không phát sinh lỗi tương phản mới.
 - `prefers-reduced-motion: reduce`: đã thêm override cho cả 4 cơ chế mới (`.pressable`, `.filter-chip`, `[data-hero-intro]`, `.qty-bounce`) vào đúng khối `@media` đã có sẵn từ đợt A.
 
-**Không làm E3.**
+---
+
+## 9. Đợt E3 — Mật độ thông tin thật trên thẻ sách
+
+Bối cảnh: thẻ sách (`BookCard`) và trang catalog chỉ hiện tên/giá/tác giả — không có gì nói "cuốn này thuộc danh mục con nào" hay "cuốn này có nằm trong một tủ tuyển chọn không", dù dữ liệu đó đã có sẵn trong CSDL. Đợt này thêm đúng 2 lát thông tin thật (không suy diễn, không placeholder) vào những chỗ đã có sẵn nhưng chưa hiển thị.
+
+### 9.1 Nhãn danh mục con + chip "Trong tủ sách" (`BookCard`)
+
+Dưới `StockLabel`, trên tên sách: một dòng `text-micro` hiện tên danh mục CON của chính cuốn sách (chữ thường `text-ink-400`, không phải nhãn màu — khác với thẻ nổi bật ở mục 9.5, vì dòng này lặp lại trên 12+ thẻ mỗi trang, một khối màu lặp nhiều lần sẽ rối mắt) và/hoặc chip "Trong tủ sách" (`font-semibold text-cham-700`) nếu cuốn nằm trong một tủ tuyển chọn — tên tủ hiện qua `title` gốc của trình duyệt khi rê chuột, không lồng thêm `<Link>` thứ hai vì cả thẻ đã là 1 link lớn.
+
+Gộp chung 1 dòng bằng `truncate` (không phải `flex flex-wrap`): tên danh mục con dài nhất hiện có ("Trinh thám – Kinh dị") cộng "Trong tủ sách" có thể không vừa 1 dòng ở thẻ hẹp nhất (2 cột mobile, ~159px) — nếu cho xuống dòng, dòng thứ 2 sẽ phá ngưỡng chênh chiều cao 24px yêu cầu. `truncate` buộc dòng này luôn đúng 1 dòng bất kể độ dài nội dung, phần thừa hiện dấu "…" — an toàn theo cấu trúc, không phải "vừa đủ trong đa số trường hợp".
+
+### 9.2 Dòng giới thiệu ngắn theo danh mục cha (`/sach`)
+
+Dưới tiêu đề trang catalog: một đoạn giới thiệu ngắn (`max-w-[65ch]`), lấy từ `categories.description`. Chỉ hiện khi đang lọc ĐÚNG 1 danh mục CHA (`categoryChain.length === 1`) — ẩn khi lọc theo danh mục con (dù con đó cũng "thuộc về" một cha có mô tả) và ẩn khi không lọc gì cả. Chỉ 5 danh mục cha có `description` (Văn học, Kinh tế, Tâm lý – Kỹ năng, Khoa học – Xã hội, Manga – Light novel); danh mục con luôn `null`. Nội dung lấy đúng nguyên văn được giao, không sửa câu chữ.
+
+### 9.3 Hạ tầng dữ liệu
+
+- Cột `categories.description` đã tồn tại sẵn từ trước — không cần migration cho phần này, chỉ cần `UPDATE ... WHERE slug = ...` cho 5 dòng, xác nhận lại bằng `SELECT` ngay sau đó.
+- RPC `search_books` (dùng cho `/sach` và tab "Bán chạy") chưa trả `category_id` — thêm migration `supabase/migrations/20260929052624_search_books_return_category_id.sql`: `DROP FUNCTION` rồi `CREATE FUNCTION` lại (Postgres không cho đổi tập cột của `RETURNS TABLE` qua `CREATE OR REPLACE`), logic giữ nguyên, chỉ thêm `category_id uuid` vào cột trả về.
+- `lib/queries.ts`: `BookSummary` thêm `categoryId`; `getCategoryNameMap()` (map `category_id` → tên, 23 dòng, lấy 1 lần) và `getBookCollectionRefMap()` (map slug sách → `{slug, title}` tủ sách, join thẳng `collection_books`, 17 dòng); `enrichBooksForCard()` — hàm thuần, gắn `categoryName`/`collectionRef` vào một danh sách `BookSummary` bằng 2 map trên, dùng lại ở mọi trang có `BookCard` (`/`, `/sach`, `/sach/[slug]`, `/tu-sach/[slug]`) thay vì query riêng cho từng cuốn.
+
+### 9.4 Kiểm tra bắt buộc
+
+- Chênh chiều cao thẻ trước/sau khi thêm dòng nhãn: đo bằng cách ẩn dòng nhãn trên CẢ 4 thẻ cùng một hàng lưới rồi so sánh (ẩn trên 1 thẻ duy nhất sẽ bị `align-items: stretch` mặc định của CSS Grid che mất chênh lệch thật, vì cả hàng vẫn bị kéo theo thẻ cao nhất) — **348px → 368px, chênh 20px**, trong ngưỡng 24px cho phép.
+- Kiểm chéo số chip "Trong tủ sách" bằng SQL: `collection_books` có **17 cuốn khác nhau**; đếm chip hiển thị trên `/sach` (10 ở trang 1 + 7 ở trang 2) ra đúng **17**, khớp từng slug một với danh sách SQL — không thiếu, không thừa, không trùng.
+- `SELECT slug, name, description FROM categories WHERE parent_id IS NULL ORDER BY sort_order` ngay sau `UPDATE`: cả 5 dòng khớp nguyên văn nội dung được giao.
+- Hiện/ẩn dòng giới thiệu: đúng cho cả 3 trường hợp (lọc 1 danh mục cha → hiện; lọc danh mục con → ẩn; không lọc → ẩn) trên cả 5 danh mục cha.
+- `npx tsc --noEmit`, `npm run lint`, `npm run build`: sạch.
+- Không có cặp tương phản mới dưới AA, không tràn ngang 375px trên `/`, `/sach`, `/sach?category=...`, trang chi tiết sách, trang tủ sách.
+
+### 9.5 Khép lại đợt E: chip cho thẻ nổi bật
+
+`FeaturedBook` (thẻ đầu mỗi tab ở trang chủ) trước đó chỉ có nhãn danh mục CHA màu (`extra.categoryName`, lấy qua `getFeaturedBookExtrasBySlug` — khác nguồn với `categoryName` của `BookCard`, vì thẻ này cố tình dùng danh mục cha có màu thay vì danh mục con không màu). Thêm chip "Trong tủ sách" lấy từ `book.collectionRef` (đã có sẵn trên `WithCardExtras<BookSummary>` nhờ hạ tầng mục 9.3, không cần query thêm) — đặt cùng 1 dòng với nhãn danh mục cha, cùng cơ chế `truncate` như mục 9.1 để dòng này luôn 1 dòng dù cả hai nhãn cùng xuất hiện.
+
+Đợt E kết thúc ở đây — không còn mục nào trong spec gốc (E0–E3) chưa triển khai.
