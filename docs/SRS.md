@@ -1,6 +1,6 @@
 # Đặc tả Yêu cầu Phần mềm (SRS) – NA Books – 7 Tính năng Core
 
-Phiên bản 1.2 · 24/09/2026 · Soạn bởi Lê Minh Đức
+Phiên bản 1.3 · 29/09/2026 · Soạn bởi Lê Minh Đức
 
 Tài liệu liên quan: docs/specs/claude-code-brand-update.md (nhận diện thương hiệu), docs/specs/buoc-1-catalog-chi-tiet.md (triển khai bước 1), docs/mockups/ (mockup giao diện).
 
@@ -33,6 +33,8 @@ Website bán sách độc lập (single-store), không phải marketplace đa ng
 | Backend | Supabase — Postgres + Auth + Storage + Edge Functions |
 | Automation | Make.com — email xác nhận đơn hàng, báo admin đơn mới |
 | Deploy | Vercel |
+
+Bản 1.3 bổ sung ghi nhận hệ token màu hiện tại (Tailwind v4, khai báo trong `app/globals.css`): chàm thương hiệu `cham-700` (thành phần sáng — Hero, nút chính, liên kết) và `cham-900` (nền tối — Footer, khối editorial, lớp phủ mờ); hai lớp nền sáng phân biệt `paper` (nền trang) và `surface` (nền thẻ/card); 5 màu riêng theo từng danh mục sách cha, dùng cho thẻ danh mục ở trang chủ và dải màu nhận diện trên trang catalog.
 
 ### Actors
 
@@ -366,7 +368,7 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 
 ## 6. Non-functional Requirements
 
-22 yêu cầu phi chức năng, nhóm theo 6 nhóm chuẩn SRS: hiệu năng, bảo mật, khả năng sử dụng, khả năng bảo trì/mở rộng, tương thích, khả năng tiếp cận.
+25 yêu cầu phi chức năng, nhóm theo 6 nhóm chuẩn SRS: hiệu năng, bảo mật, khả năng sử dụng, khả năng bảo trì/mở rộng, tương thích, khả năng tiếp cận.
 
 ### 6.1 Hiệu năng
 
@@ -388,6 +390,8 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 - **NFR-3.2** — Thông báo lỗi (hết hàng, sai mật khẩu, hết hạn phiên...) bằng tiếng Việt, rõ ràng, không lộ mã lỗi kỹ thuật thô.
 - **NFR-3.3** — Thao tác quan trọng (xóa sách, hủy đơn) yêu cầu xác nhận (confirm dialog) trước khi thực hiện.
 - **NFR-3.4** — Mọi chữ hiển thị viết bằng tiếng Việt theo giọng văn thống nhất: NA Books xưng "chúng mình", gọi người dùng là "bạn"; không dùng teen-code, không lạm dụng dấu "!".
+- **NFR-3.5** — Nền trang và nền các khối nội dung (thẻ sách, card) dùng hai màu khác nhau, đủ chênh lệch để phân biệt bằng mắt — không dùng chung một màu nền cho cả trang lẫn thẻ đặt trên nó.
+- **NFR-3.6** — Hiệu ứng chuyển động trên giao diện chỉ animate `transform` và `opacity` (không animate các thuộc tính gây reflow như `width`, `height`, `top`); đảm bảo Cumulative Layout Shift (CLS) = 0; tôn trọng cài đặt `prefers-reduced-motion: reduce` của người dùng.
 
 ### 6.4 Khả năng bảo trì & mở rộng
 
@@ -407,6 +411,7 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 - **NFR-6.4** — Ảnh bìa có `alt` là tên sách; icon trang trí có `aria-hidden`.
 - **NFR-6.5** — Không truyền đạt thông tin chỉ bằng màu sắc.
 - **NFR-6.6** — Chữ nội dung tối thiểu 14px.
+- **NFR-6.7** — Sau mỗi lần thêm hoặc đổi giá trị một token màu trong hệ thống thiết kế, phải kiểm tra lại mọi cặp màu chữ/nền bị ảnh hưởng để đảm bảo vẫn đạt chuẩn WCAG AA (NFR-6.1); token nào làm cặp màu tụt dưới ngưỡng phải được điều chỉnh trước khi đưa vào sử dụng.
 
 ## 7. Lịch sử thay đổi
 
@@ -415,3 +420,4 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 | 1.0 | 21/09/2026 | Bản đầu: 7 tính năng Core. |
 | 1.1 | 22/09/2026 | Tìm kiếm theo tác giả, không dấu (FR-1.3); RPC `search_books` (FR-1.11); route `/sach` (FR-1.12, FR-2.1); sách liên quan có phương án dự phòng (FR-2.3); khối "Có trong tủ sách" (FR-2.6); thanh mua hàng dính đáy trên mobile (FR-2.7); ghi log sự kiện (5.8); tủ sách tuyển chọn (5.9); schema 9 bảng; NFR giọng văn (NFR-3.4) và accessibility (6.6). |
 | 1.2 | 24/09/2026 | Chính thức hoá chính sách bìa sách: không dùng ảnh bìa bản quyền, toàn bộ bìa do `<BookCover>` sinh tự động từ `title`/`author`/`slug` (FR-2.8 mới); `cover_image_url` giữ trong schema `books` cho khả năng mở rộng sau này nhưng không dùng ở phạm vi hiện tại; cập nhật FR-1.1, FR-2.1 cho khớp. |
+| 1.3 | 29/09/2026 | Ghi nhận các quyết định thiết kế của bước 1.5 (đợt A→F, chi tiết xem `docs/specs/dot-e-design-plan.md`): chữ ký thị giác riêng — ghi chú biên tập ở lề nối bằng nét kẻ tay, quy tắc chữ nghiêng/đứng theo người nói; hợp nhất hệ màu tối `cham-900` và phân lớp nền trang/thẻ `paper`/`surface` (NFR-3.5 mới); chuyển động có mục đích, chỉ animate transform/opacity, CLS = 0, tôn trọng `prefers-reduced-motion` (NFR-3.6 mới); yêu cầu tái kiểm WCAG AA sau mỗi lần đổi token màu (NFR-6.7 mới); nhãn danh mục con, chip "Trong tủ sách" và giới thiệu ngắn theo danh mục cha trên trang catalog. |
