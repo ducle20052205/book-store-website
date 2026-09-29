@@ -334,22 +334,24 @@ Không đổi `--color-danger` (chưa dùng ở đâu trong code, không có c�
 
 ### 7.2 F2 — Sửa tỉ lệ từng khối
 
-**F2.1 Thẻ sách nổi bật** — đây là điểm có mâu thuẫn nội tại trong spec, chứng minh bằng số đo (không phải đoán): thử giữ "chiếm trọn hàng" (cách E1.5 đã làm để đạt >=1.4x) và ép bìa vào trần 32-38% cùng lúc, đo tại 1440px ra đúng cả hai (35.8% trần, 1.51x sàn) NHƯNG diện tích trống đo được **49.4%** — vì cột chữ phải "căn giữa theo chiều dọc" (yêu cầu riêng, không phải lấp đầy) trong khi bìa 35% của 1 thẻ rộng hết hàng cao tới ~700px, còn nội dung chữ tự nhiên chỉ cao ~250-260px. Giải phương trình cho mọi chiều rộng thẻ: diện tích trống nhỏ nhất về mặt đại số là ~15.7%, nhưng chỉ đạt được khi bìa co lại còn ~90px — nhỏ hơn cả bìa thường, phá luôn sàn 1.4x. **Kết luận: sàn 1.4x và trần diện tích trống 15% không thể cùng thoả khi chữ phải căn giữa — đây là mâu thuẫn của chính đề bài, không phải lỗi triển khai.**
+**F2.1 Thẻ sách nổi bật — round 1 (bố cục ngang, đã bỏ):** thử giữ "chiếm trọn hàng" (cách E1.5 đã làm để đạt >=1.4x) và ép bìa vào trần 32-38% cùng lúc, đo tại 1440px ra đúng cả hai (35.8% trần, 1.51x sàn) NHƯNG diện tích trống đo được **49.4%** — vì cột chữ phải "căn giữa theo chiều dọc" trong khi bìa 35% của 1 thẻ rộng hết hàng cao tới ~700px, còn nội dung chữ tự nhiên chỉ cao ~250-260px. Giải phương trình cho mọi chiều rộng thẻ: diện tích trống nhỏ nhất về đại số là ~15.7%, chỉ đạt được khi bìa co còn ~90px — nhỏ hơn cả bìa thường. Thử nới sang `col-span-3` cố định (không tăng theo lưới ở lg/2xl) kéo trống xuống ~35-43%, tỉ lệ bìa còn ~1.12-1.22x — vẫn không đạt trần 15%. **Kết luận (đã xác nhận đúng): sàn 1.4x và trần diện tích trống 15% không thể cùng thoả khi bìa và chữ đặt CẠNH NHAU theo chiều ngang và chữ phải căn giữa — mâu thuẫn của chính đề bài, không phải lỗi triển khai.**
 
-Ưu tiên đã chọn (đúng theo chỉ dẫn "nếu xung đột thì giảm chiều cao thẻ" của spec): đổi thẻ từ "chiếm trọn hàng" sang **luôn `col-span-3`** (không tăng theo lưới ở lg/2xl) — giữ chiều rộng thẻ ổn định hơn qua các breakpoint, kéo diện tích trống xuống còn ~35-43%, tỉ lệ bìa còn ~1.12-1.22x (dưới sàn nhưng luôn > 1, tức luôn to hơn bìa thường, không bằng/nhỏ hơn). Quan trọng hơn: lỗi GỐC trong ảnh chụp ("mảng trống lớn dồn hẳn góc dưới") đã sửa dứt điểm bằng `justify-center` — trống giờ chia đều 2 phía trên/dưới, không còn dồn một góc.
+**F2.1 round 2 [chốt] — đổi hẳn sang bố cục DỌC:** bìa TRÊN (chiếm hết chiều rộng thẻ, tỉ lệ 2:3), chữ DƯỚI, thẻ chiếm `col-span-2` (2 ô lưới, không chiếm trọn hàng, không còn trần % nào cho bìa — bỏ hẳn tiêu chí 32-38% vì nó chỉ đúng cho bố cục ngang). Khi bìa và chữ xếp CHỒNG thay vì CẠNH NHAU, khối chữ chỉ cần cao bằng đúng nội dung tự nhiên của nó — xoá hẳn mâu thuẫn hình học ở round 1, không cần đánh đổi gì nữa:
 
-| Breakpoint | Bìa/thẻ | Bìa/bìa thường | Diện tích trống |
+| Breakpoint | Bìa/bìa thường | Diện tích trống | Ô khuyết hàng cuối |
 |---|---|---|---|
-| 375px (mobile, dọc) | tối đa 200px (đúng spec) | — | — |
-| 768px | 34.7% | 1.12x | 37.0% |
-| 1440px | 35.5% | 1.12x | 43.0% |
-| 1600px | 35.1% | 1.12x | 39.0% |
+| 375px | 1.88x | 3.3% | 0 |
+| 768px | 1.92x | 2.5% | 0 |
+| 1024px | 1.92x | 2.4% | 0 |
+| 1600px | 1.93x | 2.1% | 0 |
 
-Thêm `items-start` vào lưới cha — thẻ `col-span-3` để lại 1 ô trống cùng hàng ở lg (4 cột) khiến 1 thẻ thường vô tình chung hàng với thẻ nổi bật; nếu không có `items-start`, grid mặc định `stretch` sẽ kéo dãn thẻ thường đó theo chiều cao thẻ nổi bật — đã xác nhận thẻ thường trong hàng đó cao đúng bằng thẻ ở hàng khác (558-561px), không bị kéo dãn.
+Cả 4 breakpoint đều đạt trần trống <=15% với biên độ lớn (cao nhất 3.3%, không phải chỉ vừa đủ), tỉ lệ bìa ổn định quanh ~1.9x (đúng như dự đoán "~2 lần theo chiều ngang" — bìa rộng gần bằng 2 ô lưới trừ padding thẻ, tự nhiên ra đúng tỉ lệ này mà không cần ép %).
 
-Thêm nhãn danh mục (màu theo `categoryColorClasses`, tái dùng token đợt E1.5) và dòng "Xem chi tiết →" — viết dạng `<span>` thường, không lồng `<Link>` thứ hai (link lồng link là HTML không hợp lệ).
+**Số sách lấy để lưới không khuyết ô ở cả 4 breakpoint:** thẻ nổi bật chiếm 2 ô nên số ô "thừa" cùng hàng = (số cột - 2): base(2 cột)=0, md(3)=1, lg(4)=2, 2xl(5)=3. Để không khuyết ô, số sách thường N cần thoả đồng thời N≡0(mod2), N≡1(mod3), N≡2(mod4), N≡3(mod5) — giải bằng CRT ra nghiệm dương nhỏ nhất N=58 (quá nhiều cho 1 khối xem nhanh). Thay vào đó lấy dư **16** cuốn, ẩn responsive theo từng breakpoint để số HIỂN THỊ là số lớn nhất <=16 thoả đúng mốc đó: base=16, md=16 (trùng hợp cả 2 mốc đầu không cần ẩn), lg=14 (ẩn 2 cuốn cuối), 2xl=13 (ẩn 3 cuốn cuối) — ẩn đơn điệu tăng dần, không cuốn nào ẩn rồi hiện lại. Tổng lấy về: 17 (1 nổi bật + 16 thường), tăng từ 13 ở bản E1.5/round 1.
 
-Bỏ cơ chế ẩn sách ở 2xl (`HIDE_AT_2XL_FROM_INDEX` của E1.5) — không còn cần thiết vì thẻ nổi bật không còn chiếm trọn hàng ở 2xl, phép chia ô mồ côi đổi khác (xem đoạn dưới).
+Thêm `items-start` vào lưới cha (giữ nguyên từ round 1) — thẻ nổi bật (bìa~2x + chữ to hơn) vẫn cao hơn hẳn thẻ thường dù đổi bố cục; không có `items-start`, thẻ thường chung hàng sẽ bị grid kéo dãn theo chiều cao thẻ nổi bật. Đã xác nhận qua ảnh chụp: thẻ thường cạnh thẻ nổi bật giữ đúng kích thước tự nhiên, không bị kéo dãn.
+
+Thêm nhãn danh mục (màu theo `categoryColorClasses`, tái dùng token đợt E1.5). Bỏ dòng "Xem chi tiết" của round 1 — round 2 chỉ liệt kê đúng 5 mục dưới bìa (nhãn, tên, tác giả, giá, mô tả), không có CTA riêng.
 
 **F2.2 Dải danh mục** — chiều cao cố định `h-[112px]` (giữa khoảng 104-120px), flex căn giữa dọc thay vì cao theo nội dung. Hover đổi từ `.hover-lift` dùng chung (nâng 3px + đổi shadow) sang nâng đúng 2px chỉ bằng `transform` (`hover:-translate-y-0.5`), không đổi kích thước — đã xác nhận `transition-property` chỉ gồm `transform/translate/scale/rotate`, width/height cố định 262.5×112 không đổi.
 
@@ -377,7 +379,7 @@ Padding trong của 2 section tối tăng lên >=72px, phần chênh chuyển t�
 
 - `npm run build` + `npm run lint`: sạch.
 - Tràn ngang 375px: 0px ở `/`, `/sach`, `/sach?category=van-hoc`, `/sach/nha-gia-kim`, `/tu-sach`.
-- **3 mảng trống lớn nhất còn lại** (đo bằng script, chỉ tính trống BÊN TRONG một khối, không tính ô lưới thiếu thẻ): (1) và (2) là khoảng trên/dưới cột chữ trong thẻ sách nổi bật — **148px mỗi bên**, xuất hiện giống hệt nhau ở cả 2 tab (Sách mới/Bán chạy) vì cùng 1 component; đây là hệ quả trực tiếp của mâu thuẫn "sàn 1.4x vs trần diện tích trống" đã chứng minh ở mục F2.1, không tìm được cách xoá hẳn mà vẫn giữ đủ 2 ràng buộc kia. Không tìm thấy mảng trống thứ 3 nào vượt 120px — khối editorial (~97.5px), Hero (~21px), dải danh mục và thẻ tủ sách đều dưới ngưỡng.
+- **Mảng trống >120px bên trong 1 khối**: sau khi đổi thẻ nổi bật sang bố cục dọc (round 2), khoảng trống 148px/bên từng ghi nhận ở round 1 (trên/dưới cột chữ, do bố cục ngang) **đã hết hẳn** — bố cục dọc không còn cột chữ nào cần "căn giữa" theo chiều cao bìa. Quét lại toàn bộ trang: không tìm thấy mảng trống nào vượt 120px ở bất kỳ khối nào (editorial ~97.5px, Hero ~21px, dải danh mục và thẻ tủ sách đều dưới ngưỡng, thẻ nổi bật giờ chỉ còn diện tích trống 2.1-3.3% tổng thể, không tập trung thành 1 mảng lớn ở đâu).
 - Giữ nguyên ràng buộc cũ: chỉ animate `transform`/`opacity`, không `will-change`, không thêm listener cuộn, không dữ liệu giả.
 
 **Không làm E2.**

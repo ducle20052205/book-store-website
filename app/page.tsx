@@ -54,17 +54,17 @@ const COLLECTION_STACK_OFFSETS = [
 export default async function Home() {
   const [featured, newest, bestsellerResult, categoryCounts, editorial, collectionsWithPreview] = await Promise.all([
     getFeaturedCollection(),
-    // E1.5: 13 = 1 nổi bật + 12 thường. 12 chia hết cho 2/3/4 cột (base/md/lg)
-    // nên không ô nào mồ côi ở 3 tier đó; riêng 2xl (5 cột) ẩn bớt 2 cuốn
-    // cuối — xem HIDE_AT_2XL_FROM_INDEX trong components/HomeTabs.tsx.
-    getNewestBooks(13),
+    // Đợt F round 2: 17 = 1 nổi bật (col-span-2) + 16 thường — số 16 và
+    // cách ẩn responsive theo từng breakpoint để lưới không khuyết ô, xem
+    // comment đầy đủ tại VISIBILITY_CLASS_BY_INDEX trong components/HomeTabs.tsx.
+    getNewestBooks(17),
     // 1b.1: tab "Bán chạy" dùng chung search_books(p_sort => 'bestseller') với /sach.
     searchBooks({ sort: "bestseller", page: 1 }),
     getCategoryCounts(),
     getEditorialPick(),
     getCollectionsWithPreview(),
   ]);
-  const bestselling = bestsellerResult.books.slice(0, 13);
+  const bestselling = bestsellerResult.books.slice(0, 17);
 
   // E1: mô tả ngắn cho đúng 2 cuốn đứng đầu mỗi tab (khối "to hơn hẳn").
   // Đợt F [F2.1]: lấy kèm nhãn danh mục cho cùng 2 cuốn đó.

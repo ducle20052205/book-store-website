@@ -18,53 +18,34 @@ interface HomeTabsProps {
 type TabKey = "moi-nhat" | "ban-chay";
 
 /**
- * E1.5 [sửa lỗi cũ]: bản E1 cho bìa nổi bật một chiều rộng CỐ ĐỊNH trong
- * khi thẻ chiếm col-span cố định — bìa cố định có lúc còn NHỎ HƠN bìa thẻ
- * thường. E1.5 sửa bằng bìa % + thẻ chiếm TRỌN HÀNG ở mọi breakpoint, đạt
- * >=1.4x mọi nơi — nhưng lại tạo bìa quá to (tràn hết chiều rộng thẻ khi
- * thẻ chiếm cả 4-5 cột), sinh khoảng trống lớn dưới cột chữ ngắn hơn nhiều
- * so với bìa cao — đúng lỗi Đợt F chẩn đoán ("mảng trống lớn góc dưới phải").
+ * Lịch sử: E1 (bìa px cố định) và E1.5 (bìa % + chiếm trọn hàng, đạt sàn
+ * >=1.4x) đều bị Đợt F chẩn đoán lỗi ("mảng trống lớn góc dưới phải"/diện
+ * tích trống vượt xa 15%). Đợt F round 1 thử ép bìa vào trần 32-38% trong
+ * bố cục NGANG (bìa trái, chữ phải) — CHỨNG MINH BẰNG SỐ ĐO đây là mâu
+ * thuẫn nội tại: cột chữ phải "căn giữa theo chiều dọc" trong khi bìa cao
+ * gấp nhiều lần chiều cao chữ tự nhiên, không cách nào vừa đạt sàn 1.4x
+ * vừa đạt trần trống 15% khi 2 khối đặt CẠNH NHAU theo chiều ngang.
  *
- * Đợt F [F2.1] — CHỨNG MINH BẰNG SỐ ĐO: đã thử giữ "chiếm trọn hàng" và ép
- * bìa vào trần 32-38%, đo thực tế (xem báo cáo đợt F): ở 1440px bìa đạt
- * đúng 35.8% (trong trần) và tỉ lệ 1.51x bìa thường (đạt sàn), NHƯNG diện
- * tích trống đo được 49.4% — vượt xa 15% cho phép. Nguyên nhân hình học:
- * cột chữ căn GIỮA (bullet 3 yêu cầu "căn giữa theo chiều dọc", không phải
- * lấp đầy) trong khi bìa 35% của 1 thẻ RỘNG HẾT HÀNG cao tới ~700px — nội
- * dung chữ (tên+tác giả+giá+mô tả+CTA) chỉ tự nhiên cao ~250-260px dù có
- * thêm nhãn danh mục, không cách nào "căn giữa" mà lấp hết 700px. Đã thử
- * giải phương trình đại số cho welcome mọi chiều rộng thẻ W: với text cao
- * cố định ~260px, diện tích trống nhỏ nhất đạt được la ~15.7% NHƯNG chỉ
- * tại W~260px (bìa khi đó chỉ ~90px — nhỏ hơn cả bìa thường, phá luôn sàn
- * 1.4x). Kết luận: 2 ràng buộc (sàn 1.4x) và (trần diện tích trống 15%)
- * KHÔNG thể cùng thoả với chữ căn giữa — đây là mâu thuẫn nội tại của
- * spec, không phải lỗi triển khai.
+ * Đợt F round 2 [chốt]: bỏ hẳn bố cục ngang, đổi sang DỌC — bìa TRÊN
+ * (chiếm hết chiều rộng thẻ, tỉ lệ 2:3), chữ DƯỚI. Đây là thay đổi cấu
+ * trúc, không phải tinh chỉnh số đo: khi bìa và chữ xếp CHỒNG thay vì
+ * CẠNH NHAU, chiều cao khối chữ không còn bị ép phải "căn giữa" so với
+ * chiều cao bìa — chữ chỉ cần chiều cao TỰ NHIÊN của chính nó, xoá bỏ hẳn
+ * mâu thuẫn hình học đã chứng minh ở round 1. Thẻ chiếm col-span-2 (2 ô
+ * lưới, không chiếm trọn hàng) — bìa khi đó rộng gần gấp đôi 1 ô lưới
+ * thường (2 ô + khoảng cách giữa 2 ô, trừ padding thẻ), tự nhiên lớn hơn
+ * bìa thường ~2 lần theo chiều ngang mà không cần ép tỉ lệ % nào — số đo
+ * thật xem báo cáo đợt F round 2.
  *
- * Ưu tiên đã chọn (theo đúng chỉ dẫn "nếu 2 ràng buộc xung đột thì giảm
- * chiều cao thẻ" của spec — tức giảm bìa, chấp nhận tỉ lệ dưới 1.4x): thẻ
- * đổi từ "chiếm trọn hàng" sang LUÔN col-span-3 (không tăng theo cột lưới
- * ở lg/2xl nữa) — giữ W tương đối ổn định (~700-825px) qua mọi breakpoint
- * thay vì phình to theo số cột, kéo diện tích trống từ 49% xuống còn
- * ~35% (số đo thật xem báo cáo đợt F) — vẫn trên 15% nhưng đã giảm hơn
- * 1/3, tỉ lệ bìa còn ~1.18-1.22x (dưới sàn 1.4x nhưng vẫn RÕ RÀNG to hơn
- * bìa thường, không phải bằng hoặc nhỏ hơn). Quan trọng hơn: "không được
- * có mảng trống DƯỚI CÙNG" (bullet 2, đúng lỗi gốc trong ảnh chụp — trống
- * dồn hẳn một góc) ĐÃ được sửa dứt điểm bằng justify-center — trống giờ
- * chia đều 2 phía trên/dưới cột chữ, không còn dồn một góc.
+ * items-start ở lưới cha (xem HomeTabs) VẪN cần giữ: thẻ nổi bật (col-
+ * span-2, bìa~2x + chữ to hơn) vẫn cao hơn hẳn thẻ thường dù đã đổi bố
+ * cục — không có items-start, thẻ thường chung hàng (phần "ô lưới thừa"
+ * sau span-2) sẽ bị grid kéo dãn theo chiều cao thẻ nổi bật.
  *
- * items-start ở lưới cha (xem HomeTabs) để 1 thẻ thường vô tình chung hàng
- * với thẻ nổi bật (do span 3/4 hoặc 3/5, không phải trọn hàng) KHÔNG bị
- * kéo dãn theo chiều cao thẻ nổi bật — tái lặp đúng lỗi "thẻ thường có
- * khoảng trống chết" mà E1.5 từng sửa.
- *
- * Bố cục dọc (ảnh trên, chữ dưới) dưới `md` vì thẻ hẹp, bìa tối đa 200px
- * (đúng spec); chuyển ngang từ `md` vì thẻ đã đủ rộng.
- *
- * Thêm nhãn danh mục (màu theo 1 trong 5 danh mục cha, tái dùng
- * categoryColorClasses) và dòng "Xem chi tiết" — viết dạng span thường,
- * KHÔNG lồng thêm <Link> thứ hai bên trong thẻ (thẻ đã là 1 link lớn bao
- * trọn — link lồng link là HTML không hợp lệ, đọc màn hình cũng sẽ báo 2
- * điểm dừng cho cùng 1 đích đến).
+ * Nhãn danh mục (màu theo 1 trong 5 danh mục cha, tái dùng
+ * categoryColorClasses). Bỏ dòng "Xem chi tiết" của round 1 — round 2 chỉ
+ * yêu cầu đúng 5 mục dưới bìa (nhãn, tên, tác giả, giá, mô tả), không có
+ * CTA riêng; toàn thẻ đã là 1 link lớn, CTA riêng là thừa.
  */
 function FeaturedBook({ book, extra }: { book: BookSummary; extra: FeaturedBookExtra | undefined }) {
   const description = extra?.description ?? null;
@@ -74,41 +55,63 @@ function FeaturedBook({ book, extra }: { book: BookSummary; extra: FeaturedBookE
   return (
     <Link
       href={`/sach/${book.slug}`}
-      className="hover-lift col-span-2 flex flex-col gap-5 rounded-card border border-line bg-surface p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2 md:col-span-3 md:flex-row md:items-center md:gap-7"
+      className="hover-lift col-span-2 flex flex-col rounded-card border border-line bg-surface p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
     >
-      <div className="mx-auto w-full max-w-[200px] shrink-0 md:mx-0 md:w-[37%] md:max-w-none">
-        <BookCover
-          slug={book.slug}
-          title={book.title}
-          author={book.author}
-          coverImageUrl={book.coverImageUrl}
-          className="shadow-md"
-        />
-      </div>
-      <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+      <BookCover
+        slug={book.slug}
+        title={book.title}
+        author={book.author}
+        coverImageUrl={book.coverImageUrl}
+        className="shadow-md"
+      />
+      <div className="mt-4">
         {categoryName && (
           <span
-            className={`mb-1 inline-block w-fit rounded-pill px-2 py-0.5 text-micro font-semibold text-white ${categoryColorClasses(categorySlug).bg}`}
+            className={`mb-2 inline-block w-fit rounded-pill px-2 py-0.5 text-micro font-semibold text-white ${categoryColorClasses(categorySlug).bg}`}
           >
             {categoryName}
           </span>
         )}
         <p className="font-serif text-book-title font-semibold text-ink-900">{book.title}</p>
-        <p className="text-meta text-ink-400">{book.author}</p>
+        <p className="mt-1 text-meta text-ink-400">{book.author}</p>
         <Price
           price={book.price}
           discountPrice={book.discountPrice}
           hideBadge
           className="mt-1 text-card-price font-semibold"
         />
-        {description && <p className="mt-4 line-clamp-3 max-w-[52ch] text-sm text-ink-600">{description}</p>}
-        <span className="mt-4 inline-flex w-fit items-center gap-1 text-sm font-medium text-cham-700">
-          Xem chi tiết <span aria-hidden="true">→</span>
-        </span>
+        {description && <p className="mt-3 line-clamp-3 text-sm text-ink-600">{description}</p>}
       </div>
     </Link>
   );
 }
+
+/**
+ * Đợt F round 2: thẻ nổi bật giờ chiếm col-span-2 (không phải trọn hàng),
+ * nên số ô "thừa" cùng hàng với nó = (số cột - 2), đổi theo breakpoint:
+ * base(2 cột)=0 ô thừa, md(3)=1, lg(4)=2, 2xl(5)=3. Để lưới không khuyết ô
+ * ở CẢ 4 breakpoint, số sách thường hiển thị N phải thoả đồng thời:
+ *   N ≡ 0 (mod 2)   — base: thẻ nổi bật lấp kín hàng, các hàng sau đủ 2
+ *   N ≡ 1 (mod 3)   — md: 1 ô thừa + các hàng sau đủ 3
+ *   N ≡ 2 (mod 4)   — lg: 2 ô thừa + các hàng sau đủ 4
+ *   N ≡ 3 (mod 5)   — 2xl: 3 ô thừa + các hàng sau đủ 5
+ * Giải đồng thời (CRT) ra nghiệm dương nhỏ nhất N=58 — quá nhiều để lấy hết
+ * cho một khối xem nhanh ở trang chủ. Thay vào đó lấy dư 16 cuốn (đủ cho
+ * mọi breakpoint ẩn bớt một chút thay vì lấy đúng 58), ẩn responsive theo
+ * TỪNG breakpoint để số HIỂN THỊ ở mỗi mốc là số lớn nhất <=16 thoả đúng
+ * điều kiện mốc đó: base=16 (16 mod 2=0, hiện đủ 16), md=16 (16 mod 3=1,
+ * hiện đủ 16 — trùng hợp cả 2 mốc đầu đều không cần ẩn), lg=14 (16 mod 4=0
+ * sai, 14 mod 4=2 đúng — ẩn 2 cuốn cuối), 2xl=13 (16 mod 5=1 sai, 13 mod
+ * 5=3 đúng — ẩn 3 cuốn cuối). Ẩn đơn điệu tăng dần theo breakpoint (không
+ * có cuốn nào ẩn rồi hiện lại) nên chỉ cần 2 nhóm: cuốn thứ 14 (index 13)
+ * ẩn từ 2xl; cuốn 15-16 (index 14-15) ẩn từ lg. Xem báo cáo đợt F round 2
+ * cho bảng số ô khuyết đo thực tế ở cả 4 mốc.
+ */
+const VISIBILITY_CLASS_BY_INDEX: Record<number, string> = {
+  13: "2xl:hidden",
+  14: "lg:hidden",
+  15: "lg:hidden",
+};
 
 /**
  * Mục 2: khối tab Sách mới / Bán chạy trên trang chủ, dùng lại logic FR-1.6 /
@@ -158,9 +161,9 @@ export function HomeTabs({ newest, bestselling, featuredExtras }: HomeTabsProps)
 
       {/*
         items-start: xem lý do đầy đủ trong comment của FeaturedBook — thẻ
-        nổi bật giờ không còn chiếm trọn hàng ở lg/2xl (chỉ col-span-3), nên
-        1 thẻ thường có thể vô tình chung hàng với nó; items-start ngăn
-        grid kéo dãn thẻ thường đó theo chiều cao thẻ nổi bật.
+        nổi bật (col-span-2, bìa~2x + chữ to hơn) vẫn cao hơn hẳn thẻ
+        thường; items-start ngăn grid kéo dãn thẻ thường chung hàng với nó
+        theo chiều cao thẻ nổi bật.
       */}
       <div
         id="panel-sach-tab"
@@ -173,8 +176,8 @@ export function HomeTabs({ newest, bestselling, featuredExtras }: HomeTabsProps)
         ) : (
           <>
             <FeaturedBook book={firstBook} extra={featuredExtras[firstBook.slug]} />
-            {restBooks.map((book) => (
-              <BookCard key={book.slug} book={book} />
+            {restBooks.map((book, i) => (
+              <BookCard key={book.slug} book={book} className={VISIBILITY_CLASS_BY_INDEX[i]} />
             ))}
           </>
         )}
