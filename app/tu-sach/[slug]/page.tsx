@@ -1,15 +1,24 @@
 import { notFound } from "next/navigation";
 import { BookCard } from "@/components/BookCard";
 import { EditorNoteConnector } from "@/components/EditorNoteConnector";
-import { getCollectionBySlug } from "@/lib/queries";
+import { enrichBooksForCard, getBookCollectionRefMap, getCategoryNameMap, getCollectionBySlug } from "@/lib/queries";
 
 export const revalidate = 60;
 
 export default async function CollectionDetailPage({ params }: PageProps<"/tu-sach/[slug]">) {
   const { slug } = await params;
-  const collection = await getCollectionBySlug(slug);
+  const [collection, categoryNames, collectionRefs] = await Promise.all([
+    getCollectionBySlug(slug),
+    getCategoryNameMap(),
+    getBookCollectionRefMap(),
+  ]);
 
   if (!collection) notFound();
+
+  // E3: mọi cuốn ở đây đều đã "trong tủ sách" (chính tủ đang xem) — vẫn
+  // enrich đồng nhất với mọi nơi khác dùng BookCard thay vì đặc cách bỏ
+  // qua, dữ liệu vẫn đúng thật dù có hơi lặp lại ngữ cảnh trang.
+  const books = enrichBooksForCard(collection.books, categoryNames, collectionRefs);
 
   return (
     <div className="container-page py-12">
@@ -24,7 +33,7 @@ export default async function CollectionDetailPage({ params }: PageProps<"/tu-sa
           tăng cỡ chữ chỉ để hợp thức hoá nghiêng. Vẫn giữ xoay nhẹ + nét kẻ
           (≥768px) — 2 dấu hiệu chữ ký này không phụ thuộc cỡ chữ.
         */}
-        {collection.books.map((book) => (
+        {books.map((book) => (
           <div key={book.slug} className="relative">
             <BookCard book={book} />
             <div className="relative mt-3 pl-3">

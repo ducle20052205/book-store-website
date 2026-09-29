@@ -6,11 +6,13 @@ import { BookCard } from "@/components/BookCard";
 import { BookCover } from "@/components/BookCover";
 import { Price } from "@/components/Price";
 import { categoryColorClasses } from "@/lib/categoryColors";
-import type { BookSummary, FeaturedBookExtra } from "@/lib/queries";
+import type { BookSummary, FeaturedBookExtra, WithCardExtras } from "@/lib/queries";
 
 interface HomeTabsProps {
-  newest: BookSummary[];
-  bestselling: BookSummary[];
+  /** E3: BookCard trong lưới cần categoryName/collectionRef — thẻ nổi bật
+      (FeaturedBook, không dùng BookCard) chỉ cần BookSummary gốc. */
+  newest: WithCardExtras<BookSummary>[];
+  bestselling: WithCardExtras<BookSummary>[];
   /** E1/F2.1: mô tả ngắn + nhãn danh mục cho cuốn đứng đầu mỗi tab, theo slug. */
   featuredExtras: Record<string, FeaturedBookExtra>;
 }

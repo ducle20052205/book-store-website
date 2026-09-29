@@ -10,11 +10,19 @@ import { SortSelect } from "@/components/SortSelect";
 import { TrackEvent } from "@/components/TrackEvent";
 import { type ParsedCatalogParams, countActiveFilters, parseCatalogSearchParams } from "@/lib/catalog";
 import { categoryColorClasses } from "@/lib/categoryColors";
-import { type CategoryBasic, getCategoryChainBySlug, getCategoryTree, searchBooks } from "@/lib/queries";
+import {
+  type CategoryBasic,
+  enrichBooksForCard,
+  getBookCollectionRefMap,
+  getCategoryChainBySlug,
+  getCategoryNameMap,
+  getCategoryTree,
+  searchBooks,
+} from "@/lib/queries";
 
 async function resolveCatalogContext(
   parsed: ParsedCatalogParams,
-): Promise<{ heading: string; categoryName?: string; categoryChain: CategoryBasic[] }> {
+): Promise<{ heading: string; categoryName?: string; categoryChain: CategoryBasic[]; parentDescription: string | null }> {
   const categoryChain = parsed.category ? await getCategoryChainBySlug(parsed.category) : [];
   const leaf = categoryChain[categoryChain.length - 1];
 
@@ -24,7 +32,13 @@ async function resolveCatalogContext(
   else if (parsed.category) heading = "Không tìm thấy danh mục";
   else heading = "Tất cả sách";
 
-  return { heading, categoryName: leaf?.name, categoryChain };
+  // E3: chỉ hiện dòng giới thiệu khi đang lọc ĐÚNG 1 danh mục CHA (chain
+  // dài 1 — leaf chính là cha, không có cấp trên nó) — ẩn khi lọc theo
+  // danh mục con (chain dài 2) dù con đó cũng "thuộc về" 1 cha có mô tả,
+  // và ẩn khi không lọc theo danh mục nào cả (categoryChain rỗng).
+  const parentDescription = categoryChain.length === 1 ? (categoryChain[0].description ?? null) : null;
+
+  return { heading, categoryName: leaf?.name, categoryChain, parentDescription };
 }
 
 export async function generateMetadata({ searchParams }: PageProps<"/sach">): Promise<Metadata> {
@@ -42,11 +56,20 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
   const sp = await searchParams;
   const parsed = parseCatalogSearchParams(sp);
 
-  const [{ heading, categoryName, categoryChain }, categories, { books, totalCount }] = await Promise.all([
+  const [
+    { heading, categoryName, categoryChain, parentDescription },
+    categories,
+    { books: rawBooks, totalCount },
+    categoryNames,
+    collectionRefs,
+  ] = await Promise.all([
     resolveCatalogContext(parsed),
     getCategoryTree(),
     searchBooks(parsed),
+    getCategoryNameMap(),
+    getBookCollectionRefMap(),
   ]);
+  const books = enrichBooksForCard(rawBooks, categoryNames, collectionRefs);
 
   const activeFilterCount = countActiveFilters(parsed);
   // E1.5 mục 2: màu theo danh mục CHA (đầu chuỗi categoryChain), kể cả khi
@@ -84,6 +107,12 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
             <h1 className="font-serif text-h1 text-ink-900">{heading}</h1>
             <p className="text-sm text-ink-600">{totalCount} cuốn sách</p>
           </div>
+          {/*
+            E3: dòng giới thiệu ngắn — chỉ hiện khi lọc đúng 1 danh mục CHA
+            (parentDescription đã tự null hoá ở resolveCatalogContext cho
+            mọi trường hợp khác: danh mục con, không lọc, tìm kiếm chữ).
+          */}
+          {parentDescription && <p className="mt-2 max-w-[65ch] text-sm text-ink-600">{parentDescription}</p>}
           {topCategorySlug && (
             <div
               aria-hidden="true"

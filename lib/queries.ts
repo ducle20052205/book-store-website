@@ -10,6 +10,30 @@ export interface BookSummary {
   price: number;
   discountPrice: number | null;
   stockQuantity: number;
+  /** E3: cần để tra tên danh mục con hiển thị trên BookCard, xem getCategoryNameMap. */
+  categoryId: string;
+}
+
+/** E3: phần thêm vào BookSummary để hiện trên <BookCard> — xem enrichBooksForCard. */
+export type WithCardExtras<T> = T & { categoryName: string | null; collectionRef: BookCollectionRef | null };
+
+/**
+ * E3: gắn nhãn danh mục con + chip "Trong tủ sách" vào một danh sách
+ * BookSummary trước khi đưa vào <BookCard>. Hàm thuần (không gọi DB) —
+ * mọi trang gọi getCategoryNameMap()/getBookCollectionRefMap() một lần
+ * (2 bảng rất nhỏ, 23 + 17 dòng) rồi tra tại chỗ cho cả danh sách, thay vì
+ * query riêng cho từng cuốn.
+ */
+export function enrichBooksForCard<T extends BookSummary>(
+  books: T[],
+  categoryNames: Map<string, string>,
+  collectionRefs: Map<string, BookCollectionRef>,
+): WithCardExtras<T>[] {
+  return books.map((book) => ({
+    ...book,
+    categoryName: categoryNames.get(book.categoryId) ?? null,
+    collectionRef: collectionRefs.get(book.slug) ?? null,
+  }));
 }
 
 interface BookRow {
@@ -20,6 +44,7 @@ interface BookRow {
   price: number;
   discount_price: number | null;
   stock_quantity: number;
+  category_id: string;
 }
 
 function mapBookRow(row: BookRow): BookSummary {
@@ -31,6 +56,7 @@ function mapBookRow(row: BookRow): BookSummary {
     price: row.price,
     discountPrice: row.discount_price,
     stockQuantity: row.stock_quantity,
+    categoryId: row.category_id,
   };
 }
 
@@ -68,11 +94,25 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
   return roots;
 }
 
+/**
+ * E3: map category_id -> tên danh mục, dùng để hiện nhãn danh mục con trên
+ * BookCard. Chỉ 23 dòng trong bảng categories — lấy hết 1 lần rồi tra tại
+ * chỗ cho cả danh sách sách, thay vì query riêng cho từng cuốn.
+ */
+export async function getCategoryNameMap(): Promise<Map<string, string>> {
+  const { data } = await supabase.from("categories").select("id, name");
+  const map = new Map<string, string>();
+  for (const row of data ?? []) map.set(row.id, row.name);
+  return map;
+}
+
 export interface CategoryBasic {
   id: string;
   name: string;
   slug: string;
   parentId: string | null;
+  /** E3: chỉ 5 danh mục cha có dữ liệu; danh mục con luôn null. */
+  description: string | null;
 }
 
 /** Tên + vị trí danh mục theo slug, dùng cho tiêu đề trang /sach và chip bộ lọc. */
@@ -81,24 +121,24 @@ export const getCategoryBySlug = cache(async function getCategoryBySlug(
 ): Promise<CategoryBasic | null> {
   const { data } = await supabase
     .from("categories")
-    .select("id, name, slug, parent_id")
+    .select("id, name, slug, parent_id, description")
     .eq("slug", slug)
     .maybeSingle();
 
   if (!data) return null;
-  return { id: data.id, name: data.name, slug: data.slug, parentId: data.parent_id };
+  return { id: data.id, name: data.name, slug: data.slug, parentId: data.parent_id, description: data.description };
 });
 
 /** Danh mục theo id — dùng để lấy tên danh mục cha khi chỉ có category_id của sách. */
 export const getCategoryById = cache(async function getCategoryById(id: string): Promise<CategoryBasic | null> {
   const { data } = await supabase
     .from("categories")
-    .select("id, name, slug, parent_id")
+    .select("id, name, slug, parent_id, description")
     .eq("id", id)
     .maybeSingle();
 
   if (!data) return null;
-  return { id: data.id, name: data.name, slug: data.slug, parentId: data.parent_id };
+  return { id: data.id, name: data.name, slug: data.slug, parentId: data.parent_id, description: data.description };
 });
 
 /** 1c (bổ sung): chuỗi breadcrumb [cha, con] (hoặc chỉ [cha] nếu category đã là cấp cao nhất). */
@@ -155,7 +195,7 @@ export async function searchBooks(params: ParsedCatalogParams): Promise<SearchBo
 export async function getNewestBooks(limit = 8): Promise<BookSummary[]> {
   const { data } = await supabase
     .from("books")
-    .select("slug, title, author, cover_image_url, price, discount_price, stock_quantity")
+    .select("slug, title, author, cover_image_url, price, discount_price, stock_quantity, category_id")
     .order("created_at", { ascending: false })
     .limit(limit);
   return (data ?? []).map(mapBookRow);
@@ -205,6 +245,35 @@ export interface CollectionSummary {
   description: string;
   isFeatured: boolean;
   sortOrder: number;
+}
+
+export interface BookCollectionRef {
+  slug: string;
+  title: string;
+}
+
+/**
+ * E3: map slug sách -> {slug, title} tủ sách chứa nó, dùng để hiện chip
+ * "Trong tủ sách" trên BookCard (tên tủ hiện khi rê chuột qua chip). Chỉ 17
+ * dòng trong collection_books hiện tại — lấy hết 1 lần bằng join thẳng tới
+ * books.slug (không cần đi qua book_id/UUID, BookSummary không có sẵn
+ * trường đó) rồi tra tại chỗ, thay vì query riêng cho từng cuốn.
+ */
+export async function getBookCollectionRefMap(): Promise<Map<string, BookCollectionRef>> {
+  const { data } = await supabase.from("collection_books").select("books(slug), collections(slug, title)");
+
+  const rows = (data ?? []) as unknown as {
+    books: { slug: string } | null;
+    collections: { slug: string; title: string } | null;
+  }[];
+
+  const map = new Map<string, BookCollectionRef>();
+  for (const row of rows) {
+    if (row.books && row.collections) {
+      map.set(row.books.slug, { slug: row.collections.slug, title: row.collections.title });
+    }
+  }
+  return map;
 }
 
 export async function getCollections(): Promise<CollectionSummary[]> {
@@ -398,7 +467,7 @@ export async function getCollectionBySlug(slug: string): Promise<CollectionDetai
   const { data: rows } = await supabase
     .from("collection_books")
     .select(
-      "position, curator_note, books(slug, title, author, cover_image_url, price, discount_price, stock_quantity)",
+      "position, curator_note, books(slug, title, author, cover_image_url, price, discount_price, stock_quantity, category_id)",
     )
     .eq("collection_id", collection.id)
     .order("position", { ascending: true });
@@ -534,7 +603,7 @@ export async function getRelatedBooks(book: Pick<BookDetail, "id" | "categoryId"
 
   const { data: sameData } = await supabase
     .from("books")
-    .select("slug, title, author, cover_image_url, price, discount_price, stock_quantity")
+    .select("slug, title, author, cover_image_url, price, discount_price, stock_quantity, category_id")
     .eq("category_id", book.categoryId)
     .neq("id", book.id)
     .order("created_at", { ascending: false })
@@ -555,7 +624,7 @@ export async function getRelatedBooks(book: Pick<BookDetail, "id" | "categoryId"
     if (siblingIds.length > 0) {
       const { data: extraData } = await supabase
         .from("books")
-        .select("id, slug, title, author, cover_image_url, price, discount_price, stock_quantity")
+        .select("id, slug, title, author, cover_image_url, price, discount_price, stock_quantity, category_id")
         .in("category_id", siblingIds)
         .neq("id", book.id)
         .order("created_at", { ascending: false })

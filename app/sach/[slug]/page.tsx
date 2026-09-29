@@ -11,9 +11,12 @@ import { StockLabel } from "@/components/StockLabel";
 import { TrackEvent } from "@/components/TrackEvent";
 import {
   type BookDetail,
+  enrichBooksForCard,
   getBookBySlug,
+  getBookCollectionRefMap,
   getBookCollections,
   getCategoryChainById,
+  getCategoryNameMap,
   getRelatedBooks,
 } from "@/lib/queries";
 
@@ -123,11 +126,14 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
   const book = await getBookBySlug(slug);
   if (!book) notFound();
 
-  const [categoryChain, collections, related] = await Promise.all([
+  const [categoryChain, collections, related, categoryNames, collectionRefs] = await Promise.all([
     getCategoryChainById(book.categoryId),
     getBookCollections(book.id),
     getRelatedBooks(book),
+    getCategoryNameMap(),
+    getBookCollectionRefMap(),
   ]);
+  const relatedBooksEnriched = related ? enrichBooksForCard(related.books, categoryNames, collectionRefs) : [];
 
   const infoRows = buildInfoRows(book);
   const inStock = book.stockQuantity > 0;
@@ -275,7 +281,7 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
           <div>
             <h2 className="font-serif text-h2 font-semibold text-ink-900">{related.heading}</h2>
             <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-8 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
-              {related.books.map((relatedBook) => (
+              {relatedBooksEnriched.map((relatedBook) => (
                 <BookCard key={relatedBook.slug} book={relatedBook} />
               ))}
             </div>

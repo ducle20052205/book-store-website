@@ -5,7 +5,10 @@ import { Hero } from "@/components/Hero";
 import { HomeTabs } from "@/components/HomeTabs";
 import { categoryColorClasses } from "@/lib/categoryColors";
 import {
+  enrichBooksForCard,
+  getBookCollectionRefMap,
   getCategoryCounts,
+  getCategoryNameMap,
   getCollectionsWithPreview,
   getEditorialPick,
   getFeaturedBookExtrasBySlug,
@@ -52,19 +55,24 @@ const COLLECTION_STACK_OFFSETS = [
  * Xem docs/specs/dot-e-design-plan.md mục 3 cho wireframe đầy đủ.
  */
 export default async function Home() {
-  const [featured, newest, bestsellerResult, categoryCounts, editorial, collectionsWithPreview] = await Promise.all([
-    getFeaturedCollection(),
-    // Đợt F round 2: 17 = 1 nổi bật (col-span-2) + 16 thường — số 16 và
-    // cách ẩn responsive theo từng breakpoint để lưới không khuyết ô, xem
-    // comment đầy đủ tại VISIBILITY_CLASS_BY_INDEX trong components/HomeTabs.tsx.
-    getNewestBooks(17),
-    // 1b.1: tab "Bán chạy" dùng chung search_books(p_sort => 'bestseller') với /sach.
-    searchBooks({ sort: "bestseller", page: 1 }),
-    getCategoryCounts(),
-    getEditorialPick(),
-    getCollectionsWithPreview(),
-  ]);
-  const bestselling = bestsellerResult.books.slice(0, 17);
+  const [featured, newest, bestsellerResult, categoryCounts, editorial, collectionsWithPreview, categoryNames, collectionRefs] =
+    await Promise.all([
+      getFeaturedCollection(),
+      // Đợt F round 2: 17 = 1 nổi bật (col-span-2) + 16 thường — số 16 và
+      // cách ẩn responsive theo từng breakpoint để lưới không khuyết ô, xem
+      // comment đầy đủ tại VISIBILITY_CLASS_BY_INDEX trong components/HomeTabs.tsx.
+      getNewestBooks(17),
+      // 1b.1: tab "Bán chạy" dùng chung search_books(p_sort => 'bestseller') với /sach.
+      searchBooks({ sort: "bestseller", page: 1 }),
+      getCategoryCounts(),
+      getEditorialPick(),
+      getCollectionsWithPreview(),
+      // E3: nhãn danh mục con + chip "Trong tủ sách" trên BookCard.
+      getCategoryNameMap(),
+      getBookCollectionRefMap(),
+    ]);
+  const bestselling = enrichBooksForCard(bestsellerResult.books.slice(0, 17), categoryNames, collectionRefs);
+  const newestEnriched = enrichBooksForCard(newest, categoryNames, collectionRefs);
 
   // E1: mô tả ngắn cho đúng 2 cuốn đứng đầu mỗi tab (khối "to hơn hẳn").
   // Đợt F [F2.1]: lấy kèm nhãn danh mục cho cùng 2 cuốn đó.
@@ -126,7 +134,7 @@ export default async function Home() {
             đúng khoảng trống này, xuyên suốt cả tab bar lẫn lưới bên dưới.
           */}
           <div className="border-l-[3px] border-cham-700/35 pl-6">
-            <HomeTabs newest={newest} bestselling={bestselling} featuredExtras={featuredExtras} />
+            <HomeTabs newest={newestEnriched} bestselling={bestselling} featuredExtras={featuredExtras} />
           </div>
         </div>
       </section>
