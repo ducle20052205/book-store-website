@@ -1,9 +1,25 @@
 import { notFound } from "next/navigation";
 import { BookCard } from "@/components/BookCard";
 import { EditorNoteConnector } from "@/components/EditorNoteConnector";
-import { enrichBooksForCard, getBookCollectionRefMap, getCategoryNameMap, getCollectionBySlug } from "@/lib/queries";
+import {
+  enrichBooksForCard,
+  getBookCollectionRefMap,
+  getCategoryNameMap,
+  getCollectionBySlug,
+  getCollections,
+} from "@/lib/queries";
 
-export const revalidate = 60;
+// Đợt 2A (Cache Components): prerender sẵn từng tủ sách đang có.
+export async function generateStaticParams() {
+  const collections = await getCollections();
+  return collections.map((collection) => ({ slug: collection.slug }));
+}
+
+// Cho phép trang CHẶN khi render một slug chưa prerender (slug lạ): nhờ vậy
+// notFound() chạy trước khi máy chủ gửi phản hồi và trả đúng HTTP 404 (FR-9.3).
+// Bọc trong <Suspense> thì shell đã gửi đi với mã 200 trước khi biết slug có
+// tồn tại không — đã đo: trước đợt này slug lạ trả 404, bản Suspense trả 200.
+export const instant = false;
 
 export default async function CollectionDetailPage({ params }: PageProps<"/tu-sach/[slug]">) {
   const { slug } = await params;

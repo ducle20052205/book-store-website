@@ -6,8 +6,6 @@ export const metadata: Metadata = {
   title: "Tủ sách tuyển chọn — NA Books",
 };
 
-export const revalidate = 60;
-
 export default async function TuSachPage() {
   const collections = await getCollections();
 

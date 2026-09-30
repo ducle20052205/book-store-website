@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { signOut } from "@/app/actions/auth";
-import { navIconClass, navItemActiveClass, navItemClass } from "@/components/headerStyles";
+import { navAccountWidthClass, navIconClass, navItemActiveClass, navItemClass } from "@/components/headerStyles";
 import { ChevronUpIcon, CloseIcon, LogoutIcon, OrdersIcon, UserIcon } from "@/components/HeaderIcons";
 
 interface AccountMenuProps {
@@ -102,7 +102,7 @@ export function AccountMenu({ name, email }: AccountMenuProps) {
         aria-controls={open ? `${panelId} ${sheetId}` : undefined}
         aria-label="Tài khoản"
         onClick={() => setOpen((value) => !value)}
-        className={`${navItemClass} ${open ? navItemActiveClass : ""}`}
+        className={`${navItemClass} ${navAccountWidthClass} ${open ? navItemActiveClass : ""}`}
       >
         <UserIcon className={navIconClass} />
         <span className="hidden sm:inline">Tài khoản</span>

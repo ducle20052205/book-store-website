@@ -1,24 +1,28 @@
 import Link from "next/link";
+import { Suspense, type ReactNode } from "react";
 import { AccountMenu } from "@/components/AccountMenu";
 import { CategoryNav } from "@/components/CategoryNav";
 import { HeaderShell } from "@/components/HeaderShell";
 import { BagIcon, SearchIcon, UserIcon } from "@/components/HeaderIcons";
-import { navIconClass, navItemClass } from "@/components/headerStyles";
+import { navAccountWidthClass, navIconClass, navItemClass } from "@/components/headerStyles";
 import { type CategoryNode, getCategoryTree } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
 
-export interface HeaderAccount {
-  /** Họ tên; nếu hồ sơ chưa có thì dùng email làm tên hiển thị. */
-  name: string;
-  /** Email đăng nhập (từ auth.users); null khi đã dùng email làm tên để không hiện hai lần. */
-  email: string | null;
-}
-
 interface HeaderViewProps {
   categories: CategoryNode[];
-  /** null = chưa đăng nhập. */
-  account: HeaderAccount | null;
+  /** Mục "Đăng nhập" hoặc menu "Tài khoản" — Header truyền vào một <Suspense>, xem bên dưới. */
+  accountItem: ReactNode;
   cartCount?: number;
+}
+
+/** Mục "Đăng nhập" — vừa là trạng thái chưa đăng nhập thật, vừa là fallback trong lúc đọc phiên. */
+function LoginLink() {
+  return (
+    <a href="/dang-nhap" aria-label="Đăng nhập" className={`${navItemClass} ${navAccountWidthClass}`}>
+      <UserIcon className={navIconClass} />
+      <span className="hidden sm:inline">Đăng nhập</span>
+    </a>
+  );
 }
 
 /**
@@ -28,7 +32,7 @@ interface HeaderViewProps {
  * mục — "Đăng nhập" hoặc "Tài khoản", và "Giỏ hàng" (đã gỡ mục "Yêu thích" vì
  * trang đó chưa tồn tại).
  */
-export function HeaderView({ categories, account, cartCount = 0 }: HeaderViewProps) {
+export function HeaderView({ categories, accountItem, cartCount = 0 }: HeaderViewProps) {
   return (
     <HeaderShell
       topbar={
@@ -69,14 +73,7 @@ export function HeaderView({ categories, account, cartCount = 0 }: HeaderViewPro
             aria-label="Tài khoản và giỏ hàng"
             className="order-2 ml-auto flex shrink-0 items-center gap-1 md:order-3 md:ml-0"
           >
-            {account ? (
-              <AccountMenu name={account.name} email={account.email} />
-            ) : (
-              <a href="/dang-nhap" aria-label="Đăng nhập" className={navItemClass}>
-                <UserIcon className={navIconClass} />
-                <span className="hidden sm:inline">Đăng nhập</span>
-              </a>
-            )}
+            {accountItem}
 
             <Link
               href="/gio-hang"
@@ -103,28 +100,52 @@ export function HeaderView({ categories, account, cartCount = 0 }: HeaderViewPro
   );
 }
 
+/**
+ * Đọc phiên đăng nhập và dựng mục tài khoản. Đọc cookie nên PHẢI nằm sau
+ * <Suspense> (Cache Components): phần này stream vào sau, không nằm trong
+ * shell tĩnh. getUser() hỏi thẳng máy chủ Auth để xác thực token (không chỉ
+ * đọc cookie).
+ */
+async function AccountItem() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return <LoginLink />;
+
+  const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+  const fullName = profile?.full_name?.trim();
+  return fullName ? (
+    <AccountMenu name={fullName} email={user.email ?? null} />
+  ) : (
+    <AccountMenu name={user.email ?? "Tài khoản của bạn"} email={null} />
+  );
+}
+
 interface HeaderProps {
   cartCount?: number;
 }
 
 /**
- * Server Component: đọc người dùng bằng client server rồi truyền trạng thái
- * xuống (spec đợt 2A mục 6). getUser() hỏi thẳng máy chủ Auth để xác thực
- * token, không chỉ đọc cookie.
+ * Header của layout gốc (đợt 2A). Phần tĩnh — logo, ô tìm kiếm, thanh danh mục
+ * (dữ liệu qua `use cache`) — prerender vào shell. Chỉ mục tài khoản phụ thuộc
+ * phiên nên bọc riêng trong <Suspense> với fallback là trạng thái chưa đăng nhập:
+ * layout gốc không đọc cookie ở tầng trên cùng nên các trang bên trong vẫn tĩnh
+ * được. Người đã đăng nhập sẽ thấy "Đăng nhập" trong khoảnh khắc ngắn cho tới
+ * khi phần streaming về, rồi đổi sang "Tài khoản".
  */
 export async function Header({ cartCount = 0 }: HeaderProps) {
-  const supabase = await createClient();
-  const [categories, userResult] = await Promise.all([getCategoryTree(), supabase.auth.getUser()]);
-  const user = userResult.data.user;
+  const categories = await getCategoryTree();
 
-  let account: HeaderAccount | null = null;
-  if (user) {
-    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
-    const fullName = profile?.full_name?.trim();
-    account = fullName
-      ? { name: fullName, email: user.email ?? null }
-      : { name: user.email ?? "Tài khoản của bạn", email: null };
-  }
-
-  return <HeaderView categories={categories} account={account} cartCount={cartCount} />;
+  return (
+    <HeaderView
+      categories={categories}
+      cartCount={cartCount}
+      accountItem={
+        <Suspense fallback={<LoginLink />}>
+          <AccountItem />
+        </Suspense>
+      }
+    />
+  );
 }
