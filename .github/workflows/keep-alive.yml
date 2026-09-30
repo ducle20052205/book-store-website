@@ -1,0 +1,44 @@
+name: Keep Supabase alive
+
+# Gói free của Supabase tạm dừng project sau 7 ngày không có hoạt động. Workflow
+# này gọi hai trang công khai của site mỗi ngày một lần để có request thật chạm
+# tới database. Không dùng secret, chỉ gọi URL công khai.
+# Giải thích và hạn chế: docs/runbooks/giu-supabase-khong-tam-dung.md
+
+on:
+  schedule:
+    # 04:23 UTC (11:23 giờ Việt Nam). Phút 23, không phải phút 0, để tránh giờ cao
+    # điểm của GitHub Actions (đầu giờ nhiều lịch cùng kích hoạt nên hay trễ/bị bỏ).
+    - cron: "23 4 * * *"
+  workflow_dispatch:
+
+# Job chỉ chạy curl, không checkout, không cần quyền gì trên repo.
+permissions: {}
+
+env:
+  BASE_URL: https://book-store-website-dun.vercel.app
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # /sach chạy truy vấn tìm sách (RPC search_books) ở mỗi request.
+      - name: Gọi trang danh sách sách
+        run: |
+          curl --fail --silent --show-error --max-time 60 --retry 2 --retry-delay 10 \
+            --output "$RUNNER_TEMP/sach.html" "$BASE_URL/sach"
+
+      # Lấy slug của một cuốn sách đang có trên trang danh sách (thay vì ghi cứng
+      # một slug, để xoá hay đổi tên sách không làm workflow báo lỗi oan), rồi gọi
+      # trang chi tiết của nó — trang này đọc thêm nhiều bảng trong database.
+      - name: Gọi trang chi tiết một cuốn sách
+        run: |
+          slug=$(grep -oE 'href="/sach/[a-z0-9-]+"' "$RUNNER_TEMP/sach.html" | head -n 1 | sed 's|href="/sach/||; s|"$||')
+          if [ -z "$slug" ]; then
+            echo "::error::Không tìm thấy liên kết chi tiết sách nào trong $BASE_URL/sach (trang trống hoặc đổi cấu trúc?)"
+            exit 1
+          fi
+          echo "Gọi $BASE_URL/sach/$slug"
+          curl --fail --silent --show-error --max-time 60 --retry 2 --retry-delay 10 \
+            --output /dev/null "$BASE_URL/sach/$slug"
