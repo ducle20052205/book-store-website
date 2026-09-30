@@ -45,7 +45,7 @@ file đó thay vì đoán từ ảnh.
 - Topbar cao 64px, thanh danh mục cao 52px, đệm ngang 24px.
 - Ô nhập cao 46px trên desktop, 48px trên mobile với font 16px để iOS không tự phóng to.
 - Nút chính cao 48px desktop, 50px mobile.
-- Bo góc 3px cho ô nhập và nút, 4px cho thẻ.
+- Bo góc: ô nhập và nút dùng `radius-field`, thẻ form dùng `radius-menu` (hai token đã có trong `app/globals.css` từ đợt 2A). Không viết cứng số px.
 - Thẻ form hai cột: rộng 1040px, chia 440px cột editorial nền chàm đậm và 600px cột form.
 - Thẻ form một cột (quên mật khẩu, đã gửi link, đặt lại mật khẩu): rộng 560px, canh giữa.
 - Menu tài khoản: rộng 272px, mỗi mục cao 46px, nền đặc, viền `#DCD4C4`, đổ bóng `0 16px 34px rgba(23,29,64,0.22)`, canh mép phải theo mép phải nút Tài khoản.
