@@ -1,6 +1,6 @@
 import { cache } from "react";
 import type { ParsedCatalogParams } from "@/lib/catalog";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/server";
 
 export interface BookSummary {
   slug: string;
@@ -70,6 +70,7 @@ export interface CategoryNode {
 
 /** Cây danh mục 2 cấp, sắp xếp theo sort_order — dùng cho mega-menu. */
 export async function getCategoryTree(): Promise<CategoryNode[]> {
+  const supabase = await createClient();
   const { data } = await supabase
     .from("categories")
     .select("id, name, slug, parent_id, sort_order")
@@ -100,6 +101,7 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
  * chỗ cho cả danh sách sách, thay vì query riêng cho từng cuốn.
  */
 export async function getCategoryNameMap(): Promise<Map<string, string>> {
+  const supabase = await createClient();
   const { data } = await supabase.from("categories").select("id, name");
   const map = new Map<string, string>();
   for (const row of data ?? []) map.set(row.id, row.name);
@@ -119,6 +121,7 @@ export interface CategoryBasic {
 export const getCategoryBySlug = cache(async function getCategoryBySlug(
   slug: string,
 ): Promise<CategoryBasic | null> {
+  const supabase = await createClient();
   const { data } = await supabase
     .from("categories")
     .select("id, name, slug, parent_id, description")
@@ -131,6 +134,7 @@ export const getCategoryBySlug = cache(async function getCategoryBySlug(
 
 /** Danh mục theo id — dùng để lấy tên danh mục cha khi chỉ có category_id của sách. */
 export const getCategoryById = cache(async function getCategoryById(id: string): Promise<CategoryBasic | null> {
+  const supabase = await createClient();
   const { data } = await supabase
     .from("categories")
     .select("id, name, slug, parent_id, description")
@@ -173,6 +177,7 @@ export interface SearchBooksResult {
  * xếp và phân trang chạy hết phía server (NFR-1.3).
  */
 export async function searchBooks(params: ParsedCatalogParams): Promise<SearchBooksResult> {
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc("search_books", {
     p_q: params.q ?? null,
     p_category_slug: params.category ?? null,
@@ -193,6 +198,7 @@ export async function searchBooks(params: ParsedCatalogParams): Promise<SearchBo
 
 /** FR-1.6(a): mới nhất trước. */
 export async function getNewestBooks(limit = 8): Promise<BookSummary[]> {
+  const supabase = await createClient();
   const { data } = await supabase
     .from("books")
     .select("slug, title, author, cover_image_url, price, discount_price, stock_quantity, category_id")
@@ -221,6 +227,7 @@ export interface FeaturedBookExtra {
  */
 export async function getFeaturedBookExtrasBySlug(slugs: string[]): Promise<Record<string, FeaturedBookExtra>> {
   if (slugs.length === 0) return {};
+  const supabase = await createClient();
   const { data } = await supabase.from("books").select("slug, description, category_id").in("slug", slugs);
   const rows = data ?? [];
   const map: Record<string, FeaturedBookExtra> = {};
@@ -260,6 +267,7 @@ export interface BookCollectionRef {
  * trường đó) rồi tra tại chỗ, thay vì query riêng cho từng cuốn.
  */
 export async function getBookCollectionRefMap(): Promise<Map<string, BookCollectionRef>> {
+  const supabase = await createClient();
   const { data } = await supabase.from("collection_books").select("books(slug), collections(slug, title)");
 
   const rows = (data ?? []) as unknown as {
@@ -277,6 +285,7 @@ export async function getBookCollectionRefMap(): Promise<Map<string, BookCollect
 }
 
 export async function getCollections(): Promise<CollectionSummary[]> {
+  const supabase = await createClient();
   const { data } = await supabase
     .from("collections")
     .select("id, slug, title, description, is_featured, sort_order")
@@ -298,6 +307,7 @@ export interface CollectionPreview extends CollectionSummary {
 
 /** C.2 mục 5: mỗi tủ sách kèm tối đa 3 bìa đầu (theo position) để xếp chồng trên trang chủ. */
 export async function getCollectionsWithPreview(): Promise<CollectionPreview[]> {
+  const supabase = await createClient();
   const collections = await getCollections();
 
   return Promise.all(
@@ -340,6 +350,7 @@ export interface CategoryWithCount {
 
 /** C.2 mục 2: mỗi danh mục cha kèm tổng số sách thuộc nó hoặc các danh mục con của nó. */
 export async function getCategoryCounts(): Promise<CategoryWithCount[]> {
+  const supabase = await createClient();
   const tree = await getCategoryTree();
 
   return Promise.all(
@@ -368,6 +379,7 @@ export interface EditorialPick {
  * sort_order, để không lặp lại đúng những cuốn đã hiện ở Hero.
  */
 export async function getEditorialPick(): Promise<EditorialPick | null> {
+  const supabase = await createClient();
   const { data: candidateCollections } = await supabase
     .from("collections")
     .select("id, slug, title")
@@ -419,6 +431,7 @@ interface CollectionBookWithBookRow {
 
 /** Mục 5.2: hero lấy tủ sách is_featured = true, tối đa 5 ảnh bìa đầu theo position. */
 export async function getFeaturedCollection(): Promise<FeaturedCollection | null> {
+  const supabase = await createClient();
   const { data: collection } = await supabase
     .from("collections")
     .select("id, slug, title, description")
@@ -456,6 +469,7 @@ export interface CollectionDetail extends CollectionSummary {
 }
 
 export async function getCollectionBySlug(slug: string): Promise<CollectionDetail | null> {
+  const supabase = await createClient();
   const { data: collection } = await supabase
     .from("collections")
     .select("id, slug, title, description, is_featured, sort_order")
@@ -516,6 +530,7 @@ export interface BookDetail {
 
 /** 1c.1/1c.2: dữ liệu đầy đủ cho trang /sach/[slug]. */
 export const getBookBySlug = cache(async function getBookBySlug(slug: string): Promise<BookDetail | null> {
+  const supabase = await createClient();
   const { data } = await supabase
     .from("books")
     .select(
@@ -561,6 +576,7 @@ interface CollectionBooksJoinRow {
 
 /** [Thay đổi SRS — FR-2.6 mới] Mọi tủ sách có chứa cuốn này, kèm curator_note riêng của cuốn trong tủ đó. */
 export async function getBookCollections(bookId: string): Promise<BookCollectionEntry[]> {
+  const supabase = await createClient();
   const { data } = await supabase
     .from("collection_books")
     .select("curator_note, collections(id, slug, title)")
@@ -598,6 +614,7 @@ export interface RelatedBooks {
  * trùng. Tiêu đề đổi theo việc có phải lấy thêm từ cha hay không.
  */
 export async function getRelatedBooks(book: Pick<BookDetail, "id" | "categoryId">): Promise<RelatedBooks | null> {
+  const supabase = await createClient();
   const category = await getCategoryById(book.categoryId);
   if (!category) return null;
 
