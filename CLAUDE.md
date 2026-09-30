@@ -24,9 +24,20 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 - **Mọi client Supabase khởi tạo bên trong hàm xử lý request**, không bao giờ ở module scope.
 - **Header dùng `getClaims()`, `proxy.ts` dùng `getUser()`.** Khác nhau là cố ý: `getUser()` hỏi Auth server nên phát hiện được token bị thu hồi, hợp cho hàng rào bảo vệ; `getClaims()` xác minh chữ ký cục bộ, đủ cho hiển thị và không tốn round trip. Đừng đồng nhất.
 
+## Supabase: hosted và cục bộ
+
+- Hosted: không có CLI, mọi thay đổi schema đi qua migration file + MCP.
+- Cục bộ: Supabase CLI 2.118.0 (ngoài repo), stack 5 container, cấu hình trong `supabase/config.toml`.
+- Cổng: Kong 54321, Postgres 54322, Mailpit 54324, app cục bộ 3100 (hosted dev vẫn 3000).
+- Biến môi trường cục bộ nằm ở `.env.supabase-local` (đã git-ignore). KHÔNG sửa `.env.local`.
+- Khoá ký JWT cục bộ là ES256 để khớp hosted; file khoá riêng đã git-ignore.
+- Khác biệt đã biết so với hosted: rate limit email 360000/h (hosted 30/h), OTP 6 ký tự (hosted 8), Site URL localhost:3100, email đi qua Mailpit.
+- Chi tiết đầy đủ: `docs/runbooks/supabase-local.md`.
+- Claude Code KHÔNG tạo/đăng nhập tài khoản trên hosted Auth; chỉ làm trên 127.0.0.1.
+
 ## Database
 
-- Mọi thay đổi schema đi qua migration trong `supabase/migrations/`, apply bằng Supabase MCP (không có CLI cục bộ), tên file theo đúng `version` Supabase trả về — không sửa qua Table Editor.
+- Mọi thay đổi schema đi qua migration trong `supabase/migrations/`, apply bằng Supabase MCP (hosted không có CLI, xem mục "Supabase: hosted và cục bộ"), tên file theo đúng `version` Supabase trả về — không sửa qua Table Editor.
 - Trước mọi thao tác xoá/phá dữ liệu đang được tham chiếu: DỪNG LẠI, hỏi trước khi làm.
 - Trigger `profiles_protect_role` khoá `role` với người không phải Admin, và khoá `email` với mọi người — kể cả service role. Muốn sửa `email` phải tạm tắt trigger trong một transaction (xem `docs/runbooks/tao-admin-dau-tien.md`).
 

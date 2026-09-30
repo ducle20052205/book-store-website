@@ -98,3 +98,18 @@ Giá trị này đến từ mockup: `docs/mockups/buoc-2/header-2a.html` ghi vi�
 **Cần làm:** đổi viền ô tìm kiếm sang `line-field` (đạt 3,20:1 trên nền trắng của topbar), và sửa `header-2a.html` (khai báo `.search` và dòng "Ô tìm kiếm" trong bảng "Số đo bắt buộc") cho khớp.
 
 **Trạng thái:** chưa xử lý.
+
+## 7. Sheet/dropdown không đóng khi bấm Back/Forward của trình duyệt
+
+**Hiện trạng:** sheet menu trên mobile và dropdown tài khoản (`components/AccountMenu.tsx`) nằm trong root layout, nên state `open` của chúng không reset khi điều hướng bằng nút Back/Forward. Không phải lỗi của Cache Components: layout gốc không bị huỷ hay ẩn khi đổi trang, nên state sống qua mọi điều hướng, kể cả khi tắt Cache Components.
+
+**Số đo (30/09/2026, bản production trỏ Supabase cục bộ, khung 375px, phiên đăng nhập):** mở sheet ở `/sach?sort=newest`, bấm Back tới `/`: sheet vẫn mở (`aria-expanded = true`), cuộn nền vẫn bị khoá; bấm Forward: vẫn mở. URL và nội dung phía sau đổi, sheet giữ nguyên. Ngược lại, đóng sheet bằng cách bấm liên kết trong sheet rồi Back thì đúng: sheet đóng, cuộn nền mở khoá. Dropdown chưa đo riêng bằng Back/Forward, nhưng dùng cùng state `open` trong cùng component.
+
+**Cần làm:** đóng menu khi đường dẫn đổi (đọc `usePathname()` và `useSearchParams()` trong `AccountMenu`, đặt lại `open` khi một trong hai thay đổi), sao cho Back/Forward cũng đóng menu như bấm liên kết.
+
+**Hoàn thành khi:**
+- Sau khi mở sheet rồi bấm Back, sheet đóng trong vòng 1 lần điều hướng và cuộn nền được mở khoá.
+- Kiểm trên cả hai trạng thái: đã đăng nhập (sheet tài khoản) và chưa đăng nhập (menu không có sheet, kiểm rằng Back không để lại trạng thái lạ ở header).
+- Chụp ảnh toàn trang thu nhỏ trước và sau khi sửa, ở 375px và 1280px (dropdown).
+
+**Trạng thái:** chưa xử lý.

@@ -68,3 +68,9 @@ Kiểm chứng app chỉ nói chuyện với stack cục bộ: `grep -rl <mã-pr
 
 - **TTFB và thời gian tải**: Auth, Postgres và app cùng máy, không có độ trễ mạng hay khởi động lạnh của hàm, nên không so được với mốc đo trên Vercel + Supabase hosted.
 - **Đo trong trình duyệt tích hợp của Claude**: `requestAnimationFrame` chỉ chạy ~2 Hz ở đó (bộ hẹn giờ vẫn bình thường), nên bước hoán đổi Suspense của React (gom qua rAF) bị chậm giả tạo ~0,5–1 giây. Đừng dùng đo khoảng shell → nhãn tài khoản trong khung đó; đo ở trình duyệt thật.
+
+## Dừng và khởi động lại
+
+- **Dừng (giữ dữ liệu):** `supabase stop`. Không có CLI trong PATH thì dừng thẳng các container `supabase_*` trong Docker Desktop. Thoát Docker Desktop cũng dừng cả stack.
+- **Khởi động lại:** chạy lại đúng lệnh `supabase start -x studio,realtime,storage-api,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta` ở mục "Dựng" (image đã có sẵn nên không kéo lại).
+- **Cảnh báo:** stack đang chạy vẫn chiếm RAM và một ít CPU khi không dùng. Đo ngày 30/09/2026: 5 container ~320 MB RAM lúc rảnh, chưa kể bộ nhớ Docker Desktop giữ cho máy ảo của nó. Không dùng nữa thì dừng.
