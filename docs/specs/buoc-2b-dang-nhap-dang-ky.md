@@ -75,7 +75,30 @@ Cách sửa:
 
 Đánh đổi phải ghi vào spec và vào SRS: JWT làm mới mỗi giờ, nên khi đợt 2D cho
 sửa họ tên thì dropdown hiện tên cũ tới lần refresh kế tiếp. Vá ở 2D bằng
-`refreshSession()` ngay sau khi lưu hồ sơ.
+`refreshSession()` ngay sau khi lưu hồ sơ — kèm điều kiện ở đoạn tiếp theo, không
+có thì `refreshSession()` không đổi được tên.
+
+**Quyết định cho đợt 2D — họ tên có hai nguồn.** Tên hiển thị ở Header lấy từ JWT,
+tức từ `auth.users.raw_user_meta_data.full_name`, không phải từ
+`profiles.full_name`. Khi 2D cho sửa họ tên, nếu chỉ cập nhật `profiles` thì hai
+nơi lệch nhau, và `refreshSession()` cũng không cứu được vì nó chỉ phát lại token
+từ metadata của Auth.
+
+Hướng đã chốt, cùng mô hình đã dùng cho email: **`auth.users` là nguồn,
+`profiles.full_name` là bản sao.**
+1. Trang hồ sơ gọi `updateUser({ data: { full_name } })`.
+2. Một trigger `sync_profile_name` trên `auth.users` đồng bộ xuống
+   `profiles.full_name` khi `raw_user_meta_data` đổi, cùng kiểu với
+   `sync_profile_email` ở đợt 2A.
+3. Ứng dụng gọi `refreshSession()` để JWT mang tên mới.
+4. Ứng dụng **không** ghi thẳng vào `profiles.full_name`.
+
+Đây là việc của **2D**, không làm ở 2B; 2B chỉ ghi lại quyết định để 2D không phải
+suy lại. Hai điều 2D còn phải tự quyết: (a) có khoá `profiles.full_name` bằng
+trigger như đã khoá `email` ở `profiles_protect_role` hay không — policy
+`profiles_update_own` hiện cho sửa mọi cột của dòng mình, nên nếu không khoá thì
+điều 4 chỉ là quy ước, không phải ràng buộc ở database; (b) khi cập nhật SRS
+(FR-5.2, FR-5.5) nhớ ghi mô hình này.
 
 ## 5. Trang `/dang-nhap`
 
