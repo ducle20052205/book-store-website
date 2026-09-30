@@ -5,6 +5,7 @@ import { CategoryNav } from "@/components/CategoryNav";
 import { HeaderShell } from "@/components/HeaderShell";
 import { BagIcon, SearchIcon, UserIcon } from "@/components/HeaderIcons";
 import { navAccountWidthClass, navIconClass, navItemClass } from "@/components/headerStyles";
+import { LoginNavLink } from "@/components/LoginNavLink";
 import { type CategoryNode, getCategoryTree } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,10 +19,10 @@ interface HeaderViewProps {
 /** Mục "Đăng nhập" — vừa là trạng thái chưa đăng nhập thật, vừa là fallback trong lúc đọc phiên. */
 function LoginLink() {
   return (
-    <a href="/dang-nhap" aria-label="Đăng nhập" className={`${navItemClass} ${navAccountWidthClass}`}>
+    <LoginNavLink className={`${navItemClass} ${navAccountWidthClass}`}>
       <UserIcon className={navIconClass} />
       <span className="hidden sm:inline">Đăng nhập</span>
-    </a>
+    </LoginNavLink>
   );
 }
 

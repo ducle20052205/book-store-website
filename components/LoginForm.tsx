@@ -149,7 +149,7 @@ export function LoginForm() {
       </button>
 
       <p className="mt-4 text-meta text-ink-600">
-        Giỏ hàng đang có của bạn sẽ được giữ nguyên sau khi đăng nhập.
+        Đăng nhập xong bạn quay lại đúng trang đang xem, và giỏ hàng đang có sẽ được giữ nguyên.
       </p>
     </form>
   );

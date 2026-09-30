@@ -156,9 +156,18 @@ bàn phím hoặc trình đọc màn hình thường chưa kịp đọc đã m�
 - Không bắt đầu bằng `/\`
 - Không hợp lệ hoặc không có thì về `/`
 
-Logic này đã có ở `proxy.ts` từ 2A. Tách thành một hàm dùng chung
-(`lib/nextParam.ts`), gọi ở cả proxy lẫn hai trang, để không có hai bản luật
-lệch nhau.
+Luật này **chưa có** ở `proxy.ts` từ 2A (proxy chỉ tạo giá trị `next` từ đường
+dẫn của chính request, chưa kiểm tra gì). Viết thành một hàm dùng chung
+(`lib/nextParam.ts`, `safeNextPath`), gọi ở proxy, hai form và mọi nơi khác đọc
+hay ghi `?next=`, để không có hai bản luật lệch nhau. Ngoài ba luật trên, hàm còn
+dựng URL thật rồi so origin, bắt trường hợp chèn tab hoặc xuống dòng (`/<tab>/host`
+bị bộ phân tích URL đọc thành `//host`).
+
+**Liên kết "Đăng nhập" ở header** mang `?next=` là đường dẫn hiện tại (kèm query),
+tạo bằng `safeNextPath`; đường dẫn hiện tại là `/` thì không thêm tham số; ở
+`/dang-nhap` và `/dang-ky` giữ nguyên `next` mà trang đang có thay vì lấy chính
+trang đó làm đích. Nhờ vậy câu "Đăng nhập xong bạn quay lại đúng trang đang xem"
+ở cuối form đăng nhập là đúng sự thật.
 
 **`mergeGuestCart()`** — tạo `lib/cart/mergeGuestCart.ts`:
 ```ts
