@@ -224,22 +224,35 @@ khoản thử sau khi kiểm xong.
 `profiles.email` khớp theo, cờ `app.sync_auth_email` tắt lại sau trigger, một
 `UPDATE profiles.email` khác trong cùng transaction vẫn bị khoá.
 
+**Vì sao cách kiểm khác bản đầu.** Project hosted bật Secure email change (xem
+`docs/runbooks/cau-hinh-supabase-auth.md`): đổi email phải xác nhận ở cả địa chỉ
+cũ lẫn địa chỉ mới, nên `auth.users.email` **không** đổi ngay khi gọi
+`updateUser({ email })`. Đòi cả hai cột bằng địa chỉ mới ngay sau lệnh gọi là
+không đạt được. Thứ cần chứng minh là trigger `sync_profile_email`, chạy khi
+`auth.users.email` thật sự đổi.
+
 Cách kiểm:
 
 1. Đăng nhập bằng tài khoản thử tại `/dang-nhap`.
 2. Gọi `createClient().auth.updateUser({ email: '<địa chỉ mới>' })` (client
    trình duyệt ở `lib/supabase/client.ts`) từ một Client Component hoặc script
-   tạm, không commit. Địa chỉ mới phải là hộp thư mình kiểm soát được.
-3. Ghi lại hành vi quan sát được khi email confirmation đang tắt: đổi áp dụng
-   ngay, hay Supabase vẫn gửi thư xác nhận (tới địa chỉ nào). Nếu cần xác nhận
-   thì mở thư, hoàn tất bước đó rồi mới đọc lại.
-4. Đọc lại: `select p.email as profiles_email, u.email as auth_email from
+   tạm, không commit.
+3. Ghi lại hành vi quan sát được: Supabase trả về gì (`data.user` có `new_email`
+   không), có gửi thư xác nhận không và tới những địa chỉ nào; xác nhận
+   `auth.users.email` chưa đổi. Đây là ghi nhận hành vi, không phải điều kiện
+   đạt.
+4. Làm cho `auth.users.email` thật sự đổi, bằng một trong hai cách: (a) xác nhận
+   ở cả hai địa chỉ — chỉ làm được khi cả địa chỉ cũ lẫn mới đều là hộp thư mình
+   kiểm soát được (tài khoản thử đăng ký bằng địa chỉ `@example.com` thì không
+   nhận được thư); (b) thao tác admin: Dashboard → Authentication → Users → sửa
+   email của tài khoản thử, hoặc trong SQL Editor `update auth.users set email =
+   '<địa chỉ mới>' where id = '<id tài khoản thử>';`.
+5. Đọc lại: `select p.email as profiles_email, u.email as auth_email from
    public.profiles p join auth.users u on u.id = p.id where p.id = '<id tài khoản
    thử>';`
 
-Đạt khi: `profiles_email` và `auth_email` **cùng bằng địa chỉ mới**. Hai cột cùng
-giữ email cũ cũng là "khớp nhau" nhưng nghĩa là email chưa đổi — không đạt
-(tiêu chí 23).
+Đạt khi: sau khi `auth.users.email` đổi, `profiles.email` khớp giá trị mới
+(`profiles_email` = `auth_email` = địa chỉ mới) (tiêu chí 23).
 
 ### 11.2 `/admin` với tài khoản `customer` (tiêu chí 22 của 2A)
 
@@ -419,10 +432,12 @@ Mỗi mục kèm số đo hoặc kết quả lệnh trong báo cáo.
     chuỗi `@`** trong `metadata`.
 
 **Kế thừa từ 2A** (cách kiểm chi tiết ở mục 11)
-23. Tiêu chí 15 của 2A (mục 11.1): sau `updateUser({ email })` với phiên thật,
-    `profiles.email` **và** `auth.users.email` cùng bằng địa chỉ **mới** — hai cột
-    cùng giữ email cũ là "khớp" nhưng không đạt. Ghi rõ hành vi khi email
-    confirmation tắt: áp dụng ngay hay vẫn gửi thư xác nhận, tới địa chỉ nào.
+23. Tiêu chí 15 của 2A (mục 11.1): gọi `updateUser({ email })` bằng phiên thật,
+    ghi lại Supabase trả về gì và có gửi thư xác nhận không (ghi nhận hành vi,
+    không phải điều kiện đạt; Secure email change đang bật nên `auth.users.email`
+    chưa đổi ngay, xem `docs/runbooks/cau-hinh-supabase-auth.md`). Điều kiện đạt:
+    sau khi `auth.users.email` đổi (qua xác nhận cả hai địa chỉ, hoặc qua thao
+    tác admin), `profiles.email` khớp giá trị mới.
 24. Tiêu chí 22 của 2A (mục 11.2): phiên `customer` mở `/admin` và `/admin/sach`,
     cả hai trả HTTP 307 về `/`, không render giao diện quản trị; ghi mã và URL
     cuối từ tab Network. Đối chứng bằng tài khoản admin: `/admin` không bị chuyển
