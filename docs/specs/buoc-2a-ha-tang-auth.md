@@ -22,7 +22,7 @@ Trước khi làm bất kỳ màn hình đăng nhập nào, dự án cần bốn
 
 **Thuộc phạm vi**
 - Một migration: cột `profiles.email`, sửa `handle_new_user()`, sửa `protect_profile_role()` để khoá cột `email`, thêm `sync_profile_email()` cùng trigger `on_auth_user_email_updated` trên `auth.users`, mở rộng CHECK của `events.event_type`.
-- Cài `@supabase/ssr`, tách thành ba client, xoá singleton cũ.
+- Cài `@supabase/ssr`, tách thành bốn client (mục 4), xoá singleton cũ.
 - Tạo `proxy.ts` làm mới phiên và chặn sớm các route cần đăng nhập.
 - Header hai trạng thái, dropdown tài khoản, sheet tài khoản trên mobile, gỡ liên kết Yêu thích.
 - Runbook tạo admin đầu tiên.
@@ -130,16 +130,19 @@ Ràng buộc:
 
 ## 4. Client Supabase
 
-Cài `@supabase/ssr`. Tách thành ba nơi tạo client, **mỗi client khởi tạo bên trong request handler, không bao giờ ở module scope**:
+Cài `@supabase/ssr`. Tách thành bốn nơi tạo client, **mỗi client khởi tạo bên trong request handler, không bao giờ ở module scope**:
 
 | File | Hàm | Dùng ở đâu |
 |---|---|---|
 | `lib/supabase/client.ts` | `createBrowserClient` | Client Component |
-| `lib/supabase/server.ts` | `createServerClient` + `cookies()` từ `next/headers` | Server Component, Server Action, Route Handler |
+| `lib/supabase/server.ts` | `createServerClient` + `cookies()` từ `next/headers` | Server Component, Server Action, Route Handler — chỉ cho dữ liệu phụ thuộc phiên |
 | `lib/supabase/proxy.ts` | `createServerClient` đọc/ghi cookie qua `NextRequest`/`NextResponse` | chỉ `proxy.ts` gọi |
+| `lib/supabase/public.ts` | `createClient` của `supabase-js`, không cookie, không lưu phiên | `lib/queries.ts` — dữ liệu công khai |
 
 - `setAll` trong `lib/supabase/server.ts` phải bọc `try/catch` — Server Component không ghi được cookie, và lỗi đó là bình thường, không được để nó làm hỏng trang.
-- Xoá `lib/supabase.ts` cũ. Chuyển `lib/queries.ts` sang client server, `lib/analytics.ts` sang client browser.
+- Xoá `lib/supabase.ts` cũ. Chuyển `lib/analytics.ts` sang client browser.
+- `lib/queries.ts` đọc dữ liệu công khai qua `lib/supabase/public.ts` (client không cookie), **không** qua client server, vì `use cache` cấm gọi `cookies()`. Client server chỉ dùng cho dữ liệu phụ thuộc phiên (vd. hồ sơ người dùng ở Header).
+- Cache Components: `next.config.ts` bật `cacheComponents: true`; dữ liệu công khai dùng `use cache` + `cacheLife("minutes")` thay cho `revalidate = 60` (khi Cache Components bật, cấu hình `revalidate` của segment bị cấm).
 - Không import client server vào bất kỳ file nào có `"use client"`.
 
 ## 5. proxy.ts
