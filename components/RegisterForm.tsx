@@ -6,6 +6,7 @@ import { signUp } from "@/app/actions/auth";
 import { AuthAlert, AuthErrorMessage } from "@/components/AuthAlert";
 import { PasswordField, TextField } from "@/components/AuthFields";
 import { PasswordStrength } from "@/components/PasswordStrength";
+import { track } from "@/lib/analytics";
 import type { AuthErrorKind } from "@/lib/authErrors";
 import { FULL_NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/lib/authRules";
 import { mergeGuestCart } from "@/lib/cart/mergeGuestCart";
@@ -126,6 +127,10 @@ export function RegisterForm() {
     } catch {
       // bỏ qua có chủ ý
     }
+    // Ghi sự kiện SAU khi đã có phiên (để track() gắn đúng user_id), không chặn điều
+    // hướng nếu ghi lỗi. metadata chỉ có phương thức — tuyệt đối không có email (FR-8.5).
+    track("sign_up", { method: "password" });
+
     const target = safeNextPath(new URLSearchParams(window.location.search).get("next"));
     router.push(withWelcomeParam(target));
     router.refresh();

@@ -6,6 +6,7 @@ import { type FormEvent, useRef, useState } from "react";
 import { signIn } from "@/app/actions/auth";
 import { AuthAlert, AuthErrorMessage } from "@/components/AuthAlert";
 import { PasswordField, TextField } from "@/components/AuthFields";
+import { track } from "@/lib/analytics";
 import type { AuthErrorKind } from "@/lib/authErrors";
 import { mergeGuestCart } from "@/lib/cart/mergeGuestCart";
 import { safeNextPath } from "@/lib/nextParam";
@@ -80,6 +81,10 @@ export function LoginForm() {
     } catch {
       // bỏ qua có chủ ý
     }
+    // Ghi sự kiện SAU khi đã có phiên (để track() gắn đúng user_id), không chặn điều
+    // hướng nếu ghi lỗi. metadata chỉ có phương thức — tuyệt đối không có email (FR-8.5).
+    track("login", { method: "password" });
+
     // Nút giữ trạng thái đang xử lý tới khi trang mới hiện.
     router.push(safeNextPath(new URLSearchParams(window.location.search).get("next")));
     router.refresh();
