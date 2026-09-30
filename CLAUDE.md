@@ -40,7 +40,7 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 ## Giao diện
 
 - Chỉ dùng token màu khai báo trong `@theme` (`app/globals.css`) — không viết cứng mã hex trong component.
-- Dùng lại component dùng chung đã có: `Price`, `BookCard`, `BookCover`, `StockLabel`, `Toast`.
+- Dùng lại component dùng chung đã có: `Price`, `BookCard`, `BookCover`, `StockLabel`, `Toast`. `Toast` chỉ dùng cho thông báo thuần xác nhận và ngắn (vd. đã thêm vào giỏ). Thông báo mang thông tin người dùng cần đọc kỹ hoặc có hành động thì dùng dải trong trang, không tự tắt (WCAG 2.2.1).
 - Chữ hiển thị cho người dùng viết bằng tiếng Việt, đúng giọng văn NA Books ở `docs/specs/claude-code-brand-update.md` mục 6.
 - Không bao giờ thêm ảnh bìa sách từ nguồn ngoài (không hotlink, không tải ảnh có bản quyền) — bìa luôn do `BookCover` sinh tự động.
 

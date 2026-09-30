@@ -35,17 +35,19 @@ file đó thay vì đoán từ ảnh.
 | Chữ chính | `#1A1C2E` |
 | Chữ phụ | `#5F6379` |
 | Thành công | `#266E48` |
-| Viền ô nhập | `#CFC7B8` |
+| Viền ô nhập | `#A29376` |
 | Viền thẻ | `#E3DCCE` |
 | Nền ô tìm kiếm và khối phụ | `#F6F2E9` |
 | Nền mục đang chọn | `#F4F2F8` |
+
+Ảnh PNG trong thư mục này chụp trước khi sửa màu viền ô nhập nên hiển thị viền nhạt hơn code (giá trị cũ `#CFC7B8` chỉ đạt 1,68:1 trên nền trắng, dưới ngưỡng 3:1 của WCAG 1.4.11); token `line-field` trong `app/globals.css` là nguồn đúng, không phải ảnh.
 
 ## Số đo lặp lại ở mọi màn
 
 - Topbar cao 64px, thanh danh mục cao 52px, đệm ngang 24px.
 - Ô nhập cao 46px trên desktop, 48px trên mobile với font 16px để iOS không tự phóng to.
 - Nút chính cao 48px desktop, 50px mobile.
-- Bo góc 3px cho ô nhập và nút, 4px cho thẻ.
+- Bo góc: ô nhập và nút dùng `radius-field`, thẻ form dùng `radius-menu` (hai token đã có trong `app/globals.css` từ đợt 2A). Không viết cứng số px.
 - Thẻ form hai cột: rộng 1040px, chia 440px cột editorial nền chàm đậm và 600px cột form.
 - Thẻ form một cột (quên mật khẩu, đã gửi link, đặt lại mật khẩu): rộng 560px, canh giữa.
 - Menu tài khoản: rộng 272px, mỗi mục cao 46px, nền đặc, viền `#DCD4C4`, đổ bóng `0 16px 34px rgba(23,29,64,0.22)`, canh mép phải theo mép phải nút Tài khoản.

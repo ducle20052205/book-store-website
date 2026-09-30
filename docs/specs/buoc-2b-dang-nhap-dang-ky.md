@@ -1,11 +1,10 @@
 # Đợt 2B — Đăng nhập và đăng ký
 
-Bước 2 · Tài khoản người dùng · phiên bản 1.0 · 30/09/2026
+Bước 2 · Tài khoản người dùng · phiên bản 1.1 · 30/09/2026
 Nhánh: `feature/buoc-2b-dang-nhap-dang-ky`
 
 Tài liệu liên quan: `docs/SRS.md` (FR-5.1, FR-5.3, FR-8.3, FR-8.4),
-`docs/specs/buoc-2a-ha-tang-auth.md`, `docs/specs/buoc-2b-kiem-thua-ke.md`,
-`docs/mockups/buoc-2/`.
+`docs/specs/buoc-2a-ha-tang-auth.md`, `docs/mockups/buoc-2/`.
 
 ---
 
@@ -18,8 +17,8 @@ trạng thái, trigger đồng bộ email. Nhưng chưa có đường nào để
 1. Không có `/dang-nhap` và `/dang-ky`.
 2. Header đang gọi `getUser()` rồi query `profiles` để lấy tên, khiến người đã
    đăng nhập thấy nhãn "Đăng nhập" khoảng 100–200ms trước khi nó đổi.
-3. Ba tiêu chí của 2A chưa kiểm được vì cần phiên thật (xem
-   `buoc-2b-kiem-thua-ke.md` mục 1–3).
+3. Năm việc của 2A chưa kiểm được vì cần phiên thật: tiêu chí 13, 14, 15, 22
+   và luồng đăng xuất (xem mục 11.1–11.3, 11.6–11.7).
 4. `?next=` đã có ở `proxy.ts` nhưng chưa có trang nào đọc nó.
 5. FR-3.4 cần một điểm móc để đợt 3 gắn việc gộp giỏ hàng vào.
 
@@ -32,7 +31,7 @@ trạng thái, trigger đồng bộ email. Nhưng chưa có đường nào để
 - Xử lý `?next=` ở tầng trang.
 - Hàm `mergeGuestCart()` rỗng, gọi đúng chỗ.
 - Ghi sự kiện `sign_up` và `login`.
-- Kiểm năm mục của `buoc-2b-kiem-thua-ke.md`.
+- Kiểm bảy mục kế thừa từ 2A (mục 11).
 
 **Ngoài phạm vi**
 - `/quen-mat-khau`, `/dat-lai-mat-khau`, `/auth/callback`, template email (2C).
@@ -85,6 +84,10 @@ Tham chiếu `docs/mockups/buoc-2/dang-nhap.png` (desktop) và khung trái của
 
 **Bố cục** — thẻ 1040px chia 440px cột editorial nền `cham-900` và 600px cột
 form. Mobile một cột, cột editorial rút còn khối trích dẫn đặt dưới form.
+
+**Token** — dùng chung cho cả `/dang-ky` (mục 6): `radius-field` cho ô nhập và
+nút, `radius-menu` cho thẻ form, `line-field` cho viền ô nhập và select. Không
+viết hex hay số px bo góc cứng.
 
 **Trường**
 | Trường | Thuộc tính |
@@ -195,16 +198,161 @@ dùng hơn, đổi lại để lộ email nào có trong hệ thống. Chỉ ho�
 confirmation đang tắt; nếu sau này bật lên, Supabase sẽ cố tình che thông tin
 này và thông báo phải viết lại.
 
-## 11. Năm mục kế thừa từ 2A
+## 11. Bảy mục kế thừa từ 2A
 
-Làm theo `docs/specs/buoc-2b-kiem-thua-ke.md`. Tóm tắt:
+Năm mục 11.1, 11.2, 11.3, 11.6, 11.7 là tiêu chí (hoặc luồng) của đợt 2A
+(`docs/specs/buoc-2a-ha-tang-auth.md`) nhưng cần một **phiên đăng nhập thật** mà
+2A không tạo được: chưa có `/dang-nhap` (thuộc 2B) và `/auth/callback` (thuộc
+2C). Phần kiểm ở tầng database của các tiêu chí này đã làm xong ở 2A. Hai mục
+11.4 và 11.5 là tồn đọng khác phát hiện trong 2A, không thuộc tiêu chí nào của
+2A.
 
-1. Tiêu chí 15 — `updateUser({ email })` với phiên thật.
-2. Tiêu chí 22 — `/admin` với phiên `customer`.
-3. Luồng đăng xuất với phiên thật.
-4. Nháy trạng thái header (mục 4 của spec này xử lý, mục này đo lại).
-5. Cache Components giữ trạng thái trang cũ — rà bộ lọc catalog, menu tài
-   khoản, ô tìm kiếm.
+**Cả bảy mục đều bắt buộc trước khi đóng đợt 2B:** mỗi mục phải có kết quả đo
+thực ghi trong báo cáo đợt 2B. Thiếu một mục thì đợt 2B chưa được coi là hoàn
+thành.
+
+**Tài khoản thử.** Tạo qua chính trang `/dang-ky` của đợt này — không dùng lại
+tài khoản của Bước 0 (đã xoá ngay sau Bước 0), không dùng tài khoản admin thật
+hay tài khoản cá nhân. Tài khoản đăng ký qua `/dang-ky` có `role = 'customer'`.
+Mục 11.2 (đối chứng) và 11.7 cần thêm một tài khoản admin thử: tạo cũng qua
+`/dang-ky`, rồi thăng cấp theo `docs/runbooks/tao-admin-dau-tien.md`. Xoá mọi tài
+khoản thử sau khi kiểm xong.
+
+### 11.1 `updateUser({ email })` bằng tài khoản thật (tiêu chí 15 của 2A)
+
+Đã kiểm ở 2A (tầng database): `update auth.users set email = …` làm
+`profiles.email` khớp theo, cờ `app.sync_auth_email` tắt lại sau trigger, một
+`UPDATE profiles.email` khác trong cùng transaction vẫn bị khoá.
+
+Cách kiểm:
+
+1. Đăng nhập bằng tài khoản thử tại `/dang-nhap`.
+2. Gọi `createClient().auth.updateUser({ email: '<địa chỉ mới>' })` (client
+   trình duyệt ở `lib/supabase/client.ts`) từ một Client Component hoặc script
+   tạm, không commit. Địa chỉ mới phải là hộp thư mình kiểm soát được.
+3. Ghi lại hành vi quan sát được khi email confirmation đang tắt: đổi áp dụng
+   ngay, hay Supabase vẫn gửi thư xác nhận (tới địa chỉ nào). Nếu cần xác nhận
+   thì mở thư, hoàn tất bước đó rồi mới đọc lại.
+4. Đọc lại: `select p.email as profiles_email, u.email as auth_email from
+   public.profiles p join auth.users u on u.id = p.id where p.id = '<id tài khoản
+   thử>';`
+
+Đạt khi: `profiles_email` và `auth_email` **cùng bằng địa chỉ mới**. Hai cột cùng
+giữ email cũ cũng là "khớp nhau" nhưng nghĩa là email chưa đổi — không đạt
+(tiêu chí 23).
+
+### 11.2 `/admin` với tài khoản `customer` (tiêu chí 22 của 2A)
+
+Đã kiểm ở 2A: chưa đăng nhập, `/admin` và `/admin/sach` chuyển hướng (HTTP 307)
+tới `/dang-nhap?next=…`.
+
+Cách kiểm:
+
+1. Đăng nhập bằng tài khoản thử có `role = 'customer'`.
+2. Mở `/admin`, rồi `/admin/sach`. Ghi mã trạng thái và URL cuối từ tab Network.
+
+Đối chứng: đăng nhập bằng tài khoản admin thử (xem "Tài khoản thử" ở đầu mục
+này), mở `/admin`: không bị chuyển về `/`; kỳ vọng HTTP 404 vì chưa có giao diện
+quản trị (thuộc bước 7).
+
+Đạt khi: cả `/admin` và `/admin/sach` với `customer` bị chuyển hướng (HTTP 307)
+về `/`, không hiện giao diện quản trị; đối chứng với admin cho 404 (tiêu chí 24).
+
+### 11.3 Luồng đăng xuất có phiên thật (mục 6 của 2A)
+
+Đã kiểm ở 2A: Server Action `signOut` chạy không lỗi khi gọi không có phiên (POST
+trả 200).
+
+Cách kiểm: đăng nhập cùng một tài khoản thử ở hai trình duyệt (hoặc hai hồ sơ
+trình duyệt) A và B, rồi ở A:
+
+1. Header hiện "Tài khoản" (không phải "Đăng nhập"). Mở menu, bấm "Đăng xuất".
+   Lặp lại toàn bộ ở 375px với sheet tài khoản.
+2. Không tải lại trang: header đổi về "Đăng nhập".
+3. Tab Application → Cookies: không còn cookie `sb-<project-ref>-auth-token*`.
+4. Mở `/tai-khoan`: chuyển hướng (HTTP 307) tới `/dang-nhap?next=%2Ftai-khoan`.
+5. Tải lại trang: vẫn ở trạng thái chưa đăng nhập.
+6. Ở B, tải lại trang: vẫn hiện "Tài khoản" — đăng xuất chỉ xoá phiên hiện tại
+   (`scope: "local"`, FR-5.3), không đăng xuất các thiết bị khác.
+
+Đạt khi: cả sáu bước cho kết quả như trên, ở cả dropdown (≥ 768px) lẫn sheet
+(< 768px) (tiêu chí 25 cho bước 1–5, tiêu chí 26 cho bước 6).
+
+### 11.4 Nhãn tài khoản ở header nháy về "Đăng nhập" (tồn đọng từ 2A)
+
+Hiện trạng đo ở 2A: mục tài khoản nằm trong `<Suspense>` để trang còn render tĩnh
+được, và fallback luôn là trạng thái chưa đăng nhập. Người đã đăng nhập vì thế
+thấy "Đăng nhập" khoảng 100–200 ms rồi mới đổi sang "Tài khoản". Bề rộng hai
+trạng thái đã cân bằng (`sm:min-w-[135px]`) nên không gây dịch layout, nhưng nhãn
+vẫn nháy sai.
+
+Cách sửa: mục 4 của spec này (`getClaims()`, tên và email lấy từ claim, bỏ truy
+vấn `profiles`). `proxy.ts` giữ `getUser()` — đã quyết ở mục 4 — nên TTFB của
+request có phiên vẫn khoảng 100 ms (xem tiêu chí 3); điều đó không thuộc mục này.
+
+Cách kiểm: đăng nhập bằng tài khoản thử, mở `/` bằng bản `npm run build && npm
+start` (không đo ở `npm run dev`), đo khoảng thời gian từ lúc shell hiện tới lúc
+nhãn "Đăng nhập" đổi thành "Tài khoản", bằng Performance API hoặc
+`MutationObserver` trên mục tài khoản. Đo ít nhất 5 lần, lấy trung vị.
+
+Đạt khi: trung vị dưới 50 ms với phiên đăng nhập thật (tiêu chí 8). Không đạt thì
+ghi số thật, nói rõ phần nào chiếm thời gian, rồi xử lý theo mục 13.
+
+### 11.5 Cache Components giữ trang cũ ở trạng thái ẩn khi điều hướng (tồn đọng từ 2A)
+
+Khi bật Cache Components, Next.js giữ các trang đã rời đi ở trạng thái ẩn
+(`<Activity>`) thay vì huỷ, nên state client của chúng có thể còn sống khi quay
+lại.
+
+Đã kiểm ở 2A: `page_view` không bị ghi đôi khi điều hướng qua lại giữa các
+trang.
+
+Còn phải rà: ba chỗ dưới đây có giữ nhầm trạng thái khi quay lại trang hay không.
+
+Cách kiểm (bản `npm run build && npm start`; mỗi chỗ thử cả bấm liên kết lẫn nút
+Back/Forward của trình duyệt):
+
+1. Bộ lọc catalog ở `/sach`: đổi bộ lọc, rồi đổi cách sắp xếp (hai lần thử riêng),
+   vào một sách, rồi quay lại. Đối chiếu điều khiển bộ lọc và sắp xếp trên màn
+   hình với query string trên URL và danh sách sách hiển thị.
+2. Menu tài khoản: mở dropdown (≥ 768px) và sheet (< 768px), điều hướng sang
+   trang khác rồi quay lại. Ghi menu đang mở hay đã đóng.
+3. Ô tìm kiếm ở header, hai kịch bản (dùng hai chuỗi khác nhau để nhận ra nội
+   dung cũ): (a) gõ `aaa` nhưng chưa gửi, sang trang khác rồi quay lại; (b) tìm
+   `aaa`, rồi tìm `bbb`, sang trang khác rồi quay lại. Ghi nội dung ô sau khi
+   quay lại. Lưu ý: ô tìm kiếm trống sau khi tìm là hành vi có sẵn (đã ghi ở
+   `docs/specs/dot-1.6-sua-loi-giao-dien.md` mục 5), không phải lệch của mục này.
+
+Đạt khi: không chỗ nào hiển thị trạng thái mâu thuẫn với URL hoặc với dữ liệu
+đang hiện (tiêu chí 29–31; riêng ô tìm kiếm theo đúng tiêu chí 31). Cách xử lý
+khi có lệch, kể cả trường hợp phải dừng ngay, nằm ở đoạn đặt trước tiêu chí 29
+ở mục 12.
+
+### 11.6 Sửa `profiles.email` bằng phiên `customer` (tiêu chí 13 của 2A)
+
+Đã kiểm ở 2A ở tầng database (giả lập phiên bằng transaction rồi rollback):
+trigger `profiles_protect_role` ép `email` về giá trị cũ.
+
+Cách kiểm:
+
+1. Đăng nhập bằng tài khoản thử `customer`.
+2. Từ một Client Component hoặc script tạm (không commit), gọi qua API bằng chính
+   phiên đó: `createClient().from('profiles').update({ email: '<địa chỉ khác>'
+   }).eq('id', '<id tài khoản thử>')`.
+3. Đọc lại: `select email from public.profiles where id = '<id tài khoản thử>';`
+
+Đạt khi: `email` không đổi (tiêu chí 27).
+
+### 11.7 Sửa `profiles.email` bằng phiên `admin` (tiêu chí 14 của 2A)
+
+Điểm cốt lõi của khoá `email` là admin cũng không sửa được, nên mục này không
+được bỏ dù 11.6 đã đạt.
+
+Cách kiểm: như 11.6, nhưng đăng nhập bằng tài khoản admin thử (tạo qua
+`/dang-ky`, thăng cấp theo `docs/runbooks/tao-admin-dau-tien.md`, xoá sau khi kiểm
+— xoá tài khoản thì quyền admin mất theo, không cần giáng cấp).
+
+Đạt khi: `email` không đổi (tiêu chí 28).
 
 ## 12. Hoàn thành khi
 
@@ -214,9 +362,12 @@ Mỗi mục kèm số đo hoặc kết quả lệnh trong báo cáo.
 1. Bước 0 cho kết quả rõ ràng: JWT có hay không có `user_metadata.full_name`.
    Tài khoản thử đã xoá, `auth.users` và `profiles` về đúng số dòng ban đầu.
 2. `npm run build` exit 0, `tsc` 0 lỗi, `lint` 0 lỗi.
-3. TTFB trung vị 5 lần, không xấu hơn mốc 2A quá 20%: `/` 4,2ms, `/tu-sach`
-   4,3ms, `/sach` 4,6ms. Ghi cả thời gian tải xong (`/` 22,5ms, `/tu-sach`
-   17,4ms, `/sach` 113–119ms).
+3. TTFB trung vị 5 lần, **đo ở trạng thái chưa đăng nhập** (mốc 2A đo ở trạng
+   thái đó), không xấu hơn mốc 2A quá 20%: `/` 4,2ms, `/tu-sach` 4,3ms, `/sach`
+   4,6ms. Ghi cả thời gian tải xong (`/` 22,5ms, `/tu-sach` 17,4ms, `/sach`
+   113–119ms). Request có phiên dự kiến TTFB khoảng 100ms vì `proxy.ts` giữ
+   `getUser()` (mục 4); đo và ghi lại con số đó riêng, không dùng để đánh giá
+   đạt/trượt.
 4. `/sach` trang 1 có 20 thẻ, `?page=2` có 20, tổng 40. `?q=nha gia kim` ra 1
    kết quả. `?category=van-hoc` ra 10 sách.
 5. `grep -rn "SERVICE_ROLE" .next/static` trả 0 dòng.
@@ -226,9 +377,10 @@ Mỗi mục kèm số đo hoặc kết quả lệnh trong báo cáo.
    còn `getUser()`.
 7. Header không còn truy vấn `profiles`: đếm số truy vấn database khi render
    `/` lúc chưa đăng nhập và lúc đã đăng nhập, hai con số phải bằng nhau.
-8. Thời gian từ lúc shell hiện tới lúc nhãn tài khoản đổi, đo với phiên thật:
-   **dưới 50ms**, trung vị 5 lần. Không đạt thì ghi số thật và nói rõ vướng ở
-   đâu, đừng nới mục tiêu.
+8. Thời gian từ lúc shell hiện tới lúc nhãn tài khoản đổi, đo với phiên thật
+   trên bản `npm run build && npm start`, bằng Performance API hoặc
+   `MutationObserver`, ít nhất 5 lần: **dưới 50ms**, trung vị. Không đạt thì ghi
+   số thật và nói rõ vướng ở đâu, đừng nới mục tiêu.
 9. Dropdown hiện đúng họ tên và email của tài khoản đang đăng nhập.
 
 **Đăng nhập**
@@ -266,30 +418,68 @@ Mỗi mục kèm số đo hoặc kết quả lệnh trong báo cáo.
 22. Truy vấn toàn bộ `events` của hai thao tác trên: **không dòng nào chứa
     chuỗi `@`** trong `metadata`.
 
-**Kế thừa từ 2A**
-23. Tiêu chí 15 của 2A: `updateUser({ email })` với phiên thật, `profiles.email`
-    khớp `auth.users.email`. Ghi rõ hành vi khi email confirmation tắt.
-24. Tiêu chí 22 của 2A: phiên `customer` mở `/admin` bị chuyển về `/`, không
-    render giao diện quản trị.
-25. Đăng xuất với phiên thật: header về trạng thái chưa đăng nhập, refresh vẫn
-    thế, cookie phiên đã bị xoá.
-26. Cache Components: vào `/sach?category=van-hoc`, sang `/`, quay lại — bộ lọc
-    không bị giữ sai; mở dropdown tài khoản, điều hướng đi rồi quay lại —
-    dropdown không tự mở lại.
+**Kế thừa từ 2A** (cách kiểm chi tiết ở mục 11)
+23. Tiêu chí 15 của 2A (mục 11.1): sau `updateUser({ email })` với phiên thật,
+    `profiles.email` **và** `auth.users.email` cùng bằng địa chỉ **mới** — hai cột
+    cùng giữ email cũ là "khớp" nhưng không đạt. Ghi rõ hành vi khi email
+    confirmation tắt: áp dụng ngay hay vẫn gửi thư xác nhận, tới địa chỉ nào.
+24. Tiêu chí 22 của 2A (mục 11.2): phiên `customer` mở `/admin` và `/admin/sach`,
+    cả hai trả HTTP 307 về `/`, không render giao diện quản trị; ghi mã và URL
+    cuối từ tab Network. Đối chứng bằng tài khoản admin: `/admin` không bị chuyển
+    về `/`, trả 404.
+25. Đăng xuất với phiên thật (mục 11.3), ở cả dropdown (≥ 768px) và sheet (375px):
+    header đổi về "Đăng nhập" không cần tải lại trang; cookie
+    `sb-<project-ref>-auth-token*` bị xoá; `/tai-khoan` chuyển hướng 307 tới
+    `/dang-nhap?next=%2Ftai-khoan`; tải lại trang vẫn ở trạng thái chưa đăng nhập.
+26. Đăng xuất chỉ xoá phiên hiện tại (mục 11.3, `scope: "local"`, FR-5.3): sau khi
+    đăng xuất ở trình duyệt A, trình duyệt B cùng tài khoản tải lại vẫn hiện
+    "Tài khoản".
+27. Tiêu chí 13 của 2A (mục 11.6): phiên `customer` sửa `profiles.email` của chính
+    mình qua API, đọc lại: `email` không đổi.
+28. Tiêu chí 14 của 2A (mục 11.7): phiên `admin` sửa `profiles.email` của chính
+    mình qua API, đọc lại: `email` không đổi.
+
+**Nhóm Cache Components (tiêu chí 29–31)** — bắt buộc phải **có số đo**, không
+bắt buộc phải đạt. Tiêu chí giữ dạng đạt/không đạt, không nới. Phát hiện lệch thì
+ghi "không đạt" kèm mô tả, đưa vào `docs/specs/dot-1.6-sua-loi-giao-dien.md`, và
+vẫn đóng được đợt 2B.
+
+Ngoại lệ chặn đóng đợt: nếu lệch là lỗi đúng sai chứ không phải thẩm mỹ — dữ
+liệu hoặc trạng thái của một phiên lọt sang phiên khác, hiển thị sai trạng thái
+đăng nhập sau khi đăng xuất, hoặc hiển thị dữ liệu của người dùng khác — thì
+**dừng và báo ngay**, không ghi vào backlog.
+
+29. Cache Components — bộ lọc catalog (mục 11.5): vào `/sach?category=van-hoc`,
+    đổi bộ lọc rồi đổi cách sắp xếp, sang `/` hoặc một trang sách, quay lại bằng
+    liên kết và bằng Back/Forward: điều khiển bộ lọc, điều khiển sắp xếp và danh
+    sách sách khớp với query string trên URL, không bị giữ sai.
+30. Cache Components — menu tài khoản (mục 11.5): mở dropdown (≥ 768px) và sheet
+    (< 768px), điều hướng đi rồi quay lại bằng liên kết và bằng Back/Forward: menu
+    không tự mở lại.
+31. Cache Components — ô tìm kiếm (mục 11.5). Ô trống sau khi tìm là hành vi
+    **đang có** (form GET không có `defaultValue`), đã ghi ở
+    `docs/specs/dot-1.6-sua-loi-giao-dien.md` mục 5 — không tính là lệch của
+    tiêu chí này. Chạy hai kịch bản (a) và (b) ở mục 11.5, cả liên kết lẫn
+    Back/Forward: ô trống thì đạt; ô có chữ thì phải đúng chữ gõ gần nhất (`aaa`
+    ở (a), `bbb` ở (b)). Trượt chỉ khi ô hiện một giá trị khác với lần gõ gần
+    nhất, tức Cache Components giữ lại nội dung cũ.
 
 **Giao diện và tiếp cận**
-27. Ở 1280px: thẻ form rộng 1040px, chia 440/600. Ở 375px: không cuộn ngang,
+32. Ở 1280px: thẻ form rộng 1040px, chia 440/600. Ở 375px: không cuộn ngang,
     mọi vùng chạm ≥ 44×44px, ô nhập cao 48px font 16px.
-28. Mọi cặp chữ/nền trên hai trang mới đạt tương phản ≥ 4,5:1 (biểu tượng
-    ≥ 3:1). Liệt kê từng cặp kèm tỷ số.
-29. Tab qua toàn bộ form theo đúng thứ tự thị giác; nút Hiện/Ẩn có
+33. Mọi cặp chữ/nền trên hai trang mới đạt tương phản ≥ 4,5:1 (biểu tượng
+    ≥ 3:1). Viền ô nhập và viền select (`line-field`) đạt ≥ 3:1 so với nền thẻ
+    form (WCAG 1.4.11), vì viền là thứ duy nhất nhận diện ô. Liệt kê từng cặp kèm
+    tỷ số.
+34. Tab qua toàn bộ form theo đúng thứ tự thị giác; nút Hiện/Ẩn có
     `aria-pressed`; thông báo lỗi có `role="alert"`.
-30. Ảnh chụp toàn trang thu nhỏ: `/dang-nhap` và `/dang-ky` ở 1280px và 375px,
+35. Ảnh chụp toàn trang thu nhỏ: `/dang-nhap` và `/dang-ky` ở 1280px và 375px,
     cộng một ảnh dải chào mừng. Không phải ảnh cận cảnh.
 
 **Dọn dẹp**
-31. Mọi tài khoản thử đã xoá. `auth.users` và `profiles` chỉ còn các dòng có
-    trước đợt này. Không còn file hay route tạm nào trong `git status`.
+36. Mọi tài khoản thử đã xoá, kể cả tài khoản admin thử ở mục 11.7. `auth.users`
+    và `profiles` chỉ còn các dòng có trước đợt này; số admin về đúng như trước.
+    Không còn file hay route tạm nào trong `git status`.
 
 ## 13. Điều cần làm rõ trước khi code
 

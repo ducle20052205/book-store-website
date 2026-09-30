@@ -166,7 +166,7 @@ Tham chiếu artboard `Header.dc.html` trong canvas mockup.
 - Bàn phím: `aria-expanded` trên nút, Esc đóng, click ra ngoài đóng, focus quay lại nút sau khi đóng.
 - Mobile (<768px): chạm vào mục tài khoản mở sheet trượt từ đáy (artboard `MobileMenu.dc.html`), mọi vùng chạm ≥44×44px, có nút đóng.
 - Đăng xuất gọi `signOut()` trong Server Action rồi `revalidatePath('/')`.
-  Phần cần phiên đăng nhập thật (kiểm luồng đăng xuất): hoãn sang đợt 2B, xem mục 3 của spec 2B (`docs/specs/buoc-2b-kiem-thua-ke.md`).
+  Phần cần phiên đăng nhập thật (kiểm luồng đăng xuất): hoãn sang đợt 2B, xem mục 11.3 của spec 2B (`docs/specs/buoc-2b-dang-nhap-dang-ky.md`).
 
 ## 7. Runbook admin
 
@@ -208,9 +208,11 @@ Mỗi mục phải kèm số đo hoặc kết quả lệnh trong báo cáo.
 11. `select has_function_privilege('anon', 'public.handle_new_user()', 'execute');` trả về **false**; lặp lại với `authenticated` và `public`.
 12. `select has_function_privilege('anon', 'public.protect_profile_role()', 'execute');` trả về **false**, và tương tự với `public.sync_profile_email()`; lặp lại với `authenticated` và `public`. Cùng với tiêu chí 11, cả ba hàm đều phải trả **false** với cả ba vai trò. `create or replace` không khôi phục quyền đã revoke ở migration `0002`, nhưng phải kiểm chứng chứ không tin lý thuyết.
 13. Đăng nhập bằng một tài khoản role `customer`, gọi `update profiles set email = '...'` cho chính dòng của mình qua API, đọc lại: giá trị `email` **không** đổi.
+    Phần cần phiên đăng nhập thật: hoãn sang đợt 2B, xem mục 11.6 của spec 2B (`docs/specs/buoc-2b-dang-nhap-dang-ky.md`).
 14. Đăng nhập bằng một tài khoản role `admin`, gọi `update profiles set email = '...'` cho chính dòng của mình qua API, đọc lại: giá trị `email` **không** đổi. Tiêu chí trước chỉ thử bằng `customer`, trong khi điểm cốt lõi của quyết định là Admin cũng không sửa được.
+    Phần cần phiên đăng nhập thật: hoãn sang đợt 2B, xem mục 11.7 của spec 2B (`docs/specs/buoc-2b-dang-nhap-dang-ky.md`).
 15. Dùng một tài khoản thử tạo riêng cho phép kiểm này — không dùng tài khoản admin hay tài khoản cá nhân — và đổi sang một địa chỉ thử mà mình kiểm soát được. Gọi `supabase.auth.updateUser({ email: '<địa chỉ thử>' })` bằng tài khoản đó, rồi đọc lại `profiles`: cột `email` khớp `auth.users.email`. Ghi lại hành vi quan sát được khi email confirmation đang tắt: đổi áp dụng ngay, hay Supabase vẫn gửi mail xác nhận tới địa chỉ mới. Kiểm xong thì xoá tài khoản thử.
-    Phần cần phiên đăng nhập thật: hoãn sang đợt 2B, xem mục 1 của spec 2B (`docs/specs/buoc-2b-kiem-thua-ke.md`).
+    Phần cần phiên đăng nhập thật: hoãn sang đợt 2B, xem mục 11.1 của spec 2B (`docs/specs/buoc-2b-dang-nhap-dang-ky.md`).
 
 **Header**
 16. Ở viewport 1280px: nhóm liên kết bên phải gồm đúng **2 mục**, tổng chiều rộng trong khoảng **200–255px**; không có cuộn ngang. Ghi số đo thực. Con số này chỉ để bảo đảm nhóm liên kết không lấn ô tìm kiếm; ô tìm kiếm phải còn tối thiểu **800px** ở viewport 1280px.
@@ -222,7 +224,7 @@ Mỗi mục phải kèm số đo hoặc kết quả lệnh trong báo cáo.
 **Route**
 21. Mở `/tai-khoan` khi chưa đăng nhập: chuyển hướng tới `/dang-nhap?next=%2Ftai-khoan` (trang đích trả 404 ở đợt này — chấp nhận được, ghi rõ trong báo cáo).
 22. Mở `/admin` khi đã đăng nhập bằng tài khoản `customer`: chuyển hướng, **không** render giao diện quản trị.
-    Phần cần phiên đăng nhập thật: hoãn sang đợt 2B, xem mục 2 của spec 2B (`docs/specs/buoc-2b-kiem-thua-ke.md`).
+    Phần cần phiên đăng nhập thật: hoãn sang đợt 2B, xem mục 11.2 của spec 2B (`docs/specs/buoc-2b-dang-nhap-dang-ky.md`).
 
 **Ảnh kiểm tra**
 23. Ảnh chụp **toàn trang thu nhỏ** (không phải ảnh cận cảnh) của `/` và `/sach` ở 1280px và 375px, trước và sau đợt này, để đối chiếu không có gì xô lệch.
