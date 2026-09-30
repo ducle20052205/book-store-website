@@ -1,6 +1,18 @@
 import { cache } from "react";
 import type { ParsedCatalogParams } from "@/lib/catalog";
-import { supabase } from "@/lib/supabase";
+import { cacheLife } from "next/cache";
+import { createPublicClient } from "@/lib/supabase/public";
+
+/*
+ * Đợt 2A: mọi truy vấn ở đây đọc dữ liệu CÔNG KHAI bằng client không cookie
+ * (lib/supabase/public.ts) để dùng được trong `use cache`.
+ *  - Có `use cache` + cacheLife("minutes") (làm mới sau 60 giây, như `revalidate = 60`
+ *    trước đây): mọi hàm mà trang chủ, /tu-sach, /tu-sach/[slug], Header và
+ *    Footer cần — nhờ vậy các route này prerender thành shell tĩnh.
+ *  - KHÔNG cache: searchBooks, getCategoryBySlug, getBookBySlug,
+ *    getBookCollections, getRelatedBooks — phụ thuộc URL/từ khoá tuỳ ý hoặc cần
+ *    dữ liệu mới (/sach, /sach/[slug]); các route đó luôn render theo request.
+ */
 
 export interface BookSummary {
   slug: string;
@@ -70,6 +82,9 @@ export interface CategoryNode {
 
 /** Cây danh mục 2 cấp, sắp xếp theo sort_order — dùng cho mega-menu. */
 export async function getCategoryTree(): Promise<CategoryNode[]> {
+  "use cache";
+  cacheLife("minutes");
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("categories")
     .select("id, name, slug, parent_id, sort_order")
@@ -100,6 +115,9 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
  * chỗ cho cả danh sách sách, thay vì query riêng cho từng cuốn.
  */
 export async function getCategoryNameMap(): Promise<Map<string, string>> {
+  "use cache";
+  cacheLife("minutes");
+  const supabase = createPublicClient();
   const { data } = await supabase.from("categories").select("id, name");
   const map = new Map<string, string>();
   for (const row of data ?? []) map.set(row.id, row.name);
@@ -119,6 +137,7 @@ export interface CategoryBasic {
 export const getCategoryBySlug = cache(async function getCategoryBySlug(
   slug: string,
 ): Promise<CategoryBasic | null> {
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("categories")
     .select("id, name, slug, parent_id, description")
@@ -130,7 +149,10 @@ export const getCategoryBySlug = cache(async function getCategoryBySlug(
 });
 
 /** Danh mục theo id — dùng để lấy tên danh mục cha khi chỉ có category_id của sách. */
-export const getCategoryById = cache(async function getCategoryById(id: string): Promise<CategoryBasic | null> {
+export async function getCategoryById(id: string): Promise<CategoryBasic | null> {
+  "use cache";
+  cacheLife("minutes");
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("categories")
     .select("id, name, slug, parent_id, description")
@@ -139,7 +161,7 @@ export const getCategoryById = cache(async function getCategoryById(id: string):
 
   if (!data) return null;
   return { id: data.id, name: data.name, slug: data.slug, parentId: data.parent_id, description: data.description };
-});
+}
 
 /** 1c (bổ sung): chuỗi breadcrumb [cha, con] (hoặc chỉ [cha] nếu category đã là cấp cao nhất). */
 async function buildCategoryChain(category: CategoryBasic): Promise<CategoryBasic[]> {
@@ -173,6 +195,7 @@ export interface SearchBooksResult {
  * xếp và phân trang chạy hết phía server (NFR-1.3).
  */
 export async function searchBooks(params: ParsedCatalogParams): Promise<SearchBooksResult> {
+  const supabase = createPublicClient();
   const { data, error } = await supabase.rpc("search_books", {
     p_q: params.q ?? null,
     p_category_slug: params.category ?? null,
@@ -191,8 +214,22 @@ export async function searchBooks(params: ParsedCatalogParams): Promise<SearchBo
   };
 }
 
+/**
+ * Tab "Bán chạy" ở trang chủ (đợt 2A): cùng RPC search_books nhưng bọc use cache
+ * để trang chủ prerender được. /sach vẫn gọi searchBooks() trực tiếp, không
+ * cache, nên kết quả tìm kiếm luôn mới.
+ */
+export async function getBestsellingBooks(): Promise<SearchBooksResult> {
+  "use cache";
+  cacheLife("minutes");
+  return searchBooks({ sort: "bestseller", page: 1 });
+}
+
 /** FR-1.6(a): mới nhất trước. */
 export async function getNewestBooks(limit = 8): Promise<BookSummary[]> {
+  "use cache";
+  cacheLife("minutes");
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("books")
     .select("slug, title, author, cover_image_url, price, discount_price, stock_quantity, category_id")
@@ -220,7 +257,10 @@ export interface FeaturedBookExtra {
  * danh mục đã có, không phải danh mục con (không có màu riêng).
  */
 export async function getFeaturedBookExtrasBySlug(slugs: string[]): Promise<Record<string, FeaturedBookExtra>> {
+  "use cache";
+  cacheLife("minutes");
   if (slugs.length === 0) return {};
+  const supabase = createPublicClient();
   const { data } = await supabase.from("books").select("slug, description, category_id").in("slug", slugs);
   const rows = data ?? [];
   const map: Record<string, FeaturedBookExtra> = {};
@@ -260,6 +300,9 @@ export interface BookCollectionRef {
  * trường đó) rồi tra tại chỗ, thay vì query riêng cho từng cuốn.
  */
 export async function getBookCollectionRefMap(): Promise<Map<string, BookCollectionRef>> {
+  "use cache";
+  cacheLife("minutes");
+  const supabase = createPublicClient();
   const { data } = await supabase.from("collection_books").select("books(slug), collections(slug, title)");
 
   const rows = (data ?? []) as unknown as {
@@ -277,6 +320,9 @@ export async function getBookCollectionRefMap(): Promise<Map<string, BookCollect
 }
 
 export async function getCollections(): Promise<CollectionSummary[]> {
+  "use cache";
+  cacheLife("minutes");
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("collections")
     .select("id, slug, title, description, is_featured, sort_order")
@@ -298,6 +344,9 @@ export interface CollectionPreview extends CollectionSummary {
 
 /** C.2 mục 5: mỗi tủ sách kèm tối đa 3 bìa đầu (theo position) để xếp chồng trên trang chủ. */
 export async function getCollectionsWithPreview(): Promise<CollectionPreview[]> {
+  "use cache";
+  cacheLife("minutes");
+  const supabase = createPublicClient();
   const collections = await getCollections();
 
   return Promise.all(
@@ -340,6 +389,9 @@ export interface CategoryWithCount {
 
 /** C.2 mục 2: mỗi danh mục cha kèm tổng số sách thuộc nó hoặc các danh mục con của nó. */
 export async function getCategoryCounts(): Promise<CategoryWithCount[]> {
+  "use cache";
+  cacheLife("minutes");
+  const supabase = createPublicClient();
   const tree = await getCategoryTree();
 
   return Promise.all(
@@ -368,6 +420,9 @@ export interface EditorialPick {
  * sort_order, để không lặp lại đúng những cuốn đã hiện ở Hero.
  */
 export async function getEditorialPick(): Promise<EditorialPick | null> {
+  "use cache";
+  cacheLife("minutes");
+  const supabase = createPublicClient();
   const { data: candidateCollections } = await supabase
     .from("collections")
     .select("id, slug, title")
@@ -419,6 +474,9 @@ interface CollectionBookWithBookRow {
 
 /** Mục 5.2: hero lấy tủ sách is_featured = true, tối đa 5 ảnh bìa đầu theo position. */
 export async function getFeaturedCollection(): Promise<FeaturedCollection | null> {
+  "use cache";
+  cacheLife("minutes");
+  const supabase = createPublicClient();
   const { data: collection } = await supabase
     .from("collections")
     .select("id, slug, title, description")
@@ -456,6 +514,9 @@ export interface CollectionDetail extends CollectionSummary {
 }
 
 export async function getCollectionBySlug(slug: string): Promise<CollectionDetail | null> {
+  "use cache";
+  cacheLife("minutes");
+  const supabase = createPublicClient();
   const { data: collection } = await supabase
     .from("collections")
     .select("id, slug, title, description, is_featured, sort_order")
@@ -516,6 +577,7 @@ export interface BookDetail {
 
 /** 1c.1/1c.2: dữ liệu đầy đủ cho trang /sach/[slug]. */
 export const getBookBySlug = cache(async function getBookBySlug(slug: string): Promise<BookDetail | null> {
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("books")
     .select(
@@ -561,6 +623,7 @@ interface CollectionBooksJoinRow {
 
 /** [Thay đổi SRS — FR-2.6 mới] Mọi tủ sách có chứa cuốn này, kèm curator_note riêng của cuốn trong tủ đó. */
 export async function getBookCollections(bookId: string): Promise<BookCollectionEntry[]> {
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from("collection_books")
     .select("curator_note, collections(id, slug, title)")
@@ -598,6 +661,7 @@ export interface RelatedBooks {
  * trùng. Tiêu đề đổi theo việc có phải lấy thêm từ cha hay không.
  */
 export async function getRelatedBooks(book: Pick<BookDetail, "id" | "categoryId">): Promise<RelatedBooks | null> {
+  const supabase = createPublicClient();
   const category = await getCategoryById(book.categoryId);
   if (!category) return null;
 

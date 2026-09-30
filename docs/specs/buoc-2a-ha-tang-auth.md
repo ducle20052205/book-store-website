@@ -22,7 +22,7 @@ Trước khi làm bất kỳ màn hình đăng nhập nào, dự án cần bốn
 
 **Thuộc phạm vi**
 - Một migration: cột `profiles.email`, sửa `handle_new_user()`, sửa `protect_profile_role()` để khoá cột `email`, thêm `sync_profile_email()` cùng trigger `on_auth_user_email_updated` trên `auth.users`, mở rộng CHECK của `events.event_type`.
-- Cài `@supabase/ssr`, tách thành ba client, xoá singleton cũ.
+- Cài `@supabase/ssr`, tách thành bốn client (mục 4), xoá singleton cũ.
 - Tạo `proxy.ts` làm mới phiên và chặn sớm các route cần đăng nhập.
 - Header hai trạng thái, dropdown tài khoản, sheet tài khoản trên mobile, gỡ liên kết Yêu thích.
 - Runbook tạo admin đầu tiên.
@@ -130,16 +130,19 @@ Ràng buộc:
 
 ## 4. Client Supabase
 
-Cài `@supabase/ssr`. Tách thành ba nơi tạo client, **mỗi client khởi tạo bên trong request handler, không bao giờ ở module scope**:
+Cài `@supabase/ssr`. Tách thành bốn nơi tạo client, **mỗi client khởi tạo bên trong request handler, không bao giờ ở module scope**:
 
 | File | Hàm | Dùng ở đâu |
 |---|---|---|
 | `lib/supabase/client.ts` | `createBrowserClient` | Client Component |
-| `lib/supabase/server.ts` | `createServerClient` + `cookies()` từ `next/headers` | Server Component, Server Action, Route Handler |
+| `lib/supabase/server.ts` | `createServerClient` + `cookies()` từ `next/headers` | Server Component, Server Action, Route Handler — chỉ cho dữ liệu phụ thuộc phiên |
 | `lib/supabase/proxy.ts` | `createServerClient` đọc/ghi cookie qua `NextRequest`/`NextResponse` | chỉ `proxy.ts` gọi |
+| `lib/supabase/public.ts` | `createClient` của `supabase-js`, không cookie, không lưu phiên | `lib/queries.ts` — dữ liệu công khai |
 
 - `setAll` trong `lib/supabase/server.ts` phải bọc `try/catch` — Server Component không ghi được cookie, và lỗi đó là bình thường, không được để nó làm hỏng trang.
-- Xoá `lib/supabase.ts` cũ. Chuyển `lib/queries.ts` sang client server, `lib/analytics.ts` sang client browser.
+- Xoá `lib/supabase.ts` cũ. Chuyển `lib/analytics.ts` sang client browser.
+- `lib/queries.ts` đọc dữ liệu công khai qua `lib/supabase/public.ts` (client không cookie), **không** qua client server, vì `use cache` cấm gọi `cookies()`. Client server chỉ dùng cho dữ liệu phụ thuộc phiên (vd. hồ sơ người dùng ở Header).
+- Cache Components: `next.config.ts` bật `cacheComponents: true`; dữ liệu công khai dùng `use cache` + `cacheLife("minutes")` thay cho `revalidate = 60` (khi Cache Components bật, cấu hình `revalidate` của segment bị cấm).
 - Không import client server vào bất kỳ file nào có `"use client"`.
 
 ## 5. proxy.ts
@@ -163,6 +166,7 @@ Tham chiếu artboard `Header.dc.html` trong canvas mockup.
 - Bàn phím: `aria-expanded` trên nút, Esc đóng, click ra ngoài đóng, focus quay lại nút sau khi đóng.
 - Mobile (<768px): chạm vào mục tài khoản mở sheet trượt từ đáy (artboard `MobileMenu.dc.html`), mọi vùng chạm ≥44×44px, có nút đóng.
 - Đăng xuất gọi `signOut()` trong Server Action rồi `revalidatePath('/')`.
+  Phần cần phiên đăng nhập thật (kiểm luồng đăng xuất): hoãn sang đợt 2B, xem mục 3 của spec 2B (`docs/specs/buoc-2b-kiem-thua-ke.md`).
 
 ## 7. Runbook admin
 
@@ -206,9 +210,10 @@ Mỗi mục phải kèm số đo hoặc kết quả lệnh trong báo cáo.
 13. Đăng nhập bằng một tài khoản role `customer`, gọi `update profiles set email = '...'` cho chính dòng của mình qua API, đọc lại: giá trị `email` **không** đổi.
 14. Đăng nhập bằng một tài khoản role `admin`, gọi `update profiles set email = '...'` cho chính dòng của mình qua API, đọc lại: giá trị `email` **không** đổi. Tiêu chí trước chỉ thử bằng `customer`, trong khi điểm cốt lõi của quyết định là Admin cũng không sửa được.
 15. Dùng một tài khoản thử tạo riêng cho phép kiểm này — không dùng tài khoản admin hay tài khoản cá nhân — và đổi sang một địa chỉ thử mà mình kiểm soát được. Gọi `supabase.auth.updateUser({ email: '<địa chỉ thử>' })` bằng tài khoản đó, rồi đọc lại `profiles`: cột `email` khớp `auth.users.email`. Ghi lại hành vi quan sát được khi email confirmation đang tắt: đổi áp dụng ngay, hay Supabase vẫn gửi mail xác nhận tới địa chỉ mới. Kiểm xong thì xoá tài khoản thử.
+    Phần cần phiên đăng nhập thật: hoãn sang đợt 2B, xem mục 1 của spec 2B (`docs/specs/buoc-2b-kiem-thua-ke.md`).
 
 **Header**
-16. Ở viewport 1280px: nhóm liên kết bên phải gồm đúng **2 mục**, tổng chiều rộng trong khoảng **200–235px**; ô tìm kiếm rộng trong khoảng **855–905px**; không có cuộn ngang. Ghi số đo thực.
+16. Ở viewport 1280px: nhóm liên kết bên phải gồm đúng **2 mục**, tổng chiều rộng trong khoảng **200–255px**; không có cuộn ngang. Ghi số đo thực. Con số này chỉ để bảo đảm nhóm liên kết không lấn ô tìm kiếm; ô tìm kiếm phải còn tối thiểu **800px** ở viewport 1280px.
 17. Ở viewport 375px: không có cuộn ngang; mọi mục chạm ≥ **44×44px**.
 18. Dropdown mở ở 1280px: chụp ảnh cho thấy **không** đọc được chữ nào của thanh CategoryNav xuyên qua panel. Ghi giá trị `z-index` của panel và của nav.
 19. Nhấn Esc khi dropdown đang mở thì panel đóng và focus quay về nút Tài khoản.
@@ -217,6 +222,7 @@ Mỗi mục phải kèm số đo hoặc kết quả lệnh trong báo cáo.
 **Route**
 21. Mở `/tai-khoan` khi chưa đăng nhập: chuyển hướng tới `/dang-nhap?next=%2Ftai-khoan` (trang đích trả 404 ở đợt này — chấp nhận được, ghi rõ trong báo cáo).
 22. Mở `/admin` khi đã đăng nhập bằng tài khoản `customer`: chuyển hướng, **không** render giao diện quản trị.
+    Phần cần phiên đăng nhập thật: hoãn sang đợt 2B, xem mục 2 của spec 2B (`docs/specs/buoc-2b-kiem-thua-ke.md`).
 
 **Ảnh kiểm tra**
 23. Ảnh chụp **toàn trang thu nhỏ** (không phải ảnh cận cảnh) của `/` và `/sach` ở 1280px và 375px, trước và sau đợt này, để đối chiếu không có gì xô lệch.

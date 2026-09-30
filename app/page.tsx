@@ -6,6 +6,7 @@ import { HomeTabs } from "@/components/HomeTabs";
 import { categoryColorClasses } from "@/lib/categoryColors";
 import {
   enrichBooksForCard,
+  getBestsellingBooks,
   getBookCollectionRefMap,
   getCategoryCounts,
   getCategoryNameMap,
@@ -14,12 +15,12 @@ import {
   getFeaturedBookExtrasBySlug,
   getFeaturedCollection,
   getNewestBooks,
-  searchBooks,
 } from "@/lib/queries";
 
-// Trang không dùng API động (cookies/headers/searchParams) nên Next.js sẽ
-// static hoá và đóng băng dữ liệu Supabase lúc build nếu không có dòng này.
-export const revalidate = 60;
+// Đợt 2A: trang prerender thành shell tĩnh. Dữ liệu đi qua các hàm `use cache`
+// của lib/queries.ts (cacheLife "minutes" = làm mới sau 60 giây, thay cho
+// `export const revalidate = 60` — cấu hình segment này bị cấm khi bật
+// cacheComponents). Phần phụ thuộc phiên đăng nhập nằm ở Header, sau <Suspense>.
 
 const COLLECTION_STACK_OFFSETS = [
   "z-40 rotate-[-3deg]",
@@ -62,8 +63,9 @@ export default async function Home() {
       // cách ẩn responsive theo từng breakpoint để lưới không khuyết ô, xem
       // comment đầy đủ tại VISIBILITY_CLASS_BY_INDEX trong components/HomeTabs.tsx.
       getNewestBooks(17),
-      // 1b.1: tab "Bán chạy" dùng chung search_books(p_sort => 'bestseller') với /sach.
-      searchBooks({ sort: "bestseller", page: 1 }),
+      // 1b.1: tab "Bán chạy" dùng chung search_books(p_sort => 'bestseller') với /sach
+      // (bản có cache của cùng RPC đó, xem getBestsellingBooks).
+      getBestsellingBooks(),
       getCategoryCounts(),
       getEditorialPick(),
       getCollectionsWithPreview(),

@@ -12,7 +12,9 @@ Hàm `public.protect_profile_role()` (trigger `profiles_protect_role`) có đư�
 
 ## Điều kiện trước khi chạy
 
-- Tài khoản cần thăng cấp đã được đăng ký bình thường qua giao diện website (FR-5.1), để trigger `handle_new_user()` đã tạo dòng `profiles` tương ứng.
+- Tài khoản cần thăng cấp đã tồn tại và đã có dòng `profiles` tương ứng — trigger `handle_new_user()` tạo dòng này ngay khi tài khoản được tạo, bằng cách nào cũng vậy:
+  - Sau đợt 2B: đăng ký bình thường qua trang `/dang-ky` (FR-5.1).
+  - Trước đó (trang `/dang-ky` chưa có): tạo trong Supabase Dashboard → Authentication → Users → Add user. Dòng `profiles` vẫn được trigger tạo, nhưng `full_name` để trống nếu không điền `raw_user_meta_data`.
 - Có quyền chạy SQL trực tiếp trên database (Supabase Dashboard → SQL Editor).
 
 ## Bước 1 — thăng cấp
@@ -64,3 +66,7 @@ select count(*) as so_admin from public.profiles where role = 'admin';
 ```
 
 Khi khu vực `/admin/*` (FR-7.1) đã có, kiểm tra thêm bằng giao diện: đăng nhập bằng tài khoản vừa thăng cấp và truy cập `/admin/*`.
+
+## Hạn chế đã biết
+
+Policy `profiles_update_own` chỉ cho người dùng sửa dòng của chính mình, nên admin hiện **không** thăng cấp được người khác qua giao diện — muốn có thêm admin thì phải lặp lại đúng quy trình này. Việc thăng cấp qua giao diện thuộc bước 7 (Admin Dashboard).

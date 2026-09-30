@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 
 const SESSION_ID_KEY = "na_sid";
 
@@ -25,6 +25,7 @@ export type EventType = "page_view" | "search" | "add_to_cart" | "checkout_start
 export function track(eventType: EventType, metadata: Record<string, unknown> = {}): void {
   void (async () => {
     try {
+      const supabase = createClient();
       const sessionId = getSessionId();
       const { data } = await supabase.auth.getSession();
 
