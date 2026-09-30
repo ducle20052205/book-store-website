@@ -117,7 +117,7 @@
        tượng, cần 3:1). Chữ gợi ý ô tìm kiếm KHÔNG dùng #8A8676 của mockup
        (chỉ 3,27:1 trên field, tụt dưới 4,5:1) mà giữ ink-400. */
   --color-line-warm: #E3DCCE;     /* viền topbar, ô tìm kiếm */
-  --color-line-field: #A29376;    /* viền ô nhập và select trong form; ≥ 3:1 trên nền trắng (WCAG 1.4.11) */
+  --color-line-field: #9E8E70;    /* viền ô nhập và select trong form; ≥ 3:1 trên nền trắng (WCAG 1.4.11) */
   --color-menu-line: #DCD4C4;     /* viền menu tài khoản */
   --color-menu-sep: #EFE9DD;      /* vạch ngăn trong menu */
   --color-field: #F6F2E9;         /* nền ô tìm kiếm, nút đóng sheet */
