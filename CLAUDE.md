@@ -63,6 +63,8 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 - Mockup và spec mâu thuẫn: theo spec, và báo lại chỗ mâu thuẫn.
 - Gặp tình huống nằm trong mục "Điều cần làm rõ trước khi code" của spec: dừng và hỏi, đừng tự chọn.
 - Báo cáo bằng số đo thật (px, ms, số dòng, mã HTTP), không mô tả cảm giác. Tiêu chí không đạt thì ghi con số đo được và lý do, đừng bỏ trống.
+- Mọi tiêu chí dùng selector phải nêu selector chỉ khớp đúng trạng thái đang kiểm, và phải có đối chứng ở trạng thái ngược lại. Đối chứng cũng "đạt" nghĩa là phép đo hỏng, không phải mã đạt.
+- Mọi ngưỡng phần trăm phải lớn hơn độ nhiễu đo được của chính phép đo đó. Đo độ nhiễu trước khi đặt ngưỡng.
 - Kiểm giao diện bằng ảnh chụp toàn trang thu nhỏ, không chỉ ảnh cận cảnh.
 - File tạm, route thử, script đo: xoá trước khi commit, chạy `git status` xác nhận sạch.
 

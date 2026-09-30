@@ -411,14 +411,17 @@ Mỗi mục kèm số đo hoặc kết quả lệnh trong báo cáo.
 1. Bước 0 cho kết quả rõ ràng: JWT có hay không có `user_metadata.full_name`.
    Tài khoản thử đã xoá, `auth.users` và `profiles` về đúng số dòng ban đầu.
 2. `npm run build` exit 0, `tsc` 0 lỗi, `lint` 0 lỗi.
-3. TTFB trung vị 5 lần, **đo ở trạng thái chưa đăng nhập** (mốc 2A đo ở trạng
-   thái đó), không xấu hơn mốc 2A quá 20%: `/` 4,2ms, `/tu-sach` 4,3ms, `/sach`
-   4,6ms. Ghi cả thời gian tải xong (`/` 22,5ms, `/tu-sach` 17,4ms, `/sach`
-   113–119ms). Request có phiên dự kiến TTFB khoảng 100ms vì `proxy.ts` giữ
-   `getUser()` (mục 4); đo và ghi lại con số đó riêng, không dùng để đánh giá
-   đạt/trượt. Đo với bản build production (`npm run build && npm start`, port
-   3000) trỏ Supabase HOSTED (`.env.local`), đúng điều kiện đã lập mốc ở 2A. Đo
-   trên stack cục bộ không so sánh được vì thiếu round-trip mạng.
+3. Không tái diễn hồi quy hiệu năng.
+   Đo cùng phiên, cùng máy, cùng bản production: checkout `main` đo 15 lần mỗi
+   trang, rồi checkout nhánh PR đo 15 lần mỗi trang. Lấy trung vị.
+   Đạt khi: trung vị nhánh PR ≤ trung vị `main` + 1,5 ms VÀ ≤ 2x trung vị
+   `main`, cho cả 4 trang (`/`, `/sach`, `/tu-sach`, `/tu-sach/<slug>`).
+   Ghi cả min–max để thấy độ nhiễu.
+   Lý do đổi: mốc tuyệt đối của 2A đo ở phiên khác; ba lần đo 2A của cùng một
+   trang `/` với cùng mã cho 4,17 / 4,98 / 5,19 ms, chênh 24,5% — lớn hơn ngưỡng
+   20% cũ. Ngưỡng nhỏ hơn nhiễu thì không phân biệt được đạt và trượt. Hồi quy
+   cần bắt là loại 223x (2,9 ms → 647,7 ms).
+   Trạng thái: CHUYỂN SANG ĐỢT 2B.1.
 4. `/sach` trang 1 có 20 thẻ, `?page=2` có 20, tổng 40. `?q=nha gia kim` ra 1
    kết quả. `?category=van-hoc` ra 10 sách.
 5. `grep -rn "SERVICE_ROLE" .next/static` trả 0 dòng.
@@ -428,21 +431,19 @@ Mỗi mục kèm số đo hoặc kết quả lệnh trong báo cáo.
    còn `getUser()`.
 7. Header không còn truy vấn `profiles`: đếm số truy vấn database khi render
    `/` lúc chưa đăng nhập và lúc đã đăng nhập, hai con số phải bằng nhau.
-8. Nhãn tài khoản chỉ render một giai đoạn, không có bước đổi sau hydration.
-   Ba phép đo, tất cả với phiên thật trên stack cục bộ:
-   a. Chunk HTML đầu tiên của `/` đã chứa nút menu tài khoản của phiên
-      (`button[aria-haspopup]`, nhãn "Tài khoản"), tức phần phụ thuộc phiên không
-      bị dồn sang chunk sau. Họ tên và email nằm trong menu (chỉ dựng khi mở) và
-      trong dữ liệu RSC, không hiện ở nhãn; chữ "Đăng nhập" của fallback vẫn có
-      trong chunk đó nhưng đi cùng bản thay thế. Đo 5 lần, 5/5 phải đạt.
-   b. Tìm trong mã nguồn client: không component nào đọc trạng thái đăng nhập
-      rồi setState sau hydration. Ghi rõ lệnh tìm và số kết quả (phải là 0).
-   c. Text của nhãn tài khoản sau khi hydrate xong giống hệt text trong HTML
-      server. So sánh chuỗi, 5 lần, 5/5 giống nhau.
-   Lý do đổi: tiêu chí cũ ("dưới 50ms giữa shell và lúc nhãn đổi") giả định có
-   hai giai đoạn render. Kiến trúc getClaims() đã xoá giai đoạn thứ hai, nên
-   không còn khoảng thời gian nào để đo. requestAnimationFrame trong trình duyệt
-   tích hợp chạy ~2Hz nên mọi số đo theo frame đều không dùng được.
+8. Không lần nào người đã đăng nhập nhìn thấy trạng thái chưa đăng nhập sau khi
+   khung đầu đã vẽ.
+   Tải đầy đủ `/` 10 lần với phiên thật, trình duyệt thật chạy rAF 60 Hz, đo
+   bằng `MutationObserver` + `PerformanceObserver`. Cấm dùng
+   `requestAnimationFrame` trong mã đo. Đếm số lần chữ "Đăng nhập" hiển thị sau
+   mốc FCP: phải bằng 0/10.
+   ĐỐI CHỨNG BẮT BUỘC: chạy lại đúng phép đo với phiên chưa đăng nhập. Nếu đối
+   chứng cũng ra 0 thì phép đo không phân biệt được trạng thái → phép đo hỏng,
+   không phải mã đạt.
+   Mốc trước khi sửa (đo 30/09, Edge headless): 3/5 lần thấy sai, kéo dài
+   234–273 ms. Nguyên nhân: React streaming chỉ hiện Suspense boundary ngay nếu
+   nó xong trước khung vẽ đầu; xong sau thì chờ `$RT`+300 ms.
+   Trạng thái: CHUYỂN SANG ĐỢT 2B.1.
 9. Dropdown hiện đúng họ tên và email của tài khoản đang đăng nhập.
 
 **Đăng nhập**
@@ -544,6 +545,12 @@ liệu hoặc trạng thái của một phiên lọt sang phiên khác, hiển t
 36. Mọi tài khoản thử đã xoá, kể cả tài khoản admin thử ở mục 11.7. `auth.users`
     và `profiles` chỉ còn các dòng có trước đợt này; số admin về đúng như trước.
     Không còn file hay route tạm nào trong `git status`.
+
+### Hai tiêu chí chuyển sang 2B.1
+
+Tiêu chí 3 và 8 chuyển sang đợt 2B.1 (`docs/specs/buoc-2b1-xoa-nhay-trang-thai-header.md`).
+Lỗi nhấp nháy có từ 2A chứ không phải hồi quy của 2B; 2B làm nhẹ đi bằng cách
+bỏ truy vấn `profiles`. Giữ PR chờ một lỗi kế thừa không đem lại gì.
 
 ## 13. Điều cần làm rõ trước khi code
 
