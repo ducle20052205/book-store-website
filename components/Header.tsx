@@ -103,22 +103,34 @@ export function HeaderView({ categories, accountItem, cartCount = 0 }: HeaderVie
 /**
  * Đọc phiên đăng nhập và dựng mục tài khoản. Đọc cookie nên PHẢI nằm sau
  * <Suspense> (Cache Components): phần này stream vào sau, không nằm trong
- * shell tĩnh. getUser() hỏi thẳng máy chủ Auth để xác thực token (không chỉ
- * đọc cookie).
+ * shell tĩnh.
+ *
+ * Đợt 2B (spec mục 4): dùng getClaims(), không dùng phương thức hỏi thẳng máy
+ * chủ Auth như proxy.ts. Hai chỗ chịu mức rủi ro khác nhau nên cố ý không đồng
+ * nhất: Header chỉ HIỂN THỊ (tên, email), nên chỉ cần chữ ký JWT hợp lệ —
+ * getClaims() xác minh cục bộ bằng JWKS (khoá ES256 bất đối xứng), không tốn
+ * round trip (~99 ms đo ở 2A). proxy.ts là hàng rào BẢO VỆ, cần phát hiện cả
+ * token đã bị thu hồi, thứ mà chỉ kiểm chữ ký không thấy được — xem comment ở
+ * lib/supabase/proxy.ts.
+ *
+ * Tên và email lấy thẳng từ claim (user_metadata.full_name, email), không truy
+ * vấn `profiles`. Đánh đổi: JWT làm mới mỗi giờ nên tên có thể cũ tới lần làm
+ * mới kế tiếp khi đợt 2D cho sửa họ tên.
  */
 async function AccountItem() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return <LoginLink />;
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims) return <LoginLink />;
 
-  const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
-  const fullName = profile?.full_name?.trim();
+  const rawName: unknown = claims.user_metadata?.full_name;
+  const fullName = typeof rawName === "string" ? rawName.trim() : "";
+  const email = typeof claims.email === "string" && claims.email.length > 0 ? claims.email : null;
+
   return fullName ? (
-    <AccountMenu name={fullName} email={user.email ?? null} />
+    <AccountMenu name={fullName} email={email} />
   ) : (
-    <AccountMenu name={user.email ?? "Tài khoản của bạn"} email={null} />
+    <AccountMenu name={email ?? "Tài khoản của bạn"} email={null} />
   );
 }
 
