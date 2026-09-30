@@ -129,6 +129,13 @@
   --shadow-menu: 0 16px 34px rgba(23, 29, 64, 0.22);
   --shadow-sheet: 0 -12px 34px rgba(0, 0, 0, 0.34);
 
+  /* Đợt 2B [docs/mockups/buoc-2/bo-trang-thai-thong-bao.png, spec mục 7]: nền
+     tint của ô thông báo lỗi/thành công — màu lấy mẫu từ điểm ảnh của mockup
+     (success-tint trùng #E7F0EA của spec). Viền trái 3px dùng danger/success. */
+  --color-danger-tint: #FBEDEB;   /* nền ô thông báo lỗi */
+  --color-success-tint: #E7F0EA;  /* nền dải thông báo thành công */
+  --radius-notice: 2px;           /* bo góc ô/dải thông báo */
+
   /* A.2 — thang chữ theo vai trò. Quy ước Tailwind v4: --text-{tên} đi kèm
      --text-{tên}--line-height / --letter-spacing để 1 class gộp đủ 3 thuộc
      tính (vd. `text-display` = cỡ chữ + line-height + letter-spacing). */
