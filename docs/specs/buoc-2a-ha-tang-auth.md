@@ -208,7 +208,7 @@ Mỗi mục phải kèm số đo hoặc kết quả lệnh trong báo cáo.
 15. Dùng một tài khoản thử tạo riêng cho phép kiểm này — không dùng tài khoản admin hay tài khoản cá nhân — và đổi sang một địa chỉ thử mà mình kiểm soát được. Gọi `supabase.auth.updateUser({ email: '<địa chỉ thử>' })` bằng tài khoản đó, rồi đọc lại `profiles`: cột `email` khớp `auth.users.email`. Ghi lại hành vi quan sát được khi email confirmation đang tắt: đổi áp dụng ngay, hay Supabase vẫn gửi mail xác nhận tới địa chỉ mới. Kiểm xong thì xoá tài khoản thử.
 
 **Header**
-16. Ở viewport 1280px: nhóm liên kết bên phải gồm đúng **2 mục**, tổng chiều rộng trong khoảng **200–235px**; ô tìm kiếm rộng trong khoảng **855–905px**; không có cuộn ngang. Ghi số đo thực.
+16. Ở viewport 1280px: nhóm liên kết bên phải gồm đúng **2 mục**, tổng chiều rộng trong khoảng **200–255px**; không có cuộn ngang. Ghi số đo thực. Con số này chỉ để bảo đảm nhóm liên kết không lấn ô tìm kiếm; ô tìm kiếm phải còn tối thiểu **800px** ở viewport 1280px.
 17. Ở viewport 375px: không có cuộn ngang; mọi mục chạm ≥ **44×44px**.
 18. Dropdown mở ở 1280px: chụp ảnh cho thấy **không** đọc được chữ nào của thanh CategoryNav xuyên qua panel. Ghi giá trị `z-index` của panel và của nav.
 19. Nhấn Esc khi dropdown đang mở thì panel đóng và focus quay về nút Tài khoản.
