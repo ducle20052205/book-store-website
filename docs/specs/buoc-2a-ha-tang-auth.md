@@ -208,7 +208,9 @@ Mỗi mục phải kèm số đo hoặc kết quả lệnh trong báo cáo.
 11. `select has_function_privilege('anon', 'public.handle_new_user()', 'execute');` trả về **false**; lặp lại với `authenticated` và `public`.
 12. `select has_function_privilege('anon', 'public.protect_profile_role()', 'execute');` trả về **false**, và tương tự với `public.sync_profile_email()`; lặp lại với `authenticated` và `public`. Cùng với tiêu chí 11, cả ba hàm đều phải trả **false** với cả ba vai trò. `create or replace` không khôi phục quyền đã revoke ở migration `0002`, nhưng phải kiểm chứng chứ không tin lý thuyết.
 13. Đăng nhập bằng một tài khoản role `customer`, gọi `update profiles set email = '...'` cho chính dòng của mình qua API, đọc lại: giá trị `email` **không** đổi.
+    Phần cần phiên đăng nhập thật: hoãn sang đợt 2B, xem mục 11.6 của spec 2B (`docs/specs/buoc-2b-dang-nhap-dang-ky.md`).
 14. Đăng nhập bằng một tài khoản role `admin`, gọi `update profiles set email = '...'` cho chính dòng của mình qua API, đọc lại: giá trị `email` **không** đổi. Tiêu chí trước chỉ thử bằng `customer`, trong khi điểm cốt lõi của quyết định là Admin cũng không sửa được.
+    Phần cần phiên đăng nhập thật: hoãn sang đợt 2B, xem mục 11.7 của spec 2B (`docs/specs/buoc-2b-dang-nhap-dang-ky.md`).
 15. Dùng một tài khoản thử tạo riêng cho phép kiểm này — không dùng tài khoản admin hay tài khoản cá nhân — và đổi sang một địa chỉ thử mà mình kiểm soát được. Gọi `supabase.auth.updateUser({ email: '<địa chỉ thử>' })` bằng tài khoản đó, rồi đọc lại `profiles`: cột `email` khớp `auth.users.email`. Ghi lại hành vi quan sát được khi email confirmation đang tắt: đổi áp dụng ngay, hay Supabase vẫn gửi mail xác nhận tới địa chỉ mới. Kiểm xong thì xoá tài khoản thử.
     Phần cần phiên đăng nhập thật: hoãn sang đợt 2B, xem mục 11.1 của spec 2B (`docs/specs/buoc-2b-dang-nhap-dang-ky.md`).
 

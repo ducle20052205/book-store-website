@@ -35,10 +35,12 @@ file đó thay vì đoán từ ảnh.
 | Chữ chính | `#1A1C2E` |
 | Chữ phụ | `#5F6379` |
 | Thành công | `#266E48` |
-| Viền ô nhập | `#CFC7B8` |
+| Viền ô nhập | `#A29376` |
 | Viền thẻ | `#E3DCCE` |
 | Nền ô tìm kiếm và khối phụ | `#F6F2E9` |
 | Nền mục đang chọn | `#F4F2F8` |
+
+Ảnh PNG trong thư mục này chụp trước khi sửa màu viền ô nhập nên hiển thị viền nhạt hơn code (giá trị cũ `#CFC7B8` chỉ đạt 1,68:1 trên nền trắng, dưới ngưỡng 3:1 của WCAG 1.4.11); token `line-field` trong `app/globals.css` là nguồn đúng, không phải ảnh.
 
 ## Số đo lặp lại ở mọi màn
 

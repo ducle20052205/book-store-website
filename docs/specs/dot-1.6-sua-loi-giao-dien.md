@@ -70,3 +70,13 @@ Hiện `Toast` chỉ được dùng ở `components/PurchasePanel.tsx` (trang ch
 **Cần làm:** thêm pause-on-hover và pause-on-focus (dừng đồng hồ khi chuột ở trên hoặc focus ở trong toast, đếm lại khi rời đi). `CLAUDE.md` đã giới hạn `Toast` cho thông báo xác nhận ngắn; thông báo mang thông tin cần đọc kỹ dùng dải trong trang, không tự tắt.
 
 **Trạng thái:** chưa xử lý.
+
+## 5. Ô tìm kiếm ở header trống sau khi tìm
+
+**Hiện trạng:** ô tìm kiếm ở header (`components/Header.tsx`, `input#site-search`) nằm trong một form GET thường (`action="/sach"`) và không có `defaultValue`. Đo trên bản `npm run build && npm start`: HTML của `/sach?q=nha+gia+kim` chứa `input#site-search` không có thuộc tính `value`. Nên sau khi tìm, ô trống trong khi URL có `?q=`; người dùng không thấy và không sửa được từ khoá vừa tìm.
+
+**Có từ bước 1, không liên quan Cache Components.** Tiêu chí 31 của spec 2B (`docs/specs/buoc-2b-dang-nhap-dang-ky.md`) vì vậy không tính hành vi này là lệch.
+
+**Cần làm:** đọc `?q=` và truyền vào `defaultValue` của ô. Lưu ý khi làm: Header nằm trong layout gốc, mà layout không đọc được `searchParams` (Next.js: layout không render lại khi điều hướng, xem `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/layout.md`, mục "Query params"). Vì vậy không dùng được prop `searchParams` của trang. Cách hợp lệ là tách ô tìm kiếm thành một Client Component dùng `useSearchParams()`, bọc trong `<Suspense>` (Cache Components bắt buộc). `defaultValue` chỉ có tác dụng lúc mount, nên cần thêm `key` theo giá trị `q` để ô cập nhật khi điều hướng phía client (Back/Forward giữa hai lần tìm).
+
+**Trạng thái:** chưa xử lý.

@@ -317,14 +317,16 @@ Back/Forward của trình duyệt):
    hình với query string trên URL và danh sách sách hiển thị.
 2. Menu tài khoản: mở dropdown (≥ 768px) và sheet (< 768px), điều hướng sang
    trang khác rồi quay lại. Ghi menu đang mở hay đã đóng.
-3. Ô tìm kiếm ở header, hai kịch bản: (a) gõ chữ nhưng chưa gửi, sang trang khác
-   rồi quay lại; (b) sau một lần tìm ở `/sach?q=…`, sang trang khác rồi quay lại.
-   Đối chiếu nội dung ô với URL hiện tại.
+3. Ô tìm kiếm ở header, hai kịch bản (dùng hai chuỗi khác nhau để nhận ra nội
+   dung cũ): (a) gõ `aaa` nhưng chưa gửi, sang trang khác rồi quay lại; (b) tìm
+   `aaa`, rồi tìm `bbb`, sang trang khác rồi quay lại. Ghi nội dung ô sau khi
+   quay lại. Lưu ý: ô tìm kiếm trống sau khi tìm là hành vi có sẵn (đã ghi ở
+   `docs/specs/dot-1.6-sua-loi-giao-dien.md` mục 5), không phải lệch của mục này.
 
 Đạt khi: không chỗ nào hiển thị trạng thái mâu thuẫn với URL hoặc với dữ liệu
-đang hiện (tiêu chí 29–31). Tiêu chí giữ dạng đạt/không đạt, không nới. Chỗ nào
-lệch thì ghi rõ hành vi quan sát được vào báo cáo đợt 2B (tiêu chí đó ghi là
-không đạt) và thêm một mục vào `docs/specs/dot-1.6-sua-loi-giao-dien.md`.
+đang hiện (tiêu chí 29–31; riêng ô tìm kiếm theo đúng tiêu chí 31). Cách xử lý
+khi có lệch, kể cả trường hợp phải dừng ngay, nằm ở đoạn đặt trước tiêu chí 29
+ở mục 12.
 
 ### 11.6 Sửa `profiles.email` bằng phiên `customer` (tiêu chí 13 của 2A)
 
@@ -436,6 +438,17 @@ Mỗi mục kèm số đo hoặc kết quả lệnh trong báo cáo.
     mình qua API, đọc lại: `email` không đổi.
 28. Tiêu chí 14 của 2A (mục 11.7): phiên `admin` sửa `profiles.email` của chính
     mình qua API, đọc lại: `email` không đổi.
+
+**Nhóm Cache Components (tiêu chí 29–31)** — bắt buộc phải **có số đo**, không
+bắt buộc phải đạt. Tiêu chí giữ dạng đạt/không đạt, không nới. Phát hiện lệch thì
+ghi "không đạt" kèm mô tả, đưa vào `docs/specs/dot-1.6-sua-loi-giao-dien.md`, và
+vẫn đóng được đợt 2B.
+
+Ngoại lệ chặn đóng đợt: nếu lệch là lỗi đúng sai chứ không phải thẩm mỹ — dữ
+liệu hoặc trạng thái của một phiên lọt sang phiên khác, hiển thị sai trạng thái
+đăng nhập sau khi đăng xuất, hoặc hiển thị dữ liệu của người dùng khác — thì
+**dừng và báo ngay**, không ghi vào backlog.
+
 29. Cache Components — bộ lọc catalog (mục 11.5): vào `/sach?category=van-hoc`,
     đổi bộ lọc rồi đổi cách sắp xếp, sang `/` hoặc một trang sách, quay lại bằng
     liên kết và bằng Back/Forward: điều khiển bộ lọc, điều khiển sắp xếp và danh
@@ -443,15 +456,21 @@ Mỗi mục kèm số đo hoặc kết quả lệnh trong báo cáo.
 30. Cache Components — menu tài khoản (mục 11.5): mở dropdown (≥ 768px) và sheet
     (< 768px), điều hướng đi rồi quay lại bằng liên kết và bằng Back/Forward: menu
     không tự mở lại.
-31. Cache Components — ô tìm kiếm (mục 11.5), hai kịch bản (gõ chưa gửi rồi đi và
-    quay lại; đã tìm `?q=…` rồi đi và quay lại), cả liên kết lẫn Back/Forward:
-    nội dung ô không mâu thuẫn với URL hiện tại.
+31. Cache Components — ô tìm kiếm (mục 11.5). Ô trống sau khi tìm là hành vi
+    **đang có** (form GET không có `defaultValue`), đã ghi ở
+    `docs/specs/dot-1.6-sua-loi-giao-dien.md` mục 5 — không tính là lệch của
+    tiêu chí này. Chạy hai kịch bản (a) và (b) ở mục 11.5, cả liên kết lẫn
+    Back/Forward: ô trống thì đạt; ô có chữ thì phải đúng chữ gõ gần nhất (`aaa`
+    ở (a), `bbb` ở (b)). Trượt chỉ khi ô hiện một giá trị khác với lần gõ gần
+    nhất, tức Cache Components giữ lại nội dung cũ.
 
 **Giao diện và tiếp cận**
 32. Ở 1280px: thẻ form rộng 1040px, chia 440/600. Ở 375px: không cuộn ngang,
     mọi vùng chạm ≥ 44×44px, ô nhập cao 48px font 16px.
 33. Mọi cặp chữ/nền trên hai trang mới đạt tương phản ≥ 4,5:1 (biểu tượng
-    ≥ 3:1). Liệt kê từng cặp kèm tỷ số.
+    ≥ 3:1). Viền ô nhập và viền select (`line-field`) đạt ≥ 3:1 so với nền thẻ
+    form (WCAG 1.4.11), vì viền là thứ duy nhất nhận diện ô. Liệt kê từng cặp kèm
+    tỷ số.
 34. Tab qua toàn bộ form theo đúng thứ tự thị giác; nút Hiện/Ẩn có
     `aria-pressed`; thông báo lỗi có `role="alert"`.
 35. Ảnh chụp toàn trang thu nhỏ: `/dang-nhap` và `/dang-ky` ở 1280px và 375px,
