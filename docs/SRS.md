@@ -1,6 +1,6 @@
 # Đặc tả Yêu cầu Phần mềm (SRS) – NA Books – 7 Tính năng Core
 
-Phiên bản 1.3 · 29/09/2026 · Soạn bởi Lê Minh Đức
+Phiên bản 1.4 · 29/09/2026 · Soạn bởi Lê Minh Đức
 
 Tài liệu liên quan: docs/specs/claude-code-brand-update.md (nhận diện thương hiệu), docs/specs/buoc-1-catalog-chi-tiet.md (triển khai bước 1), docs/mockups/ (mockup giao diện).
 
@@ -8,7 +8,7 @@ Tài liệu liên quan: docs/specs/claude-code-brand-update.md (nhận diện th
 
 Tài liệu đặc tả 7 tính năng Core của website bán sách (dự án showcase/portfolio cá nhân, không kinh doanh thật), làm cơ sở triển khai trực tiếp với Claude Code và minh chứng năng lực đặc tả yêu cầu (BA) cho nhà tuyển dụng.
 
-**Phạm vi.** 7 tính năng: Catalog & tìm kiếm/lọc, Trang chi tiết sách, Giỏ hàng, Checkout, Tài khoản người dùng, Lịch sử đơn hàng, Admin Dashboard cơ bản. Hai tính năng sau nằm **ngoài phạm vi** tài liệu này, đặc tả riêng ở buổi khác: Chatbot trợ lý AI (Gemini) và Dashboard thống kê nâng cao.
+**Phạm vi.** 7 tính năng: Catalog & tìm kiếm/lọc, Trang chi tiết sách, Giỏ hàng, Checkout, Tài khoản người dùng, Lịch sử đơn hàng, Admin Dashboard cơ bản. Hai tính năng sau nằm **ngoài phạm vi** tài liệu này, đặc tả riêng ở buổi khác: Chatbot trợ lý AI (Gemini) và Dashboard thống kê nâng cao. Ba hạng mục sau cũng nằm **ngoài phạm vi** bản này: đăng nhập bằng magic link, đăng nhập bằng Google và danh sách yêu thích (wishlist).
 
 Ngoài 7 tính năng Core, bản 1.1 bổ sung hai phần nhỏ phục vụ định vị sản phẩm và đo lường: **Tủ sách tuyển chọn** (mục 5.9) và **Ghi log sự kiện hành vi** (mục 5.8). Phần ghi log chỉ thu thập dữ liệu; Dashboard thống kê nâng cao dùng dữ liệu này vẫn nằm ngoài phạm vi tài liệu.
 
@@ -46,7 +46,7 @@ Bản 1.3 bổ sung ghi nhận hệ token màu hiện tại (Tailwind v4, khai b
 
 ### Database schema
 
-9 bảng Postgres, tất cả đã bật Row Level Security (RLS). Bản 1.0 có 7 bảng; bản 1.1 bổ sung `collections` và `collection_books` (tủ sách tuyển chọn), cột `categories.sort_order` (thứ tự hiển thị menu), và dùng cột `events.metadata` (jsonb) cho ghi log sự kiện. Chi tiết cột xem `supabase/migrations/`.
+11 bảng Postgres, tất cả đã bật Row Level Security (RLS). Bản 1.0 có 7 bảng; bản 1.1 bổ sung `collections` và `collection_books` (tủ sách tuyển chọn), cột `categories.sort_order` (thứ tự hiển thị menu), và dùng cột `events.metadata` (jsonb) cho ghi log sự kiện; bản 1.4 bổ sung `provinces` và `wards` (dữ liệu hành chính, FR-5.8) cùng các cột `profiles.email`, `profiles.province_code`, `profiles.ward_code`, `profiles.address_line`. Chi tiết cột xem `supabase/migrations/`.
 
 ```mermaid
 erDiagram
@@ -60,6 +60,8 @@ erDiagram
     ORDERS ||--o{ ORDER_ITEMS : contains
     COLLECTIONS ||--o{ COLLECTION_BOOKS : contains
     BOOKS ||--o{ COLLECTION_BOOKS : "listed in"
+    PROVINCES ||--o{ WARDS : contains
+    WARDS |o--o{ PROFILES : "ward of"
 
     PROFILES {
         uuid id PK
@@ -67,7 +69,19 @@ erDiagram
         string email
         string role
         string phone
+        string province_code
+        string ward_code FK
+        string address_line
         string address
+    }
+    PROVINCES {
+        string code PK
+        string name
+    }
+    WARDS {
+        string code PK
+        string name
+        string province_code FK
     }
     CATEGORIES {
         uuid id PK
@@ -130,6 +144,8 @@ erDiagram
     }
 ```
 
+`profiles` tham chiếu `wards` bằng một khoá ngoại kép `(ward_code, province_code)` với `MATCH FULL`; sơ đồ ER không diễn tả được khoá nhiều cột nên chỉ vẽ một quan hệ.
+
 Bảng `events` nhận log sự kiện hành vi từ các tính năng Core (mục 5.8). Dashboard thống kê nâng cao đọc dữ liệu này và được đặc tả riêng.
 
 ## 3. UML Use Case Diagram
@@ -154,6 +170,7 @@ flowchart LR
     UC9([Xem lịch sử đơn hàng])
     UC10([Hủy đơn hàng])
     UC15([Xem tủ sách tuyển chọn])
+    UC16([Đổi mật khẩu])
 
     G --> UC1
     G --> UC2
@@ -171,6 +188,7 @@ flowchart LR
     C --> UC9
     C --> UC10
     C --> UC15
+    C --> UC16
 ```
 
 Ghi chú: UC3 (Quản lý giỏ hàng) khả dụng cho cả hai actor nhưng lưu dữ liệu khác nơi — giỏ của Khách vãng lai ở `localStorage`, giỏ của Khách hàng ở bảng `cart_items` (chi tiết mục 5.3). UC8 chỉ Khách hàng thực hiện được — Khách vãng lai bấm "Thanh toán" bị chuyển hướng sang UC4/UC5 trước.
@@ -200,7 +218,7 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 
 ## 4. User Stories
 
-29 user story, đánh số US-x.x theo 7 tính năng Core và phần Tủ sách tuyển chọn, theo mẫu "Là \[role\], tôi muốn \[action\] để \[benefit\]".
+30 user story, đánh số US-x.x theo 7 tính năng Core và phần Tủ sách tuyển chọn, theo mẫu "Là \[role\], tôi muốn \[action\] để \[benefit\]".
 
 ### 4.1 Catalog & Tìm kiếm/Lọc
 
@@ -235,8 +253,9 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 
 - **US-5.1** — Là khách vãng lai, tôi muốn đăng ký bằng email/mật khẩu để đặt hàng và theo dõi đơn.
 - **US-5.2** — Là khách hàng, tôi muốn đăng nhập/đăng xuất để bảo vệ thông tin tài khoản.
-- **US-5.3** — Là khách hàng, tôi muốn đặt lại mật khẩu khi quên để không mất quyền truy cập tài khoản.
+- **US-5.3** — Là khách vãng lai, tôi muốn đặt lại mật khẩu khi quên để không mất quyền truy cập tài khoản.
 - **US-5.4** — Là khách hàng, tôi muốn cập nhật thông tin cá nhân (họ tên, SĐT, địa chỉ) để thông tin giao hàng luôn chính xác.
+- **US-5.5** — Là khách hàng, tôi muốn đổi mật khẩu khi đang đăng nhập để chủ động giữ an toàn cho tài khoản.
 
 ### 4.6 Lịch sử đơn hàng
 
@@ -257,7 +276,7 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 
 ## 5. Functional Requirements
 
-60 yêu cầu chức năng, đánh số FR-x.x theo 7 tính năng Core và phần Tủ sách tuyển chọn/Ghi log sự kiện — đủ chi tiết (tên cột, business logic, RLS) để đưa thẳng cho Claude Code triển khai.
+63 yêu cầu chức năng, đánh số FR-x.x theo 7 tính năng Core và phần Tủ sách tuyển chọn/Ghi log sự kiện — đủ chi tiết (tên cột, business logic, RLS) để đưa thẳng cho Claude Code triển khai.
 
 ### 5.1 Catalog & Tìm kiếm/Lọc
 
@@ -299,7 +318,7 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 ### 5.4 Checkout
 
 - **FR-4.1** — Yêu cầu đăng nhập. Khách vãng lai bấm "Thanh toán" → chuyển hướng đăng nhập/đăng ký, sau đó quay lại checkout với giỏ hàng đã merge (FR-3.4).
-- **FR-4.2** — Trang checkout hiển thị: danh sách sách trong giỏ, tổng tiền, form nhập địa chỉ giao hàng (`shipping_address` — điền sẵn từ `profiles.address` nếu có, cho phép sửa), chọn phương thức thanh toán (`payment_method` — "COD" hoặc "Chuyển khoản").
+- **FR-4.2** — Trang checkout hiển thị: danh sách sách trong giỏ, tổng tiền, form địa chỉ giao hàng dùng đúng ba trường của FR-5.5 (`province_code`, `ward_code`, `address_line`) — điền sẵn từ `profiles` nếu có, cho phép sửa cho riêng đơn này — và chọn phương thức thanh toán (`payment_method` — "COD" hoặc "Chuyển khoản"). Khi đặt hàng, ứng dụng ghép ba trường thành chuỗi và lưu vào `orders.shipping_address` như một snapshot. Việc ghép chuỗi diễn ra ở tầng ứng dụng **trước** khi gọi giao dịch đặt hàng của FR-4.3; giao dịch nhận `shipping_address` đã ghép sẵn, không phải tự tra tên tỉnh và phường từ bảng.
 - **FR-4.3** — Xác nhận đặt hàng thực hiện tuần tự trong 1 transaction (khuyến nghị Supabase Edge Function/Postgres function, tránh thao tác rời rạc từ client):
   1. Kiểm tra lại `stock_quantity` từng sách trong giỏ tại thời điểm đặt — không đủ số lượng thì hủy thao tác, báo lỗi.
   2. Tạo 1 dòng `orders` (`user_id`, `status='pending'`, `payment_method`, `total_amount`, `shipping_address`).
@@ -312,12 +331,16 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 
 ### 5.5 Tài khoản người dùng
 
-- **FR-5.1** — Đăng ký bằng email + mật khẩu (Supabase Auth), tối thiểu: `full_name`, `email`, `password` (≥ 6 ký tự — mặc định Supabase Auth). Không bật xác thực email (email confirmation) để demo mượt.
-- **FR-5.2** — Đăng ký thành công → tự động tạo dòng `profiles` (`id` = auth user id, `role = 'customer'` mặc định — không cho tự chọn role, `email` đồng bộ từ `auth.users.email` qua Postgres trigger khi insert vào `auth.users`).
-- **FR-5.3** — Đăng nhập bằng email + mật khẩu; đăng xuất xóa session hiện tại.
-- **FR-5.4** — Quên mật khẩu dùng cơ chế reset password mặc định của Supabase Auth (email chứa link đặt lại).
-- **FR-5.5** — Khách hàng xem/cập nhật được `full_name`, `phone`, `address` của chính mình trong `profiles`; không tự đổi `role` hoặc `email` qua giao diện.
+- **FR-5.1** — Đăng ký bằng email + mật khẩu (Supabase Auth), tối thiểu: `full_name`, `email`, `password`. Mật khẩu tối thiểu 8 ký tự, không áp đặt quy tắc thành phần (không bắt buộc chữ hoa hay ký tự đặc biệt), theo NIST SP 800-63B rev 4; cấu hình minimum length = 8 trong Supabase Auth. Form có ô "Nhập lại email" để chống gõ sai email — lỗi làm người dùng bị khoá khỏi tài khoản vĩnh viễn; không có ô nhập lại mật khẩu, thay bằng nút hiện/ẩn mật khẩu. Không bật xác thực email (email confirmation) để demo mượt: đăng ký xong có session ngay. Magic link và đăng nhập bằng Google nằm ngoài phạm vi bản này.
+- **FR-5.2** — Đăng ký thành công → tự động tạo dòng `profiles` qua Postgres trigger `handle_new_user()` chạy khi insert vào `auth.users`; hàm insert `(id, role, email, full_name)`: `id` = auth user id, `role = 'customer'` mặc định — không cho tự chọn role, `email` = `auth.users.email`, `full_name` lấy từ `new.raw_user_meta_data ->> 'full_name'`. Bảng `profiles` có cột `email` (text, có index, không unique — `auth.users` đã đảm bảo unique). `profiles.email` là bản sao của `auth.users.email`, đồng bộ một chiều từ `auth.users` xuống `profiles` ở hai thời điểm: lúc tạo (trigger `handle_new_user`) và khi `auth.users.email` đổi (trigger `sync_profile_email`). Đó là hai đường duy nhất được ghi vào `profiles.email`; ở mọi đường khác, trigger `profiles_protect_role` ép `email` về giá trị cũ, không phân biệt Admin hay không. Nhờ đó bản sao luôn khớp nguồn. Không dựa vào giao diện để bảo đảm điều này, vì policy `profiles_update_own` cho phép sửa mọi cột của dòng mình.
+- **FR-5.3** — Đăng nhập bằng email + mật khẩu; đăng xuất xóa session hiện tại. Sau khi đăng nhập/đăng ký thành công, điều hướng theo tham số `?next=` nếu có. Chỉ chấp nhận path nội bộ bắt đầu bằng `/` và không bắt đầu bằng `//` hoặc `/\` (nhiều trình duyệt coi `\` như `/`) — chống open redirect; giá trị không hợp lệ thì về trang chủ.
+- **FR-5.4** — Quên mật khẩu dùng cơ chế reset password mặc định của Supabase Auth (email chứa link đặt lại). Email gửi qua custom SMTP (xem NFR-2.6), không dùng dịch vụ email tích hợp sẵn của Supabase — dịch vụ đó giới hạn 2 email/giờ và chỉ gửi tới địa chỉ đã pre-authorized. Route: `/quen-mat-khau` (nhập email), `/dat-lai-mat-khau` (đặt mật khẩu mới), `/auth/callback` (xác minh token từ email). Template email dùng chiến lược `token_hash` thay cho `{{ .ConfirmationURL }}` mặc định: link chứa `token_hash` và `type=recovery`, route gọi `verifyOtp` để lấy session. Lý do: luồng PKCE mặc định lưu code verifier ở trình duyệt khởi tạo, nên link mở ở trình duyệt hoặc thiết bị khác sẽ hỏng — tình huống phổ biến khi người dùng bấm quên mật khẩu trên máy tính rồi mở mail trên điện thoại.
+- **FR-5.5** — Khách hàng xem/cập nhật được `full_name`, `phone` và địa chỉ giao hàng của chính mình trong `profiles`. Địa chỉ giao hàng gồm ba trường `province_code`, `ward_code`, `address_line` (chọn theo dữ liệu hành chính ở FR-5.8). Cột `address` giữ lại làm chuỗi hiển thị đầy đủ, ghép từ ba trường trên, để `orders.shipping_address` (snapshot dạng text) không phải đổi. `email` hiển thị read-only kèm một dòng giải thích vì sao không sửa được. Khách hàng không tự đổi được `role`. Giao diện không cung cấp chỗ đổi `email`; nếu email được đổi ở tầng Auth thì trigger `sync_profile_email` đồng bộ xuống `profiles` (FR-5.2), nên hai nơi vẫn khớp. Chuỗi `address` do ứng dụng ghép ở tầng server mỗi khi lưu địa chỉ, không dùng generated column, vì chuỗi cần tên tỉnh và phường dạng chữ chứ không phải mã.
 - **FR-5.6** — RLS: `profiles` — user đọc/sửa dòng có `id = auth.uid()` của chính mình; Admin (`role='admin'`) đọc được mọi dòng (phục vụ Admin Dashboard xem thông tin khách theo đơn).
+  - Ghi chú: trigger `profiles_protect_role` khoá `role` với người không phải Admin, và khoá `email` với mọi người. Tài khoản admin đầu tiên được tạo bằng thao tác thủ công một lần theo `docs/runbooks/tao-admin-dau-tien.md`.
+  - Hạn chế đã biết: policy hiện tại chỉ cho user sửa dòng của chính mình, nên Admin chưa thăng cấp được người khác qua giao diện.
+- **FR-5.7** — Đổi mật khẩu khi đang đăng nhập: yêu cầu nhập mật khẩu hiện tại, xác minh bằng `signInWithPassword` với chính email đang đăng nhập, rồi mới gọi `updateUser` để đặt mật khẩu mới.
+- **FR-5.8** — Dữ liệu hành chính: hai bảng tra cứu `provinces` (34 dòng) và `wards`, theo mô hình chính quyền địa phương 2 cấp áp dụng từ 01/07/2025 (đã bỏ cấp huyện). RLS: `SELECT` công khai, ghi chỉ Admin. Form địa chỉ là Tỉnh/Thành phố → Phường/Xã → địa chỉ chi tiết, không có cấp quận/huyện. Schema: `provinces(code text PK, name text)`; `wards(code text PK, name text, province_code text NOT NULL REFERENCES provinces(code))` kèm `UNIQUE (code, province_code)`. `profiles` dùng khoá ngoại kép `(ward_code, province_code)` tham chiếu `wards(code, province_code)` với `MATCH FULL` — khoá ngoại đơn cho từng cột là chưa đủ, vì không ngăn được việc chọn phường không thuộc tỉnh đã chọn. Phải là `MATCH FULL` vì khoá ngoại nhiều cột mặc định dùng `MATCH SIMPLE`, chỉ cần một cột NULL là cả ràng buộc bị bỏ qua — khi đó một `province_code` không tồn tại vẫn lọt vào nếu `ward_code` còn trống. Với `MATCH FULL`, hoặc cả hai cột cùng NULL, hoặc cả hai cùng có giá trị và phải khớp một dòng `wards`. Dữ liệu seed bằng migration; không có giao diện quản lý trong phạm vi MVP, chỉnh trực tiếp qua Supabase Dashboard nếu cần.
 
 ### 5.6 Lịch sử đơn hàng
 
@@ -329,7 +352,7 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 
 ### 5.7 Admin Dashboard
 
-- **FR-7.1** — Chỉ `role='admin'` truy cập được `/admin/*`; kiểm tra role ở cả middleware (route protection) lẫn RLS (bảo vệ 2 lớp).
+- **FR-7.1** — Chỉ `role='admin'` truy cập được `/admin/*`. Bảo vệ hai lớp: `proxy.ts` (Next.js 16 đã đổi tên `middleware.ts` thành `proxy.ts`, chạy trên Node.js runtime, hàm export tên `proxy`) chặn sớm để người không phải admin không thấy giao diện quản trị; hàng rào thật là kiểm tra role trong Server Component và RLS. `proxy.ts` không được coi là lớp authorization duy nhất.
 - **FR-7.2** — Quản lý sách: Admin xem danh sách toàn bộ sách (phân trang/tìm kiếm), thêm sách mới (đủ các trường bảng `books`), sửa thông tin, xóa sách.
 - **FR-7.3** — Trước khi xóa 1 sách, kiểm tra sách có đang xuất hiện trong `order_items` nào không — nếu có, chặn xóa cứng, gợi ý đặt `stock_quantity = 0` thay thế để không phá vỡ dữ liệu lịch sử đơn hàng.
 - **FR-7.4** — Quản lý đơn hàng: Admin xem danh sách toàn bộ đơn (lọc theo status, tìm theo mã đơn/tên khách), xem chi tiết 1 đơn (kèm thông tin khách từ `profiles`), cập nhật status theo luồng `pending → processing → shipped → completed` (hoặc `→ cancelled` ở bất kỳ bước nào trước `completed`).
@@ -340,9 +363,9 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 
 - **FR-8.1** — Hệ thống ghi sự kiện hành vi vào bảng `events` qua hàm `track(event_type, metadata)` phía client, theo kiểu fire-and-forget: không chặn giao diện, lỗi không hiển thị cho người dùng.
 - **FR-8.2** — Mỗi sự kiện có `session_id` (UUID ẩn danh lưu trong `localStorage`) và `user_id` (null nếu chưa đăng nhập).
-- **FR-8.3** — Các loại sự kiện hợp lệ: `page_view`, `search`, `add_to_cart`, `checkout_started`, `order_placed` (ràng buộc CHECK ở database).
-- **FR-8.4** — `page_view` được ghi khi mở trang chi tiết sách (`metadata`: `book_id`, `slug`). `search` được ghi khi trang catalog có từ khóa (`metadata`: `q`, `results_count`, `category`, `sort`), kể cả khi không có kết quả. `add_to_cart`, `checkout_started`, `order_placed` được ghi ở các tính năng Giỏ hàng và Checkout.
-- **FR-8.5** — `metadata` không chứa dữ liệu cá nhân (email, tên, địa chỉ, số điện thoại) và tối đa 2KB.
+- **FR-8.3** — Các loại sự kiện hợp lệ: `page_view`, `search`, `add_to_cart`, `checkout_started`, `order_placed`, `sign_up`, `login` (ràng buộc CHECK ở database).
+- **FR-8.4** — `page_view` được ghi khi mở trang chi tiết sách (`metadata`: `book_id`, `slug`). `search` được ghi khi trang catalog có từ khóa (`metadata`: `q`, `results_count`, `category`, `sort`), kể cả khi không có kết quả. `add_to_cart`, `checkout_started`, `order_placed` được ghi ở các tính năng Giỏ hàng và Checkout. `sign_up` được ghi khi đăng ký thành công, `login` được ghi khi đăng nhập thành công; `metadata` của cả hai có dạng `{"method":"password"}`.
+- **FR-8.5** — `metadata` không chứa dữ liệu cá nhân (email, tên, địa chỉ, số điện thoại) và tối đa 2KB. Riêng `sign_up` và `login`: `metadata` tuyệt đối không chứa email.
 - **FR-8.6** — RLS: ai cũng được `INSERT`, nhưng chỉ với `user_id` là null hoặc bằng `auth.uid()`. Chỉ Admin được `SELECT`.
 
 ### 5.9 Tủ sách tuyển chọn
@@ -364,16 +387,18 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 | `order_items` | — | SELECT qua đơn của mình | SELECT toàn bộ |
 | `collections` | SELECT toàn bộ | SELECT toàn bộ | SELECT/INSERT/UPDATE/DELETE toàn bộ |
 | `collection_books` | SELECT toàn bộ | SELECT toàn bộ | SELECT/INSERT/UPDATE/DELETE toàn bộ |
+| `provinces` | SELECT toàn bộ | SELECT toàn bộ | SELECT/INSERT/UPDATE/DELETE toàn bộ |
+| `wards` | SELECT toàn bộ | SELECT toàn bộ | SELECT/INSERT/UPDATE/DELETE toàn bộ |
 | `events` | INSERT (`user_id` null) | INSERT (`user_id` = của mình hoặc null) | SELECT toàn bộ |
 
 ## 6. Non-functional Requirements
 
-25 yêu cầu phi chức năng, nhóm theo 6 nhóm chuẩn SRS: hiệu năng, bảo mật, khả năng sử dụng, khả năng bảo trì/mở rộng, tương thích, khả năng tiếp cận.
+26 yêu cầu phi chức năng, nhóm theo 6 nhóm chuẩn SRS: hiệu năng, bảo mật, khả năng sử dụng, khả năng bảo trì/mở rộng, tương thích, khả năng tiếp cận.
 
 ### 6.1 Hiệu năng
 
 - **NFR-1.1** — Trang catalog và trang chi tiết sách tải dưới 2 giây trên kết nối mạng trung bình (Core Web Vitals: LCP < 2.5s).
-- **NFR-1.2** — Ảnh bìa sách lưu trên Supabase Storage, tối ưu qua Next.js `Image` component (lazy loading, responsive sizing, WebP khi trình duyệt hỗ trợ).
+- **NFR-1.2** — Ảnh bìa sách do component `<BookCover>` sinh tự động (FR-2.8), không lưu trên Supabase Storage và không tải ảnh từ nguồn ngoài; vì vậy phần tối ưu ảnh qua Next.js `Image` không áp dụng trong phạm vi hiện tại.
 - **NFR-1.3** — Lọc/sắp xếp/tìm kiếm ở catalog thực hiện phía server; không tải toàn bộ dữ liệu sách về client rồi lọc.
 
 ### 6.2 Bảo mật
@@ -382,7 +407,8 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 - **NFR-2.2** — API key (Gemini cho chatbot — cấu hình buổi khác), Supabase service role key, Make.com webhook secret — không expose ra phía client, chỉ dùng trong Edge Functions/server-side code.
 - **NFR-2.3** — Input từ mọi form (đăng ký, checkout, thêm/sửa sách...) validate cả client (UX) lẫn server/database (ràng buộc thật, không tin dữ liệu từ client).
 - **NFR-2.4** — Mật khẩu không lưu dạng plaintext (Supabase Auth mặc định hash bằng bcrypt).
-- **NFR-2.5** — Middleware kiểm tra `role='admin'` cho mọi route `/admin/*` trước khi render, tránh lộ giao diện quản trị qua URL trực tiếp.
+- **NFR-2.5** — `proxy.ts` (Next.js 16, trước đây là `middleware.ts`) kiểm tra `role='admin'` cho mọi route `/admin/*` trước khi render, tránh lộ giao diện quản trị qua URL trực tiếp; Server Component kiểm tra lại role — proxy không phải lớp authorization duy nhất (xem FR-7.1).
+- **NFR-2.6** — Hệ thống dùng custom SMTP cho toàn bộ email xác thực. Không dùng dịch vụ email tích hợp sẵn của Supabase vì dịch vụ đó giới hạn 2 email/giờ và chỉ gửi tới địa chỉ đã pre-authorized.
 
 ### 6.3 Khả năng sử dụng
 
@@ -421,3 +447,4 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 | 1.1 | 22/09/2026 | Tìm kiếm theo tác giả, không dấu (FR-1.3); RPC `search_books` (FR-1.11); route `/sach` (FR-1.12, FR-2.1); sách liên quan có phương án dự phòng (FR-2.3); khối "Có trong tủ sách" (FR-2.6); thanh mua hàng dính đáy trên mobile (FR-2.7); ghi log sự kiện (5.8); tủ sách tuyển chọn (5.9); schema 9 bảng; NFR giọng văn (NFR-3.4) và accessibility (6.6). |
 | 1.2 | 24/09/2026 | Chính thức hoá chính sách bìa sách: không dùng ảnh bìa bản quyền, toàn bộ bìa do `<BookCover>` sinh tự động từ `title`/`author`/`slug` (FR-2.8 mới); `cover_image_url` giữ trong schema `books` cho khả năng mở rộng sau này nhưng không dùng ở phạm vi hiện tại; cập nhật FR-1.1, FR-2.1 cho khớp. |
 | 1.3 | 29/09/2026 | Ghi nhận các quyết định thiết kế của bước 1.5 (đợt A→F, chi tiết xem `docs/specs/dot-e-design-plan.md`): chữ ký thị giác riêng — ghi chú biên tập ở lề nối bằng nét kẻ tay, quy tắc chữ nghiêng/đứng theo người nói; hợp nhất hệ màu tối `cham-900` và phân lớp nền trang/thẻ `paper`/`surface` (NFR-3.5 mới); chuyển động có mục đích, chỉ animate transform/opacity, CLS = 0, tôn trọng `prefers-reduced-motion` (NFR-3.6 mới); yêu cầu tái kiểm WCAG AA sau mỗi lần đổi token màu (NFR-6.7 mới); nhãn danh mục con, chip "Trong tủ sách" và giới thiệu ngắn theo danh mục cha trên trang catalog. |
+| 1.4 | 29/09/2026 | Chốt quyết định thiết kế bước 2 (Tài khoản người dùng) và sửa các chỗ bản 1.3 mô tả sai database thật. Sửa cho đúng thực tế: FR-5.2 (trigger `handle_new_user()` insert `id, role, email, full_name`; `profiles` có cột `email`), FR-7.1 (route protection bằng `proxy.ts` của Next.js 16, nguyên tắc hai lớp), FR-8.3/8.4/8.5 (thêm sự kiện `sign_up`, `login`), schema 11 bảng. Viết lại/bổ sung mục 5.5: FR-5.1 (mật khẩu ≥ 8 ký tự theo NIST SP 800-63B rev 4, ô "Nhập lại email"), FR-5.3 (`?next=` chống open redirect), FR-5.4 (custom SMTP, 3 route), FR-5.5 (địa chỉ 3 trường), FR-5.6 (ghi chú và hạn chế đã biết). Thêm mới: FR-5.7 (đổi mật khẩu), FR-5.8 (`provinces`, `wards`, mô hình 2 cấp từ 01/07/2025), US-5.5, UC16, NFR-2.6, 2 dòng RLS ở mục 5.10; ngoài phạm vi: magic link, Google, wishlist; runbook `docs/runbooks/tao-admin-dau-tien.md`. Đếm lại: 63 FR (bản 1.3 ghi 60, thực tế 61), 30 US, 26 NFR. Rà soát bổ sung: khoá `profiles.email` ở tầng trigger (FR-5.2, FR-5.6), template `token_hash` cho email đặt lại mật khẩu (FR-5.4), chặn `/\` trong `?next=` (FR-5.3), khoá ngoại kép cho cặp tỉnh/phường và cách seed (FR-5.8), ghép chuỗi `address` ở tầng server (FR-5.5), đồng bộ form địa chỉ ở checkout (FR-4.2), sửa NFR-1.2 cho khớp FR-2.8, NFR-2.5 dùng `proxy.ts`, US-5.3 đổi actor thành Khách vãng lai. Lần rà thứ hai: khoá `email` vô điều kiện thay vì chỉ với người không phải Admin (FR-5.2, FR-5.6), khoá ngoại kép dùng `MATCH FULL` (FR-5.8), viết lại FR-4.2 cho nhất quán với form địa chỉ ba trường. Lần rà thứ ba: thêm trigger `sync_profile_email` đồng bộ email từ `auth.users` xuống `profiles` (FR-5.2, FR-5.5), sửa sơ đồ ER cho khớp khoá ngoại kép, làm rõ thời điểm ghép `shipping_address` (FR-4.2). Lần rà thứ tư: đặt lại cờ đồng bộ ngay sau khi dùng, dọn các câu chữ lệch nhau sau khi thêm trigger đồng bộ. |
