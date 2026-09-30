@@ -286,6 +286,10 @@ Cách kiểm:
 Đạt khi: sau khi `auth.users.email` đổi, `profiles.email` khớp giá trị mới
 (`profiles_email` = `auth_email` = địa chỉ mới) (tiêu chí 23).
 
+Phần khoá ở tầng DB đã kiểm chứng (PATCH email trả 200, cột email và role không
+đổi, cả customer lẫn admin). Phần hành vi xác nhận hai đầu khi đổi email chuyển
+sang 2D, vì đổi email là chức năng của trang hồ sơ, không thuộc 2B.
+
 ### 11.2 `/admin` với tài khoản `customer` (tiêu chí 22 của 2A)
 
 Đã kiểm ở 2A: chưa đăng nhập, `/admin` và `/admin/sach` chuyển hướng (HTTP 307)
@@ -412,7 +416,9 @@ Mỗi mục kèm số đo hoặc kết quả lệnh trong báo cáo.
    4,6ms. Ghi cả thời gian tải xong (`/` 22,5ms, `/tu-sach` 17,4ms, `/sach`
    113–119ms). Request có phiên dự kiến TTFB khoảng 100ms vì `proxy.ts` giữ
    `getUser()` (mục 4); đo và ghi lại con số đó riêng, không dùng để đánh giá
-   đạt/trượt.
+   đạt/trượt. Đo với bản build production (`npm run build && npm start`, port
+   3000) trỏ Supabase HOSTED (`.env.local`), đúng điều kiện đã lập mốc ở 2A. Đo
+   trên stack cục bộ không so sánh được vì thiếu round-trip mạng.
 4. `/sach` trang 1 có 20 thẻ, `?page=2` có 20, tổng 40. `?q=nha gia kim` ra 1
    kết quả. `?category=van-hoc` ra 10 sách.
 5. `grep -rn "SERVICE_ROLE" .next/static` trả 0 dòng.
@@ -422,10 +428,21 @@ Mỗi mục kèm số đo hoặc kết quả lệnh trong báo cáo.
    còn `getUser()`.
 7. Header không còn truy vấn `profiles`: đếm số truy vấn database khi render
    `/` lúc chưa đăng nhập và lúc đã đăng nhập, hai con số phải bằng nhau.
-8. Thời gian từ lúc shell hiện tới lúc nhãn tài khoản đổi, đo với phiên thật
-   trên bản `npm run build && npm start`, bằng Performance API hoặc
-   `MutationObserver`, ít nhất 5 lần: **dưới 50ms**, trung vị. Không đạt thì ghi
-   số thật và nói rõ vướng ở đâu, đừng nới mục tiêu.
+8. Nhãn tài khoản chỉ render một giai đoạn, không có bước đổi sau hydration.
+   Ba phép đo, tất cả với phiên thật trên stack cục bộ:
+   a. Chunk HTML đầu tiên của `/` đã chứa nút menu tài khoản của phiên
+      (`button[aria-haspopup]`, nhãn "Tài khoản"), tức phần phụ thuộc phiên không
+      bị dồn sang chunk sau. Họ tên và email nằm trong menu (chỉ dựng khi mở) và
+      trong dữ liệu RSC, không hiện ở nhãn; chữ "Đăng nhập" của fallback vẫn có
+      trong chunk đó nhưng đi cùng bản thay thế. Đo 5 lần, 5/5 phải đạt.
+   b. Tìm trong mã nguồn client: không component nào đọc trạng thái đăng nhập
+      rồi setState sau hydration. Ghi rõ lệnh tìm và số kết quả (phải là 0).
+   c. Text của nhãn tài khoản sau khi hydrate xong giống hệt text trong HTML
+      server. So sánh chuỗi, 5 lần, 5/5 giống nhau.
+   Lý do đổi: tiêu chí cũ ("dưới 50ms giữa shell và lúc nhãn đổi") giả định có
+   hai giai đoạn render. Kiến trúc getClaims() đã xoá giai đoạn thứ hai, nên
+   không còn khoảng thời gian nào để đo. requestAnimationFrame trong trình duyệt
+   tích hợp chạy ~2Hz nên mọi số đo theo frame đều không dùng được.
 9. Dropdown hiện đúng họ tên và email của tài khoản đang đăng nhập.
 
 **Đăng nhập**

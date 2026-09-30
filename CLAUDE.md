@@ -26,14 +26,14 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 
 ## Supabase: hosted và cục bộ
 
-- Hosted: không có CLI, mọi thay đổi schema đi qua migration file + MCP.
-- Cục bộ: Supabase CLI 2.118.0 (ngoài repo), stack 5 container, cấu hình trong `supabase/config.toml`.
-- Cổng: Kong 54321, Postgres 54322, Mailpit 54324, app cục bộ 3100 (hosted dev vẫn 3000).
-- Biến môi trường cục bộ nằm ở `.env.supabase-local` (đã git-ignore). KHÔNG sửa `.env.local`.
+- Hosted: không có CLI, thay đổi schema đi qua migration file + MCP.
+- Cục bộ: Supabase CLI 2.118.0 (cài ngoài repo), stack 5 container, cấu hình ở `supabase/config.toml`.
+- Cổng: Kong 54321, Postgres 54322, Mailpit 54324, app cục bộ 3100 (dev trỏ hosted vẫn 3000).
+- Biến môi trường cục bộ ở `.env.supabase-local` (đã git-ignore). KHÔNG sửa `.env.local`.
 - Khoá ký JWT cục bộ là ES256 để khớp hosted; file khoá riêng đã git-ignore.
-- Khác biệt đã biết so với hosted: rate limit email 360000/h (hosted 30/h), OTP 6 ký tự (hosted 8), Site URL localhost:3100, email đi qua Mailpit.
-- Chi tiết đầy đủ: `docs/runbooks/supabase-local.md`.
+- Khác biệt đã biết so với hosted: rate limit email 360000/h (hosted 30/h), OTP 6 ký tự (hosted 8), Site URL localhost:3100, email qua Mailpit.
 - Claude Code KHÔNG tạo/đăng nhập tài khoản trên hosted Auth; chỉ làm trên 127.0.0.1.
+- Chi tiết: `docs/runbooks/supabase-local.md`
 
 ## Database
 
