@@ -14,15 +14,28 @@ npm run build   # build production
 npm run lint    # ESLint
 ```
 
+## Kiến trúc đã chốt
+
+Những điều dưới đây trông như có thể "dọn cho gọn" nhưng không phải. Đổi chúng thì phải hỏi trước.
+
+- **`proxy.ts`, không phải `middleware.ts`.** Next.js 16 đã đổi tên; hàm export tên là `proxy`, chạy trên Node.js runtime.
+- **Cache Components đang bật** (`cacheComponents: true`). Hệ quả: không dùng segment config `revalidate`; hàm có `"use cache"` không được gọi `cookies()`; chỗ nào đọc cookie phải nằm trong `<Suspense>`.
+- **Bốn client Supabase** trong `lib/supabase/`: `client` (browser), `server` (Server Component và Server Action), `proxy` (chỉ `proxy.ts` dùng), `public` (dữ liệu công khai, không cookie, dùng được trong `"use cache"`).
+- **Mọi client Supabase khởi tạo bên trong hàm xử lý request**, không bao giờ ở module scope.
+- **Header dùng `getClaims()`, `proxy.ts` dùng `getUser()`.** Khác nhau là cố ý: `getUser()` hỏi Auth server nên phát hiện được token bị thu hồi, hợp cho hàng rào bảo vệ; `getClaims()` xác minh chữ ký cục bộ, đủ cho hiển thị và không tốn round trip. Đừng đồng nhất.
+
 ## Database
 
 - Mọi thay đổi schema đi qua migration trong `supabase/migrations/`, apply bằng Supabase MCP (không có CLI cục bộ), tên file theo đúng `version` Supabase trả về — không sửa qua Table Editor.
 - Trước mọi thao tác xoá/phá dữ liệu đang được tham chiếu: DỪNG LẠI, hỏi trước khi làm.
+- Trigger `profiles_protect_role` khoá `role` với người không phải Admin, và khoá `email` với mọi người — kể cả service role. Muốn sửa `email` phải tạm tắt trigger trong một transaction (xem `docs/runbooks/tao-admin-dau-tien.md`).
 
 ## Bảo mật
 
 - Không bao giờ commit `.env*`, trừ `.env.local.example` (chỉ chứa placeholder rỗng, không có giá trị thật).
 - Secret key (vd. `SUPABASE_SECRET_KEY`) chỉ dùng phía server, không bao giờ prefix `NEXT_PUBLIC_`; bảng mới trong Supabase phải bật RLS trước khi có dữ liệu thật.
+- Repo này là public. Không commit email cá nhân, khoá, mật khẩu — kể cả trong tài liệu, mockup, ảnh chụp màn hình và comment. Dữ liệu mẫu dùng `ban.doc@example.com`.
+- Trước khi commit thư mục có tài liệu hoặc ảnh mới, quét: `grep -rn "gmail.com" <thư mục>` trên các file text.
 
 ## Giao diện
 
@@ -35,6 +48,12 @@ npm run lint    # ESLint
 
 - Mỗi việc lớn làm trên một nhánh riêng; commit sau mỗi đợt hoàn thành, không gộp nhiều đợt vào một commit.
 - Khi báo cáo hoàn thành: liệt kê file đã sửa, file tạo mới, và những gì chưa đạt được.
+- Trước khi code: đọc spec của đợt trong `docs/specs/`, làm đúng phạm vi ghi trong đó, không mở rộng.
+- Mockup và spec mâu thuẫn: theo spec, và báo lại chỗ mâu thuẫn.
+- Gặp tình huống nằm trong mục "Điều cần làm rõ trước khi code" của spec: dừng và hỏi, đừng tự chọn.
+- Báo cáo bằng số đo thật (px, ms, số dòng, mã HTTP), không mô tả cảm giác. Tiêu chí không đạt thì ghi con số đo được và lý do, đừng bỏ trống.
+- Kiểm giao diện bằng ảnh chụp toàn trang thu nhỏ, không chỉ ảnh cận cảnh.
+- File tạm, route thử, script đo: xoá trước khi commit, chạy `git status` xác nhận sạch.
 
 ## Tài liệu tham khảo
 
