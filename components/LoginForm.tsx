@@ -7,6 +7,7 @@ import { signIn } from "@/app/actions/auth";
 import { AuthAlert, AuthErrorMessage } from "@/components/AuthAlert";
 import { PasswordField, TextField } from "@/components/AuthFields";
 import type { AuthErrorKind } from "@/lib/authErrors";
+import { mergeGuestCart } from "@/lib/cart/mergeGuestCart";
 import { safeNextPath } from "@/lib/nextParam";
 
 /** Lỗi kiểm tra ngay ở trình duyệt (chưa gọi Auth) hoặc lỗi Auth đã phân loại. */
@@ -72,7 +73,14 @@ export function LoginForm() {
       return;
     }
 
-    // Đăng nhập xong: điều hướng, để nút ở trạng thái đang xử lý tới khi trang mới hiện.
+    // Đăng nhập xong: gộp giỏ khách vào giỏ của tài khoản (đợt 3 điền ruột; hiện là
+    // hàm rỗng) rồi điều hướng. Gộp giỏ lỗi không được chặn người dùng vào tài khoản.
+    try {
+      await mergeGuestCart();
+    } catch {
+      // bỏ qua có chủ ý
+    }
+    // Nút giữ trạng thái đang xử lý tới khi trang mới hiện.
     router.push(safeNextPath(new URLSearchParams(window.location.search).get("next")));
     router.refresh();
   }

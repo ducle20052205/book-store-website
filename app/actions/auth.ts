@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { type AuthErrorKind, classifyAuthError } from "@/lib/authErrors";
+import { FULL_NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/lib/authRules";
 import { createClient } from "@/lib/supabase/server";
 
 /** Kết quả trả về cho form: chỉ có `kind` (không có thông báo gốc) khi lỗi. */
@@ -30,6 +31,44 @@ export async function signIn(input: { email: string; password: string }): Promis
 
   // Header nằm ở layout gốc và không tự render lại khi điều hướng phía client,
   // nên làm mới toàn bộ cây để mục tài khoản hiện đúng trạng thái đã đăng nhập.
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+/**
+ * Đăng ký bằng email + mật khẩu (đợt 2B, spec mục 6, FR-5.1). `full_name` đi qua
+ * `options.data.full_name` để trigger `handle_new_user` chép sang `profiles`.
+ * Confirm email đang TẮT (docs/runbooks/cau-hinh-supabase-auth.md) nên `signUp`
+ * trả session ngay; nếu không có session thì cài đặt đã bị bật lại — ghi rõ
+ * vào log để lần sau biết đường tìm, thay vì báo lỗi mơ hồ.
+ */
+export async function signUp(input: { fullName: string; email: string; password: string }): Promise<AuthActionResult> {
+  const fullName = typeof input?.fullName === "string" ? input.fullName.trim() : "";
+  const email = typeof input?.email === "string" ? input.email.trim() : "";
+  const password = typeof input?.password === "string" ? input.password : "";
+
+  if (!fullName || !email || fullName.length > FULL_NAME_MAX_LENGTH) return { ok: false, kind: "unknown" };
+  // Kiểm lại ở server dù form đã chặn: form chỉ là tiện lợi, không phải hàng rào.
+  if (password.length < PASSWORD_MIN_LENGTH) return { ok: false, kind: "weak_password" };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: fullName } },
+  });
+
+  if (error) {
+    console.error("[auth] đăng ký thất bại:", error.code ?? error.status ?? "không có mã", "-", error.message);
+    return { ok: false, kind: classifyAuthError(error) };
+  }
+  if (!data.session) {
+    console.error(
+      "[auth] đăng ký không trả session — Confirm email đang bật? Xem docs/runbooks/cau-hinh-supabase-auth.md",
+    );
+    return { ok: false, kind: "unknown" };
+  }
+
   revalidatePath("/", "layout");
   return { ok: true };
 }
