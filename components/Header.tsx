@@ -1,100 +1,41 @@
 import Link from "next/link";
+import { AccountMenu } from "@/components/AccountMenu";
 import { CategoryNav } from "@/components/CategoryNav";
 import { HeaderShell } from "@/components/HeaderShell";
-import { getCategoryTree } from "@/lib/queries";
+import { BagIcon, SearchIcon, UserIcon } from "@/components/HeaderIcons";
+import { navIconClass, navItemClass } from "@/components/headerStyles";
+import { type CategoryNode, getCategoryTree } from "@/lib/queries";
+import { createClient } from "@/lib/supabase/server";
 
-function SearchIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="20"
-      height="20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="11" cy="11" r="7" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  );
+export interface HeaderAccount {
+  /** Họ tên; nếu hồ sơ chưa có thì dùng email làm tên hiển thị. */
+  name: string;
+  /** Email đăng nhập (từ auth.users); null khi đã dùng email làm tên để không hiện hai lần. */
+  email: string | null;
 }
 
-function HeartIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="20"
-      height="20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M12 20.5s-7.5-4.6-10-9.3C.5 7.8 2.3 4.5 5.6 4c2.1-.3 4.1.8 6.4 3.3C14.3 4.8 16.3 3.7 18.4 4c3.3.5 5.1 3.8 3.6 7.2-2.5 4.7-10 9.3-10 9.3Z" />
-    </svg>
-  );
-}
-
-function UserIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="20"
-      height="20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" />
-    </svg>
-  );
-}
-
-function BagIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="20"
-      height="20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M6 8h12l-1 12H7L6 8Z" />
-      <path d="M9 8V6a3 3 0 0 1 6 0v2" />
-    </svg>
-  );
-}
-
-const iconLinkClass =
-  "pressable flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-control px-2 text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600";
-
-interface HeaderProps {
+interface HeaderViewProps {
+  categories: CategoryNode[];
+  /** null = chưa đăng nhập. */
+  account: HeaderAccount | null;
   cartCount?: number;
 }
 
-export async function Header({ cartCount = 0 }: HeaderProps) {
-  const categories = await getCategoryTree();
-
+/**
+ * Phần hiển thị của header, tách khỏi việc lấy dữ liệu để dựng được cả hai trạng
+ * thái (chưa đăng nhập / đã đăng nhập) chỉ từ props. Đợt 2A, mockup
+ * docs/mockups/buoc-2/header-2a.html: nhóm liên kết bên phải chỉ còn ĐÚNG 2
+ * mục — "Đăng nhập" hoặc "Tài khoản", và "Giỏ hàng" (đã gỡ mục "Yêu thích" vì
+ * trang đó chưa tồn tại).
+ */
+export function HeaderView({ categories, account, cartCount = 0 }: HeaderViewProps) {
   return (
     <HeaderShell
       topbar={
-        <div className="header-topbar container-page flex flex-wrap items-center gap-4 border-b border-line py-3 md:flex-nowrap md:py-0">
+        <div className="header-topbar container-page flex flex-wrap items-center gap-4 border-b border-line-warm py-3 md:flex-nowrap md:py-0">
           <Link
             href="/"
-            className="order-1 shrink-0 rounded-control font-serif text-xl font-semibold text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
+            className="order-1 flex min-h-11 shrink-0 items-center rounded-control font-serif text-xl font-semibold text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
           >
             NA Books
           </Link>
@@ -109,15 +50,17 @@ export async function Header({ cartCount = 0 }: HeaderProps) {
               Tìm tên sách, tác giả
             </label>
             <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-400">
-                <SearchIcon />
+              <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400">
+                <SearchIcon className="h-4 w-4" />
               </span>
+              {/* Cao 44px ở mobile (vùng chạm tối thiểu — NFR-6.2, tiêu chí 2A #15), 40px từ md
+                  đúng bảng "Số đo bắt buộc" của mockup (đo ở 1280px). */}
               <input
                 id="site-search"
                 name="q"
                 type="search"
                 placeholder="Tìm tên sách, tác giả…"
-                className="w-full min-w-0 rounded-input border border-line bg-paper py-2 pl-9 pr-3 text-sm text-ink-900 placeholder:text-ink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+                className="h-11 w-full min-w-0 rounded-field md:h-10 border border-line-warm bg-field pl-10 pr-3 text-sm text-ink-900 placeholder:text-ink-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
               />
             </div>
           </form>
@@ -126,23 +69,22 @@ export async function Header({ cartCount = 0 }: HeaderProps) {
             aria-label="Tài khoản và giỏ hàng"
             className="order-2 ml-auto flex shrink-0 items-center gap-1 md:order-3 md:ml-0"
           >
-            <Link href="/yeu-thich" aria-label="Yêu thích" className={iconLinkClass}>
-              <HeartIcon />
-              <span className="hidden text-sm sm:inline">Yêu thích</span>
-            </Link>
-
-            <Link href="/tai-khoan" aria-label="Tài khoản" className={iconLinkClass}>
-              <UserIcon />
-              <span className="hidden text-sm sm:inline">Tài khoản</span>
-            </Link>
+            {account ? (
+              <AccountMenu name={account.name} email={account.email} />
+            ) : (
+              <a href="/dang-nhap" aria-label="Đăng nhập" className={navItemClass}>
+                <UserIcon className={navIconClass} />
+                <span className="hidden sm:inline">Đăng nhập</span>
+              </a>
+            )}
 
             <Link
               href="/gio-hang"
               aria-label={`Giỏ hàng${cartCount > 0 ? `, ${cartCount} sản phẩm` : ""}`}
-              className={`relative ${iconLinkClass}`}
+              className={`relative ${navItemClass}`}
             >
-              <BagIcon />
-              <span className="hidden text-sm sm:inline">Giỏ hàng</span>
+              <BagIcon className={navIconClass} />
+              <span className="hidden sm:inline">Giỏ hàng</span>
               {cartCount > 0 && (
                 <span
                   aria-hidden="true"
@@ -159,4 +101,30 @@ export async function Header({ cartCount = 0 }: HeaderProps) {
       <CategoryNav categories={categories} />
     </HeaderShell>
   );
+}
+
+interface HeaderProps {
+  cartCount?: number;
+}
+
+/**
+ * Server Component: đọc người dùng bằng client server rồi truyền trạng thái
+ * xuống (spec đợt 2A mục 6). getUser() hỏi thẳng máy chủ Auth để xác thực
+ * token, không chỉ đọc cookie.
+ */
+export async function Header({ cartCount = 0 }: HeaderProps) {
+  const supabase = await createClient();
+  const [categories, userResult] = await Promise.all([getCategoryTree(), supabase.auth.getUser()]);
+  const user = userResult.data.user;
+
+  let account: HeaderAccount | null = null;
+  if (user) {
+    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+    const fullName = profile?.full_name?.trim();
+    account = fullName
+      ? { name: fullName, email: user.email ?? null }
+      : { name: user.email ?? "Tài khoản của bạn", email: null };
+  }
+
+  return <HeaderView categories={categories} account={account} cartCount={cartCount} />;
 }

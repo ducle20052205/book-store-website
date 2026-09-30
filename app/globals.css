@@ -107,6 +107,27 @@
 
   --color-surface-2: #F4F2ED;
 
+  /* Đợt 2A [Header, docs/mockups/buoc-2/header-2a.html "Số đo bắt buộc"]: các
+     giá trị màu/bo góc của mockup chưa có token tương đương chính xác (line
+     hiện #E4E2DC, radius-input 6px…) nên khai báo token RIÊNG cho header và
+     menu tài khoản, không đổi token cũ để khỏi kéo theo các trang khác.
+     Theo NFR-6.7: đã tính tương phản của mọi cặp chữ/nền mới —
+       ink-900 / field 15,04:1 · ink-400 / field 5,30:1 · ink-400 / surface
+       5,92:1 · cham-700 / cham-active 11,01:1 · ink-600 / field 7,31:1 (biểu
+       tượng, cần 3:1). Chữ gợi ý ô tìm kiếm KHÔNG dùng #8A8676 của mockup
+       (chỉ 3,27:1 trên field, tụt dưới 4,5:1) mà giữ ink-400. */
+  --color-line-warm: #E3DCCE;     /* viền topbar, ô tìm kiếm */
+  --color-menu-line: #DCD4C4;     /* viền menu tài khoản */
+  --color-menu-sep: #EFE9DD;      /* vạch ngăn trong menu */
+  --color-field: #F6F2E9;         /* nền ô tìm kiếm, nút đóng sheet */
+  --color-cham-active: #F4F2F8;   /* nền mục đang chọn ở header */
+  --color-sheet-handle: #DFD8CA;  /* thanh kéo của sheet mobile */
+  --radius-field: 3px;            /* ô tìm kiếm, nút ở header */
+  --radius-menu: 4px;             /* menu tài khoản */
+  --radius-sheet: 12px;           /* mép trên sheet mobile */
+  --shadow-menu: 0 16px 34px rgba(23, 29, 64, 0.22);
+  --shadow-sheet: 0 -12px 34px rgba(0, 0, 0, 0.34);
+
   /* A.2 — thang chữ theo vai trò. Quy ước Tailwind v4: --text-{tên} đi kèm
      --text-{tên}--line-height / --letter-spacing để 1 class gộp đủ 3 thuộc
      tính (vd. `text-display` = cỡ chữ + line-height + letter-spacing). */
@@ -153,6 +174,12 @@
      <Price> — cùng vai trò "chữ phụ rất nhỏ", tránh thêm token trùng lặp. */
   --text-meta: 0.8125rem; /* 13px */
   --text-meta--line-height: 1.4;
+}
+
+/* Đợt 2A: trang chỉ có bảng màu sáng. Khai báo rõ để Chrome trên Android
+   không tự ép dark mode và đảo màu (mockup header-2a.html, điểm khác biệt số 3). */
+:root {
+  color-scheme: light;
 }
 
 /* D: khung nội dung rộng 1440px (từ 1200px) dùng chung cho header, nav, nội
@@ -238,7 +265,9 @@
      KHÔNG đổi height/padding/font-size (từng gây reflow toàn trang mỗi lần
      đổi ngưỡng — nguyên nhân thật của lỗi giật, xem báo cáo đợt A2). */
   .header-surface {
-    background-color: rgb(255 255 255 / 0.96);
+    /* Đợt 2A: topbar nền #FFFFFF đặc (mockup, "Số đo bắt buộc") — trước là
+       trắng 96%, lộ nhẹ nền paper phía sau khi header dính. */
+    background-color: var(--color-surface);
     border-bottom: 1px solid transparent;
     box-shadow: none;
     transition-property: border-color, box-shadow;
@@ -361,6 +390,32 @@
   animation: qty-bounce 220ms var(--ease-out);
 }
 
+/* Đợt 2A: sheet tài khoản trên mobile trượt từ đáy lên, lớp phủ mờ dần vào —
+   chỉ animate transform/opacity. Không có hoạt ảnh lúc đóng (gỡ khỏi DOM
+   ngay) để không phải theo dõi sự kiện kết thúc animation. */
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.sheet-enter {
+  animation: sheet-in var(--dur-base) var(--ease-out);
+}
+.overlay-enter {
+  animation: overlay-in var(--dur-base) var(--ease-out);
+}
+
 /* A.4: bắt buộc tắt mọi chuyển động (transition + transform) khi người
    dùng bật "giảm chuyển động" ở hệ điều hành/trình duyệt. Đặt ngoài
    @layer để chắc chắn thắng mọi rule cùng thuộc tính ở trên. */
@@ -391,7 +446,9 @@
     opacity: 1 !important;
     transform: none !important;
   }
-  .qty-bounce {
+  .qty-bounce,
+  .sheet-enter,
+  .overlay-enter {
     animation: none !important;
   }
   /* B.4: skeleton dùng animate-pulse (utility có sẵn của Tailwind) — tắt
