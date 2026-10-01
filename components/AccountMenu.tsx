@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { signOut } from "@/app/actions/auth";
-import { navAccountWidthClass, navIconClass, navItemActiveClass, navItemClass } from "@/components/headerStyles";
+import {
+  navAccountLabelClass,
+  navAccountWidthClass,
+  navIconClass,
+  navItemActiveClass,
+  navItemClass,
+} from "@/components/headerStyles";
 import { ChevronUpIcon, CloseIcon, LogoutIcon, OrdersIcon, UserIcon } from "@/components/HeaderIcons";
 
 interface AccountMenuProps {
@@ -105,7 +111,7 @@ export function AccountMenu({ name, email }: AccountMenuProps) {
         className={`${navItemClass} ${navAccountWidthClass} ${open ? navItemActiveClass : ""}`}
       >
         <UserIcon className={navIconClass} />
-        <span className="hidden sm:inline">Tài khoản</span>
+        <span className={navAccountLabelClass}>Tài khoản</span>
         <ChevronUpIcon className={`hidden h-3 w-3 shrink-0 text-cham-700 sm:block ${open ? "" : "rotate-180"}`} />
       </button>
 
