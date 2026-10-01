@@ -1,4 +1,4 @@
-# Đợt 2B.1 — Xoá nháy trạng thái ở header
+# Đợt 2B.2 — Xoá nháy trạng thái ở header
 
 Bước 2 · Tài khoản người dùng · phiên bản 1.0 · 30/09/2026
 Nhánh: chưa tạo. Đợt này đi sau 2B, không nằm trong PR #9.
@@ -35,7 +35,7 @@ trên stack cục bộ):
 xong sau thì chờ `$RT` + 300 ms. Vì vậy rút ngắn thời gian server không xoá được
 lỗi: cái sai nằm ở chỗ fallback là trạng thái sai cho người đã đăng nhập.
 
-Lỗi có từ 2A, không phải hồi quy của 2B (xem "Hai tiêu chí chuyển sang 2B.1" ở mục
+Lỗi có từ 2A, không phải hồi quy của 2B (xem "Hai tiêu chí chuyển sang 2B.2" ở mục
 12 của spec 2B).
 
 ## 2. Phạm vi

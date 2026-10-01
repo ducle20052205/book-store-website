@@ -3,8 +3,8 @@
 Bước 2 · Tài khoản người dùng · phiên bản 1.0 · 01/10/2026
 Nhánh: chưa tạo. Đợt này đi sau 2B, không nằm trong PR #9.
 
-Cùng đợt 2B.1 với `docs/specs/buoc-2b1-xoa-nhay-trang-thai-header.md` (nháy "Đăng
-nhập" ở header). Hai tài liệu độc lập, làm riêng được.
+Cùng chu kỳ với đợt 2B.2 (`docs/specs/buoc-2b2-xoa-nhay-trang-thai-header.md`, nháy
+"Đăng nhập" ở header). Hai tài liệu độc lập, làm riêng được.
 
 Tài liệu liên quan: `docs/specs/buoc-2b-dang-nhap-dang-ky.md`,
 `docs/specs/buoc-2a-ha-tang-auth.md` (mục 5: proxy chỉ lo trải nghiệm),
@@ -54,7 +54,7 @@ không làm.
 
 **Ngoài phạm vi**
 - Truy vấn N+1 ở trang chủ (mục "Chưa lên lịch" cuối tài liệu).
-- Nháy "Đăng nhập" ở header (`buoc-2b1-xoa-nhay-trang-thai-header.md`).
+- Nháy "Đăng nhập" ở header (`buoc-2b2-xoa-nhay-trang-thai-header.md`).
 - `getUser()` ở proxy cho request không phải prefetch: giữ nguyên quyết định 2A.
 - Logic giỏ hàng (đợt 3).
 
@@ -443,7 +443,7 @@ khi giỏ khác rỗng).
   3.3). Tiêu chí 1.6 vẫn chưa có số thô (chỉ có cảm nhận), nên chưa đóng.
 - `npm run build` exit 0, `tsc` 0 lỗi, `lint` 0 lỗi.
 - Tiêu chí 1 (hiệu năng) và 2 (nháy "Đăng nhập") của
-  `buoc-2b1-xoa-nhay-trang-thai-header.md` không bị làm xấu đi (đo lại, ghi hai con
+  `buoc-2b2-xoa-nhay-trang-thai-header.md` không bị làm xấu đi (đo lại, ghi hai con
   số).
 - Stack cục bộ và Docker tắt sau khi đo; tài khoản thử đã xoá; `git status` sạch.
 

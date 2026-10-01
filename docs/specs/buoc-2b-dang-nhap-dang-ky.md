@@ -421,7 +421,7 @@ Mỗi mục kèm số đo hoặc kết quả lệnh trong báo cáo.
    trang `/` với cùng mã cho 4,17 / 4,98 / 5,19 ms, chênh 24,5% — lớn hơn ngưỡng
    20% cũ. Ngưỡng nhỏ hơn nhiễu thì không phân biệt được đạt và trượt. Hồi quy
    cần bắt là loại 223x (2,9 ms → 647,7 ms).
-   Trạng thái: CHUYỂN SANG ĐỢT 2B.1.
+   Trạng thái: CHUYỂN SANG ĐỢT 2B.2.
 4. `/sach` trang 1 có 20 thẻ, `?page=2` có 20, tổng 40. `?q=nha gia kim` ra 1
    kết quả. `?category=van-hoc` ra 10 sách.
 5. `grep -rn "SERVICE_ROLE" .next/static` trả 0 dòng.
@@ -443,7 +443,7 @@ Mỗi mục kèm số đo hoặc kết quả lệnh trong báo cáo.
    Mốc trước khi sửa (đo 30/09, Edge headless): 3/5 lần thấy sai, kéo dài
    234–273 ms. Nguyên nhân: React streaming chỉ hiện Suspense boundary ngay nếu
    nó xong trước khung vẽ đầu; xong sau thì chờ `$RT`+300 ms.
-   Trạng thái: CHUYỂN SANG ĐỢT 2B.1.
+   Trạng thái: CHUYỂN SANG ĐỢT 2B.2.
 9. Dropdown hiện đúng họ tên và email của tài khoản đang đăng nhập.
 
 **Đăng nhập**
@@ -546,9 +546,9 @@ liệu hoặc trạng thái của một phiên lọt sang phiên khác, hiển t
     và `profiles` chỉ còn các dòng có trước đợt này; số admin về đúng như trước.
     Không còn file hay route tạm nào trong `git status`.
 
-### Hai tiêu chí chuyển sang 2B.1
+### Hai tiêu chí chuyển sang 2B.2
 
-Tiêu chí 3 và 8 chuyển sang đợt 2B.1 (`docs/specs/buoc-2b1-xoa-nhay-trang-thai-header.md`).
+Tiêu chí 3 và 8 chuyển sang đợt 2B.2 (`docs/specs/buoc-2b2-xoa-nhay-trang-thai-header.md`).
 Lỗi nhấp nháy có từ 2A chứ không phải hồi quy của 2B; 2B làm nhẹ đi bằng cách
 bỏ truy vấn `profiles`. Giữ PR chờ một lỗi kế thừa không đem lại gì.
 
