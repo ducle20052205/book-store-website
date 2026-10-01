@@ -35,6 +35,14 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 - Claude Code KHÔNG tạo/đăng nhập tài khoản trên hosted Auth; chỉ làm trên 127.0.0.1.
 - Chi tiết: `docs/runbooks/supabase-local.md`
 
+## Vùng hạ tầng (30/09/2026)
+
+- Supabase: ap-northeast-1 (Tokyo).
+- Vercel Function Region: hnd1 (Tokyo) — đổi từ iad1 (Washington D.C.) ngày 30/09. Edge vẫn là hkg1.
+- Mốc trước khi đổi, để so sánh: PostgREST từ Vercel trung vị 280ms, p90 757ms, tối đa 1629ms.
+- Docker và stack Supabase cục bộ CHỈ mở khi prompt nói rõ là cần. Mặc định để tắt.
+- Lý do cần stack cục bộ: Claude Code không tạo/đăng nhập tài khoản trên hosted Auth, nên mọi kiểm thử cần phiên thật chạy trên 127.0.0.1.
+
 ## Database
 
 - Mọi thay đổi schema đi qua migration trong `supabase/migrations/`, apply bằng Supabase MCP (hosted không có CLI, xem mục "Supabase: hosted và cục bộ"), tên file theo đúng `version` Supabase trả về — không sửa qua Table Editor.
