@@ -315,9 +315,19 @@ nguyên: proxy chỉ lo trải nghiệm, enforcement thật ở Server Component
   15 ms, p90 27,9 ms, tối đa 386 ms. Mỗi lần rẻ hơn ~10 lần so với trước khi đổi vùng;
   số lần gọi thì không đổi.
 
-**Cách làm.** Request có `next-router-prefetch: 1` đi thẳng, không gọi `getUser()`,
-không làm mới cookie. Đường dẫn được bảo vệ (`/tai-khoan`, `/admin`) **không được
-miễn**: prefetch tới đó vẫn chạy đầy đủ logic chuyển hướng.
+**Cách làm.** Request có `next-router-prefetch: 1` không đi qua proxy, nên không gọi
+`getUser()` và không làm mới cookie. Đường dẫn được bảo vệ (`/tai-khoan`, `/admin`)
+**không được miễn**: prefetch tới đó vẫn chạy đầy đủ logic chuyển hướng.
+
+**Cơ chế: `config.matcher` với `missing`, KHÔNG kiểm header trong hàm `proxy`.** Next xoá
+các header Flight (`rsc`, `next-router-prefetch`...) khỏi `request` trước khi gọi proxy
+(`node_modules/next/dist/server/web/adapter.js` dòng 156–165; docs `proxy.md` mục "RSC
+requests and rewrites"), nên `request.headers.get("next-router-prefetch")` luôn là
+`null`. Bản đầu của hạng mục này kiểm header trong hàm và số đo **không đổi** (5 request
+prefetch có phiên vẫn gọi `getUser()` 5 lần), rồi mới đổi sang `matcher`. Cách đúng là
+một entry matcher cho mọi trang kèm `missing: [{ type: "header", key:
+"next-router-prefetch" }]`, cộng hai entry riêng không điều kiện cho `/tai-khoan/:path*`
+và `/admin/:path*`.
 
 **Hoàn thành khi.**
 4.1. Cục bộ, đã đăng nhập, tải `/`, `/sach`, `/tu-sach`: số `GET /auth/v1/user` ≤ 3

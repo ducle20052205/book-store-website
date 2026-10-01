@@ -46,7 +46,7 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 ## Sự thật kỹ thuật đã kiểm (01/10/2026)
 
 - Next đặt `pathWasRevalidated` ngay khi cookie bị đổi (`node_modules/next/dist/server/web/spec-extension/adapters/request-cookies.js` dòng 130). Bỏ `revalidatePath` khỏi một Server Action KHÔNG làm response của action hết render lại trang — nó chỉ tránh việc vô hiệu hoá cache.
-- Mọi request prefetch của Next mang header `next-router-prefetch: 1` (đã kiểm: 171/171 request RSC prefetch trong 11 lượt tải riêng, preview và cục bộ, ngày 01/10/2026). Dùng header này để tách prefetch là sạch, không có vùng xám.
+- Mọi request prefetch của Next mang header `next-router-prefetch: 1` (đã kiểm: 171/171 request RSC prefetch trong 11 lượt tải riêng, preview và cục bộ, ngày 01/10/2026). Dùng header này để tách prefetch là sạch, không có vùng xám. NHƯNG trong `proxy.ts` không đọc được header này: Next xoá các header Flight (`rsc`, `next-router-prefetch`...) khỏi `request` trước khi gọi proxy (`node_modules/next/dist/server/web/adapter.js` dòng 156–165; docs `proxy.md` mục "RSC requests and rewrites"), nên `request.headers.get("next-router-prefetch")` luôn là `null` — đã gặp 01/10: sửa theo cách đó mà số đo không đổi. Muốn bỏ qua prefetch ở proxy phải dùng `config.matcher` với `missing: [{ type: "header", key: "next-router-prefetch" }]`.
 - Bản cục bộ (`next start`) chạy HTTP/1.1 (6 kết nối mỗi origin), hosted chạy HTTP/2 (đo bằng Edge: `h2` ở 36/36 response của preview). Trước khi sửa một hiện tượng chỉ đo được ở local, kiểm xem nó có tồn tại trên hosted không. Ví dụ: 6 request prefetch kéo dài ~24,5 s khi tải `/` lúc đã đăng nhập ở local không tái hiện trên hosted (chậm nhất 1,25 s).
 
 ## Database

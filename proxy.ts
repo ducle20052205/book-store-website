@@ -29,11 +29,12 @@ function redirectKeepingSession(sessionResponse: NextResponse, to: URL) {
 }
 
 export async function proxy(request: NextRequest) {
-  const { supabase, user, response } = await updateSession(request);
   const { pathname, search } = request.nextUrl;
 
   const needsLogin = isUnder(pathname, "/tai-khoan");
   const needsAdmin = isUnder(pathname, "/admin");
+
+  const { supabase, user, response } = await updateSession(request);
 
   if (!user && (needsLogin || needsAdmin)) {
     const loginUrl = new URL("/dang-nhap", request.url);
@@ -56,7 +57,24 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Bỏ qua tệp tĩnh của Next, ảnh tối ưu, favicon và các đuôi ảnh.
-    "/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // Mọi request tới trang, trừ tệp tĩnh của Next, ảnh tối ưu, favicon, các đuôi ảnh
+    // VÀ trừ request prefetch. Request prefetch do <Link> phát khi liên kết vào khung
+    // nhìn (header `next-router-prefetch: 1`, đã kiểm 171/171 request RSC prefetch trong
+    // 11 lượt tải, 01/10/2026) chỉ lấy phần tĩnh của trang và không đọc phiên, nên
+    // không cần getUser() — một lượt gọi Auth cho mỗi liên kết trong khung nhìn, 17–24
+    // lần mỗi lần tải trang có phiên — và cũng không cần làm mới cookie.
+    //
+    // PHẢI loại bằng `missing` ở đây, không kiểm header trong hàm `proxy`: Next xoá các
+    // header Flight (`rsc`, `next-router-prefetch`...) khỏi `request` trước khi gọi proxy
+    // (node_modules/next/dist/server/web/adapter.js, và docs proxy.md mục "RSC requests
+    // and rewrites"), nên `request.headers.get("next-router-prefetch")` luôn là null.
+    {
+      source: "/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+      missing: [{ type: "header", key: "next-router-prefetch" }],
+    },
+    // Đường dẫn được bảo vệ KHÔNG được miễn: prefetch tới đây vẫn chạy đủ logic chuyển
+    // hướng. Hàng rào thật vẫn là Server Component và RLS (xem NGUYÊN TẮC HAI LỚP ở trên).
+    { source: "/tai-khoan/:path*" },
+    { source: "/admin/:path*" },
   ],
 };
