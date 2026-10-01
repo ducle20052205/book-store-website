@@ -44,9 +44,13 @@ response (đo: 54.110 byte ở bản thử). Cái bỏ `revalidatePath` loại �
 **Thuộc phạm vi**
 1. Bỏ `revalidatePath` khỏi `signIn`, `signUp`, `signOut`.
 2. Bỏ `router.refresh()` thừa sau `router.push()` ở `LoginForm`, `RegisterForm`.
-3. Giảm prefetch ở trang chủ và trang danh mục.
-4. `proxy.ts` bỏ qua request prefetch.
+3. Giảm prefetch ở trang chủ và trang danh mục. **Hạ cấp (01/10):** chỉ làm nếu
+   tiêu chí 3.3 vẫn trượt sau khi xong hạng mục 4.
+4. `proxy.ts` bỏ qua request prefetch. **Ưu tiên cao nhất của đợt.**
 5. Trang `/gio-hang` tạm cho đợt 3.
+
+**Thứ tự.** Hạng mục 4 làm trước. Các hạng mục 1, 2, 5 theo số thứ tự. Hạng mục 3
+chỉ khi điều kiện ở trên xảy ra.
 
 **Ngoài phạm vi**
 - Truy vấn N+1 ở trang chủ (mục "Chưa lên lịch" cuối tài liệu).
@@ -63,7 +67,11 @@ Mọi số "mốc" dưới đây đo ngày 01/10/2026 trừ khi ghi khác. Môi 
 - **Cục bộ:** `npm run build && npm start` trỏ stack Supabase cục bộ qua proxy đếm
   request (có thể thêm độ trễ). "+160 ms/vòng" là độ trễ thêm vào mỗi lượt gọi
   Supabase, xấp xỉ khoảng cách Vercel `iad1` tới Tokyo; chỉ để so sánh tương đối,
-  không thay được số đo hosted.
+  không thay được số đo hosted. Bản cục bộ chạy HTTP/1.1 (6 kết nối mỗi origin),
+  hosted chạy HTTP/2.
+- **Hosted, người dùng đo tay** (Claude không đăng nhập hosted): DevTools với "Preserve
+  log" **tắt**, mỗi con số là **một lượt tải**, không cộng dồn. Số request trong
+  DevTools cộng dồn khi bật ô này (xem `CLAUDE.md`).
 
 **Hai trạng thái đăng nhập loại trừ nhau (selector).** Mọi tiêu chí về header dùng
 đúng hai điều kiện sau và ghi **cả hai cờ** ở mỗi lần đọc:
@@ -129,10 +137,30 @@ không phiên là `HIT` ở 5/5 vòng, TTFB trung vị ≤ 400 ms (mốc `HIT` 2
 1.4. Preview, response `signOut` không phiên ≤ 1.000 byte (mốc 54.290 byte).
 1.5. Tiêu chí 25, 26, 29–31 của spec 2B chạy lại, đạt.
 1.6. **Người dùng đo** (Claude không đăng nhập hosted): bấm "Tạo tài khoản" tới lúc
-URL đổi sang `/`, 5 lần trên preview vùng `hnd1`. **Mốc trước khi sửa chưa có**;
-người dùng đo 5 lần trước khi merge mục này rồi 5 lần sau, ngưỡng đặt lớn hơn 3 lần
-nhiễu của 5 lần đầu. Kèm: sau một lần đăng nhập thật, `GET /sach` từ trình duyệt
-khác là `HIT` (mốc: chưa đo; đây là phép kiểm biên độ của `("/", "layout")`).
+URL đổi sang `/`, 5 lần trên hosted vùng `hnd1`. **Mốc trước khi sửa** (người dùng đo
+tay trên hosted, 01/10): đăng ký 2–3 s; đăng xuất và đăng nhập gần như tức thì. Mốc
+này là một khoảng ước lượng bằng tay, chưa có độ nhiễu: ngưỡng sau đợt đặt lớn hơn 3
+lần nhiễu của chính 5 lần đo sau. Kèm: sau một lần đăng nhập thật, `GET /sach` từ
+trình duyệt khác là `HIT` (mốc: chưa đo; đây là phép kiểm biên độ của `("/", "layout")`).
+
+**Ghi chú và phép đo cho chênh lệch đăng ký (2–3 s) so với đăng nhập và đăng xuất
+(tức thì).**
+- **GIẢ THUYẾT:** chênh lệch này đến từ **thứ tự** thao tác, không phải bản chất thao
+  tác. Đăng ký chạy trước nên trả tiền cho lần dựng lại cache của `/`; đăng nhập sau
+  hưởng cache đã ấm. Cả ba action đều gọi `revalidatePath`.
+- **PHÉP ĐO ĐỂ BÁC BỎ:** sau khi xong đợt, đo lại theo thứ tự **ngược lại** (đăng nhập
+  trước, đăng ký sau). Nếu lúc đó đăng nhập thành 2–3 s và đăng ký nhanh thì giả
+  thuyết đúng; nếu đăng ký vẫn chậm hơn thì chênh lệch là bản chất thao tác, không
+  phải thứ tự.
+- **Hai điểm cần giữ khi diễn giải, rút từ số đo 01/10 (không thay đổi giả thuyết):**
+  (a) dựng lại cache `/` chỉ tốn thêm khoảng 0,6 s ở vùng `hnd1` (`REVALIDATED`
+  0,83 s so với `HIT` 0,21 s), nhỏ hơn 2–3 s; (b) vì đăng nhập cũng gọi
+  `revalidatePath("/", "layout")`, nó cũng phải trả chi phí dựng lại, nên nếu giả
+  thuyết thứ tự đúng thì phần chi phí chỉ trả một lần phải đến từ nguồn khác, ví dụ
+  khởi động lạnh của hàm hoặc kết nối đầu tiên tới Supabase.
+- **Giả thuyết cạnh tranh:** khởi động lạnh của hàm (thao tác đầu tiên sau một lúc
+  không có request). Để tách hai nguyên nhân, làm nóng hàm trước mỗi lần đo (ít nhất
+  5 lượt tải trang trong 1 phút ngay trước đó) và ghi rõ đã làm hay chưa.
 
 ## 5. Hạng mục 2 — Bỏ `router.refresh()` thừa
 
@@ -159,6 +187,18 @@ dải chào mừng, đăng nhập không hiện (đối chứng của nhau).
 
 ## 6. Hạng mục 3 — Giảm prefetch ở trang chủ và trang danh mục
 
+**Trạng thái: HẠ CẤP (01/10). Chỉ làm nếu tiêu chí 3.3 vẫn trượt sau khi xong hạng
+mục 4.**
+
+**Lý do hạ cấp.** Sau khi đổi vùng, mỗi `getUser()` còn khoảng 15 ms (trung vị; p90
+27,9 ms, tối đa 386 ms, đo ở log Supabase 01/10 06:22–06:24 UTC, 72 lần) thay vì
+155–195 ms. Hai mươi lần cộng dồn là khoảng 300 ms phía server chứ không phải 3 s.
+Hạng mục 4 đã cắt phần lớn tải đó mà không đụng tới trải nghiệm. Prefetch cho điều
+hướng tức thì có giá trị thật với người xem portfolio.
+
+**Nếu phải làm:** dùng prefetch theo ý định (rê chuột / chạm), **không** dùng
+`prefetch={false}` toàn bộ.
+
 **Hiện trạng.** `BookCard` (`components/BookCard.tsx:59`) dùng `<Link>` không đặt
 `prefetch`, nên prefetch theo khung nhìn. Trang chủ có 46 liên kết nội bộ (31 `href`
 khác nhau: 31 tới `/sach…`, 10 tới `/tu-sach…`, 3 tới `/dang-nhap`, 1 tới `/gio-hang`,
@@ -179,10 +219,20 @@ Mỗi ô là một lần chạy trên preview. Chưa đăng nhập, cục bộ, 
 43, 17. Màn hình 1920×1080 cuộn chậm (900 ms mỗi 300 px) ở `/` trên preview: 43, 16;
 sau cuộn 45, 18. Nhiễu giữa các lần chạy: ±2 request.
 
-**Không tái hiện được số của người dùng.** Người dùng thấy 132 request (chưa đăng
-nhập) và 223 request (đã đăng nhập) với "Finish" 49 s và 3,3 phút. Đo được 41–49 request
-và Finish 1,4–2,3 s (chưa đăng nhập, preview). Chênh lệch chưa giải thích được;
-xem mục 10.
+**Số 132 / 223 request đã được giải thích (01/10).** Người dùng thấy 132 request (chưa
+đăng nhập) và 223 request (đã đăng nhập) với "Finish" 49 s và 3,3 phút vì DevTools
+bật "Preserve log": số cộng dồn qua nhiều lượt điều hướng, không phải một lượt tải.
+Một lượt tải, đã đăng nhập, trên hosted (người dùng đo tay 01/10, "Preserve log" tắt):
+**48 request, Finish 2,18 s, request chậm nhất 1,25 s (chính document), 1 request 404
+`/gio-hang`, 1 lỗi Console.** Khớp 41–49 request và Finish 1,4–2,3 s đo ở đây (preview,
+chưa đăng nhập).
+
+**Hiện tượng chỉ có ở local (không chặn đợt).** Cục bộ, đã đăng nhập, tải `/`: 6
+request prefetch `/_tree` hoàn tất sau 24,4–24,6 s (3/3 lần) dù dữ liệu tới ở 0,3 s;
+`/sach` hoàn tất sau 0,6 s, `/tu-sach` 0,4 s. **Không tái hiện trên hosted** (đo tay
+01/10: chậm nhất 1,25 s, không request nào quá 3 s). Giả thuyết giới hạn 6 kết nối
+HTTP/1.1 của bản cục bộ (hosted chạy HTTP/2) được giữ nguyên; nguyên nhân ở local
+chưa xác định.
 
 **Bấm vào thẻ sách** (preview, 5 lần, trung vị [min–max]): URL đổi sau 23 ms khi
 prefetch đã xong, h1 trang sách hiện sau 982 ms [728–1110]; bấm ngay lúc prefetch
@@ -190,17 +240,22 @@ chưa xong (mô phỏng không prefetch): URL đổi 270 ms [217–300], h1 hi�
 [531–612]. Nghĩa là bỏ prefetch không làm nội dung hiện chậm đi ở phép đo này, chỉ
 làm URL đổi muộn hơn.
 
-**Hoàn thành khi.**
+**Hoàn thành khi.** (3.1, 3.2, 3.4, 3.5 chỉ áp dụng nếu hạng mục này được kích
+hoạt; 3.3 áp dụng cho cả đợt.)
 3.1. Số request prefetch khi tải `/`, `/sach`, `/tu-sach`, `/sach?category=van-hoc`
 (chưa đăng nhập, preview, 5 lần, sau chờ yên): ≤ 8 ở mỗi trang, cả trước và sau khi
 cuộn hết trang. Mốc 11–19; ngưỡng thấp hơn mốc từ 3 (trang `/sach?category=…`,
 trước cuộn: 11) tới 11 request, mỗi chênh lệch lớn hơn nhiễu ±2. Đối chứng: trước
 khi sửa, cùng phép đo cho 11–19.
 3.2. Cục bộ, đã đăng nhập, tải `/`: số request prefetch ≤ 8 (mốc 22–24).
-3.3. Cục bộ, đã đăng nhập, tải `/`: **không request nào kéo dài hơn 3 s** (mốc: 6
-request prefetch `/_tree` kéo dài 24,4–24,6 s, 3/3 lần đo; nội dung đã tới ở 0,3 s
-nhưng `loadingFinished` chỉ tới sau 25 s; chỉ xảy ra ở `/`: `/sach` hoàn tất sau
-0,6 s, `/tu-sach` 0,4 s; chỉ khi có phiên). Nguyên nhân chưa xác định (xem mục 10).
+3.3. **Không hồi quy** (đã ĐẠT SẴN trên hosted trước khi sửa). Hosted, đã đăng nhập,
+tải `/`, một lượt tải, "Preserve log" tắt, người dùng đo tay. Mốc 01/10: 48 request,
+Finish 2,18 s, request chậm nhất 1,25 s (chính document), không request nào quá 3 s.
+Sau đợt: request chậm nhất ≤ 1,25 s + 20% = **1,50 s** và Finish ≤ 2,18 s + 20% =
+**2,62 s**. Biên 20% do yêu cầu; mốc chỉ là một lần đo tay nên chưa có độ nhiễu. Theo
+`CLAUDE.md`, đo ít nhất 5 lần để biết nhiễu trước khi dùng ngưỡng, và nếu nhiễu lớn
+hơn 20% thì nâng ngưỡng lên ít nhất ba lần nhiễu. Đây là tiêu chí cho cả đợt; hạng
+mục 3 chỉ được kích hoạt khi nó trượt sau hạng mục 4.
 3.4. Bấm vào thẻ sách ở `/` (preview, 5 lần, trung vị): h1 trang sách hiện ≤ 1,2 s
 (mốc 0,98 s với prefetch, 0,60 s không prefetch; nhiễu rộng nhất 0,38 s).
 3.5. Điều hướng bằng bàn phím tới thẻ sách vẫn hoạt động (Tab tới thẻ, Enter): URL
@@ -208,6 +263,10 @@ nhưng `loadingFinished` chỉ tới sau 25 s; chỉ xảy ra ở `/`: `/sach` h
 hướng.
 
 ## 7. Hạng mục 4 — `proxy.ts` bỏ qua request prefetch
+
+**Ưu tiên: CAO NHẤT trong đợt (nâng lên 01/10).** Căn cứ: chưa đăng nhập 0 lần
+`getUser()`; đã đăng nhập tải `/` là 17–19 lần; sau đăng ký/đăng nhập tới trang đích
+là 19–24 lần. Mục này cắt tải đó mà không đụng tới trải nghiệm người dùng.
 
 **Hiện trạng.** `proxy.ts` có matcher
 `/((?!_next/static|_next/image|favicon\.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)`,
@@ -223,6 +282,10 @@ nguyên: proxy chỉ lo trải nghiệm, enforcement thật ở Server Component
   (8 lần đo); đăng xuất: 1 lần (`getUser`) + 1 `logout`.
 - Hosted (log Supabase 30/09, vùng `iad1`): khoảng 30 lần `GET /auth/v1/user` trong
   10–20 giây đầu sau mỗi lần đăng nhập/đăng ký, mỗi lần `origin_time` 155–195 ms.
+- Hosted sau khi đổi vùng (log Supabase 01/10 06:22–06:24 UTC, người dùng đo tay đã
+  đăng nhập): 72 lần `GET /auth/v1/user` trong khoảng 2 phút, `origin_time` trung vị
+  15 ms, p90 27,9 ms, tối đa 386 ms. Mỗi lần rẻ hơn ~10 lần so với trước khi đổi vùng;
+  số lần gọi thì không đổi.
 
 **Cách làm.** Request có `next-router-prefetch: 1` đi thẳng, không gọi `getUser()`,
 không làm mới cookie. Đường dẫn được bảo vệ (`/tai-khoan`, `/admin`) **không được
@@ -270,8 +333,11 @@ khi giỏ khác rỗng).
 
 ## 9. Hoàn thành khi (cả đợt)
 
-- Các tiêu chí 1.1–1.6, 2.1–2.3, 3.1–3.5, 4.1–4.4, 5.1–5.5 đều có số đo trong báo
-  cáo; tiêu chí nào không đạt ghi con số và lý do, không nới ngưỡng.
+- Các tiêu chí 1.1–1.6, 2.1–2.3, 3.3, 4.1–4.4, 5.1–5.5 đều có số đo trong báo cáo (và
+  3.1, 3.2, 3.4, 3.5 nếu hạng mục 3 được kích hoạt); tiêu chí nào không đạt ghi con
+  số và lý do, không nới ngưỡng.
+- Tiêu chí 3.3 (không hồi quy) đo lại sau hạng mục 4, ghi rõ một lượt tải và "Preserve
+  log" tắt. Nếu trượt thì mới kích hoạt hạng mục 3.
 - `npm run build` exit 0, `tsc` 0 lỗi, `lint` 0 lỗi.
 - Tiêu chí 1 (hiệu năng) và 2 (nháy "Đăng nhập") của
   `buoc-2b1-xoa-nhay-trang-thai-header.md` không bị làm xấu đi (đo lại, ghi hai con
@@ -282,21 +348,29 @@ khi giỏ khác rỗng).
 
 Dừng lại và hỏi, đừng tự chọn, nếu gặp:
 
-- **Hiện tượng 25 s ở `/` khi đã đăng nhập (tiêu chí 3.3).** Nguyên nhân chưa biết.
-  Server không chậm (cùng request bằng `curl` có phiên: 47–66 ms; `fetch()` từ trong
-  trang sau cơn bão prefetch: 2–66 ms), dữ liệu tới đủ ở 0,3 s, chỉ phần kết thúc
-  request bị giữ ~25 s. Nếu sau hạng mục 3 và 4 vẫn còn, dừng và điều tra trước
-  khi kết luận.
-- **Không tái hiện được 132 / 223 request của người dùng.** Trước khi làm hạng mục
-  3, người dùng gửi ảnh chụp Network ở trang chủ: cột Name, Status, Time, Waterfall
-  và bộ lọc theo loại (Fetch/XHR, JS, Font, Img) để so với 41–49 đo được. Không gửi
-  HAR nguyên vẹn vì chứa cookie phiên.
-- **Cách giảm prefetch (hạng mục 3).** `prefetch={false}` cho `BookCard` và chân
-  trang, hay chỉ prefetch khi rê chuột? Quyết định này đổi cảm giác điều hướng.
 - **`("/", "layout")` trên hosted (tiêu chí 1.6).** Chỉ đo được bằng phiên thật do
   người dùng tạo.
 - Một trong ba luồng ở tiêu chí 1.1 cho header sai sau khi bỏ `revalidatePath`:
   báo lại, đừng tự vá bằng cách đưa lệnh gọi trở lại.
+- Hiện tượng request kéo dài hàng chục giây (xem dưới) **xuất hiện trên hosted**: khi
+  đó mới dừng và điều tra; ở local thì không chặn.
+- Tiêu chí 3.3 trượt sau hạng mục 4: kích hoạt hạng mục 3 (prefetch theo ý định), báo
+  số đo trước khi làm.
+
+**Không chặn đợt: hiện tượng 24,5 s ở `/` khi đã đăng nhập (chỉ ở local).** Nguyên nhân
+ở local chưa xác định: server không chậm (cùng request bằng `curl` có phiên: 47–66 ms;
+`fetch()` từ trong trang sau cơn bão prefetch: 2–66 ms), dữ liệu tới đủ ở 0,3 s, chỉ
+phần kết thúc request bị giữ ~25 s. **Không tái hiện trên hosted** (đo tay 01/10: chậm
+nhất 1,25 s, không request nào quá 3 s). Giả thuyết giới hạn 6 kết nối HTTP/1.1 của
+bản cục bộ được giữ nguyên.
+
+**Đã đóng / đã quyết (01/10).**
+- **Số 132 / 223 request của người dùng: ĐÓNG.** Là số cộng dồn do DevTools bật
+  "Preserve log", không phải một lượt tải. Kết quả một lượt tải, đã đăng nhập, hosted:
+  48 request, Finish 2,18 s, request chậm nhất 1,25 s, 1 request 404 `/gio-hang`, 1
+  lỗi Console. Không cần ảnh chụp Network nữa.
+- **Cách giảm prefetch (hạng mục 3): ĐÃ QUYẾT.** Prefetch theo ý định (rê chuột / chạm),
+  không `prefetch={false}` toàn bộ.
 
 ## 11. Chưa lên lịch
 

@@ -43,6 +43,12 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 - Docker và stack Supabase cục bộ CHỈ mở khi prompt nói rõ là cần. Mặc định để tắt.
 - Lý do cần stack cục bộ: Claude Code không tạo/đăng nhập tài khoản trên hosted Auth, nên mọi kiểm thử cần phiên thật chạy trên 127.0.0.1.
 
+## Sự thật kỹ thuật đã kiểm (01/10/2026)
+
+- Next đặt `pathWasRevalidated` ngay khi cookie bị đổi (`node_modules/next/dist/server/web/spec-extension/adapters/request-cookies.js` dòng 130). Bỏ `revalidatePath` khỏi một Server Action KHÔNG làm response của action hết render lại trang — nó chỉ tránh việc vô hiệu hoá cache.
+- Mọi request prefetch của Next mang header `next-router-prefetch: 1` (đã kiểm: 171/171 request RSC prefetch trong 11 lượt tải riêng, preview và cục bộ, ngày 01/10/2026). Dùng header này để tách prefetch là sạch, không có vùng xám.
+- Bản cục bộ (`next start`) chạy HTTP/1.1 (6 kết nối mỗi origin), hosted chạy HTTP/2 (đo bằng Edge: `h2` ở 36/36 response của preview). Trước khi sửa một hiện tượng chỉ đo được ở local, kiểm xem nó có tồn tại trên hosted không. Ví dụ: 6 request prefetch kéo dài ~24,5 s khi tải `/` lúc đã đăng nhập ở local không tái hiện trên hosted (chậm nhất 1,25 s).
+
 ## Database
 
 - Mọi thay đổi schema đi qua migration trong `supabase/migrations/`, apply bằng Supabase MCP (hosted không có CLI, xem mục "Supabase: hosted và cục bộ"), tên file theo đúng `version` Supabase trả về — không sửa qua Table Editor.
@@ -73,6 +79,8 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 - Báo cáo bằng số đo thật (px, ms, số dòng, mã HTTP), không mô tả cảm giác. Tiêu chí không đạt thì ghi con số đo được và lý do, đừng bỏ trống.
 - Mọi tiêu chí dùng selector phải nêu selector chỉ khớp đúng trạng thái đang kiểm, và phải có đối chứng ở trạng thái ngược lại. Đối chứng cũng "đạt" nghĩa là phép đo hỏng, không phải mã đạt.
 - Mọi ngưỡng phần trăm phải lớn hơn độ nhiễu đo được của chính phép đo đó. Đo độ nhiễu trước khi đặt ngưỡng.
+- Số request trong DevTools CỘNG DỒN khi bật "Preserve log" (đã gặp: 132 và 223 request ở trang chủ là cộng dồn qua nhiều lượt điều hướng; một lượt tải đo được 41–49). Mọi con số request phải ghi rõ là một lượt tải hay tích luỹ, và ô "Preserve log" bật hay tắt.
+- So sánh phải cùng điều kiện: một lần đo `HIT` từ cache edge không so được với một lần `STALE` có chạy hàm (đã gặp ở TTFB preview 01/10). Không so công bằng được thì nói thẳng, đừng báo con số đẹp.
 - Kiểm giao diện bằng ảnh chụp toàn trang thu nhỏ, không chỉ ảnh cận cảnh.
 - File tạm, route thử, script đo: xoá trước khi commit, chạy `git status` xác nhận sạch.
 
