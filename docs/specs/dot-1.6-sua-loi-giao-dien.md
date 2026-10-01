@@ -113,3 +113,15 @@ Giá trị này đến từ mockup: `docs/mockups/buoc-2/header-2a.html` ghi vi�
 - Ảnh chụp toàn trang trước và sau khi sửa, ở 375px (sheet) và 1280px (dropdown).
 
 **Trạng thái:** chưa xử lý.
+
+## 8. Font tải hai lần ở trạng thái đã đăng nhập (chỉ thấy ở bản cục bộ) — ưu tiên thấp
+
+**Hiện trạng (01/10/2026):** ở bản cục bộ (`npm start`, HTTP/1.1), đã đăng nhập, tải `/`: 25 request `Font` thay vì 15 (10 file font có preload bị tải hai lần), kéo tổng số request từ 47–48 lên 58–62. Hai request cùng URL khác nhau ở nguồn phát: lần đầu do CSS (`@font-face`, initiator `parser`), lần hai do script (initiator `script`, có header `Origin`) — là `preload()` của React từ các gợi ý `HL` trong dữ liệu RSC; `<head>` của HTML không có thẻ preload font nào. Hai nguồn cạnh tranh thời điểm: preload của script đến sau khi CSS đã bắt đầu tải thì sinh hai request, đến trước thì chỉ một.
+
+**Chi phí thực gần 0:** cả hai lần đều lấy từ bộ nhớ đệm (`servedFromCache: true`; file font có `Cache-Control: public, max-age=31536000, immutable`). Không thấy ở hosted (HTTP/2): người dùng đo preview đã đăng nhập 48 request.
+
+**Không tất định, và không do `/gio-hang` một mình.** Cùng một bản build (có trang `/gio-hang`) cho 15 font ở lần đo đầu sau khi dựng lại rồi 25 font ở các lần sau (cùng script đo). Phép thử bật-tắt trang `/gio-hang`: tắt trang cho 15 font ở 2/2 lần; bật trang cho 25 font ở khoảng 8 lần trở lên và 15 font ở 1 lần. Vậy trang không phải điều kiện đủ để xuất hiện; với số mẫu này tôi không chứng minh được trang hoàn toàn không ảnh hưởng tới xác suất, nên đừng viết nó thành "không liên quan".
+
+**Cần làm:** không điều tra thêm, trừ khi hiện tượng xuất hiện trên hosted hoặc làm chậm thời gian tải thật. Nếu phải đo lại, đếm theo request thực sự đi qua mạng (không tính bộ nhớ đệm), không theo tổng số request.
+
+**Trạng thái:** ghi nhận, không xử lý.

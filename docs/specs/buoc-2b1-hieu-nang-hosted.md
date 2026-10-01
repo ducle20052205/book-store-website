@@ -44,13 +44,13 @@ response (đo: 54.110 byte ở bản thử). Cái bỏ `revalidatePath` loại �
 **Thuộc phạm vi**
 1. Bỏ `revalidatePath` khỏi `signIn`, `signUp`, `signOut`.
 2. Bỏ `router.refresh()` thừa sau `router.push()` ở `LoginForm`, `RegisterForm`.
-3. Giảm prefetch ở trang chủ và trang danh mục. **Hạ cấp (01/10):** chỉ làm nếu
-   tiêu chí 3.3 vẫn trượt sau khi xong hạng mục 4.
+3. Giảm prefetch ở trang chủ và trang danh mục. **KHÔNG LÀM (chốt 01/10, sau khi đo
+   hosted):** xem mục 6.
 4. `proxy.ts` bỏ qua request prefetch. **Ưu tiên cao nhất của đợt.**
 5. Trang `/gio-hang` tạm cho đợt 3.
 
 **Thứ tự.** Hạng mục 4 làm trước. Các hạng mục 1, 2, 5 theo số thứ tự. Hạng mục 3
-chỉ khi điều kiện ở trên xảy ra.
+không làm.
 
 **Ngoài phạm vi**
 - Truy vấn N+1 ở trang chủ (mục "Chưa lên lịch" cuối tài liệu).
@@ -151,6 +151,9 @@ tay trên hosted, 01/10): đăng ký 2–3 s; đăng xuất và đăng nhập g�
 này là một khoảng ước lượng bằng tay, chưa có độ nhiễu: ngưỡng sau đợt đặt lớn hơn 3
 lần nhiễu của chính 5 lần đo sau. Kèm: sau một lần đăng nhập thật, `GET /sach` từ
 trình duyệt khác là `HIT` (mốc: chưa đo; đây là phép kiểm biên độ của `("/", "layout")`).
+**Cảm nhận của người dùng sau đợt (01/10, hosted, hàm đã làm nóng; KHÔNG phải số đo):**
+trên preview PR #10 cả ba luồng dưới 1 s; trên production đăng nhập 1,5–2 s. Chưa có
+số thô, nên 1.6 chưa đóng.
 
 **Ghi chú và phép đo cho chênh lệch đăng ký (2–3 s) so với đăng nhập và đăng xuất
 (tức thì).**
@@ -234,16 +237,24 @@ và `track()` ở client không chạy; không nằm trong phạm vi hạng mụ
 
 ## 6. Hạng mục 3 — Giảm prefetch ở trang chủ và trang danh mục
 
-**Trạng thái: HẠ CẤP (01/10). Chỉ làm nếu tiêu chí 3.3 vẫn trượt sau khi xong hạng
-mục 4.**
+**Trạng thái: KHÔNG LÀM (chốt 01/10).** Trước đó hạ cấp thành "chỉ làm nếu tiêu chí
+3.3 vẫn trượt sau hạng mục 4"; 3.3 không trượt (xem dưới), nên hạng mục này bỏ hẳn.
 
-**Lý do hạ cấp.** Sau khi đổi vùng, mỗi `getUser()` còn khoảng 15 ms (trung vị; p90
-27,9 ms, tối đa 386 ms, đo ở log Supabase 01/10 06:22–06:24 UTC, 72 lần) thay vì
-155–195 ms. Hai mươi lần cộng dồn là khoảng 300 ms phía server chứ không phải 3 s.
-Hạng mục 4 đã cắt phần lớn tải đó mà không đụng tới trải nghiệm. Prefetch cho điều
-hướng tức thì có giá trị thật với người xem portfolio.
+**Lý do, bằng số.**
+- **Chi phí server của prefetch gần như biến mất sau hạng mục 4.** `getUser()` khi tải
+  `/` đã đăng nhập giảm từ 16–17 lần xuống **1** (cục bộ, 5/5 lần; sau cuộn 18–19
+  xuống 1), và sau đăng ký/đăng nhập từ 20–24 xuống 2–3. Mỗi `getUser()` trên hosted
+  còn khoảng 15 ms (trung vị; p90 27,9 ms, tối đa 386 ms, log Supabase 01/10 06:22–06:24
+  UTC, 72 lần) thay vì 155–195 ms: 20 lần cộng dồn từng là khoảng 300 ms phía server,
+  nay là một lần.
+- **Cắt prefetch chỉ làm điều hướng chậm đi.** Với prefetch xong, bấm thẻ sách đổi URL
+  sau 23 ms; khi chưa prefetch (mô phỏng không prefetch) là 270 ms (preview, 5 lần).
+  Điều hướng tức thì là thứ người xem portfolio nhìn thấy trực tiếp. Lưu ý đúng với số
+  đo: ở phép đó h1 của trang sách **không** hiện chậm hơn khi bỏ prefetch (604 ms so
+  với 982 ms), nên lý do giữ prefetch là cảm giác URL và khung trang đổi tức thì, không
+  phải thời gian tới nội dung.
 
-**Nếu phải làm:** dùng prefetch theo ý định (rê chuột / chạm), **không** dùng
+**Nếu về sau có nhu cầu:** dùng prefetch theo ý định (rê chuột / chạm), **không** dùng
 `prefetch={false}` toàn bộ.
 
 **Hiện trạng.** `BookCard` (`components/BookCard.tsx:59`) dùng `<Link>` không đặt
@@ -287,22 +298,51 @@ chưa xong (mô phỏng không prefetch): URL đổi 270 ms [217–300], h1 hi�
 [531–612]. Nghĩa là bỏ prefetch không làm nội dung hiện chậm đi ở phép đo này, chỉ
 làm URL đổi muộn hơn.
 
-**Hoàn thành khi.** (3.1, 3.2, 3.4, 3.5 chỉ áp dụng nếu hạng mục này được kích
-hoạt; 3.3 áp dụng cho cả đợt.)
+**Hoàn thành khi.** (3.1, 3.2, 3.4, 3.5 **không áp dụng** vì hạng mục này không làm,
+giữ lại để tham khảo nếu sau này làm theo prefetch theo ý định; 3.3 áp dụng cho cả
+đợt và đã đóng, xem dưới.)
 3.1. Số request prefetch khi tải `/`, `/sach`, `/tu-sach`, `/sach?category=van-hoc`
 (chưa đăng nhập, preview, 5 lần, sau chờ yên): ≤ 8 ở mỗi trang, cả trước và sau khi
 cuộn hết trang. Mốc 11–19; ngưỡng thấp hơn mốc từ 3 (trang `/sach?category=…`,
 trước cuộn: 11) tới 11 request, mỗi chênh lệch lớn hơn nhiễu ±2. Đối chứng: trước
 khi sửa, cùng phép đo cho 11–19.
 3.2. Cục bộ, đã đăng nhập, tải `/`: số request prefetch ≤ 8 (mốc 22–24).
-3.3. **Không hồi quy** (đã ĐẠT SẴN trên hosted trước khi sửa). Hosted, đã đăng nhập,
-tải `/`, một lượt tải, "Preserve log" tắt, người dùng đo tay. Mốc 01/10: 48 request,
-Finish 2,18 s, request chậm nhất 1,25 s (chính document), không request nào quá 3 s.
-Sau đợt: request chậm nhất ≤ 1,25 s + 20% = **1,50 s** và Finish ≤ 2,18 s + 20% =
-**2,62 s**. Biên 20% do yêu cầu; mốc chỉ là một lần đo tay nên chưa có độ nhiễu. Theo
-`CLAUDE.md`, đo ít nhất 5 lần để biết nhiễu trước khi dùng ngưỡng, và nếu nhiễu lớn
-hơn 20% thì nâng ngưỡng lên ít nhất ba lần nhiễu. Đây là tiêu chí cho cả đợt; hạng
-mục 3 chỉ được kích hoạt khi nó trượt sau hạng mục 4.
+3.3. **Không hồi quy: ĐÃ ĐÓNG (01/10). Kết luận: không hồi quy, cải thiện nhất quán về
+hướng ở mọi phép đo thời gian và lỗi.** Không ghi con số phần trăm vì mẫu quá nhỏ để
+tính. Phép đo: hosted, đã đăng nhập, tải `/`, một lượt tải, "Preserve log" tắt, người
+dùng đo tay. Ngưỡng đặt trước: request chậm nhất ≤ 1,25 s + 20% = **1,50 s** và Finish
+≤ 2,18 s + 20% = **2,62 s** (mốc 2,18 s và 1,25 s là lượt đo tay trước đợt này: 48
+request, không request nào quá 3 s).
+
+Số thô kèm số mẫu (n):
+
+| | Production (mã cũ), n = 2 | Preview PR #10 (mã mới), n = 1 |
+|---|---|---|
+| Finish | 2,52 s (lượt đo mới) và 2,18 s (lượt đo trước) | **1,53 s** |
+| Request chậm nhất | 524 ms (lượt đo mới) và 1,25 s (lượt đo trước, chính document) | **349 ms** |
+| Lỗi Console | 1 | **0** |
+| `/gio-hang` | 404, 464 ms | **200, 38–41 ms** |
+| Số request | 42 (lượt đo mới) và 48 (lượt đo trước) | 48 |
+
+Preview **chưa đăng nhập** (n = 1): 51 request, Finish 1,14 s, chậm nhất 413 ms, 0 lỗi
+Console. Không đưa vào so sánh bên trên vì khác trạng thái đăng nhập.
+
+- **Cả hai ngưỡng đều đạt** (349 ms ≤ 1,50 s; 1,53 s ≤ 2,62 s), nhưng ngưỡng ±20% **chưa
+  được kiểm bằng độ nhiễu thật**: preview chỉ một mẫu, production hai mẫu, mà `CLAUDE.md`
+  yêu cầu đo nhiễu (ít nhất 5 lần) trước khi dùng ngưỡng phần trăm. Vì vậy kết luận chỉ
+  là hướng, không phải độ lớn.
+- **Preview thấp hơn cả hai mẫu production** ở Finish, request chậm nhất, lỗi Console và
+  độ trễ `/gio-hang`. Hai mẫu production khác nhau nhiều (Finish 2,18–2,52 s; chậm nhất
+  0,52–1,25 s), nghĩa là khác biệt ở request chậm nhất (349 ms so với 524 ms) nhỏ hơn
+  chênh lệch giữa hai lần đo production: nó cho hướng, không đủ để tách khỏi nhiễu.
+- **Số request cao hơn 6 (48 so với 42), là ngoại lệ duy nhất của câu "ở mọi phép đo".**
+  Giải thích của người dùng (chưa kiểm bằng phép thử bật-tắt): preview có thêm 3 request
+  của thanh công cụ Vercel (`feedback.js`, `validate`, `jwe`) và `/gio-hang` giờ prefetch
+  thành công thay vì hỏng.
+- **Cảnh báo phương pháp:** hai ảnh đo đầu tiên khác trạng thái đăng nhập giữa hai bên
+  nên **không dùng để kết luận**; cặp dùng để kết luận là production đã đăng nhập so với
+  preview đã đăng nhập.
+- Hạng mục 3 không làm (xem đầu mục 6): tiêu chí này không trượt.
 3.4. Bấm vào thẻ sách ở `/` (preview, 5 lần, trung vị): h1 trang sách hiện ≤ 1,2 s
 (mốc 0,98 s với prefetch, 0,60 s không prefetch; nhiễu rộng nhất 0,38 s).
 3.5. Điều hướng bằng bàn phím tới thẻ sách vẫn hoạt động (Tab tới thẻ, Enter): URL
@@ -381,6 +421,11 @@ Chỉ dùng token màu trong `@theme`.
 5.2. Tải `/`, `/sach`, `/tu-sach`, `/dang-nhap` ở cả hai trạng thái đăng nhập (đã
 đăng nhập chỉ đo cục bộ): số request 404 = 0 (mốc 1 mỗi trang) và số dòng lỗi đỏ
 trong console = 0 (mốc 1).
+**Kết quả (01/10): ĐẠT.** Cục bộ, 7 tổ hợp trang × trạng thái, 3 lượt mỗi tổ hợp: 0 và 0.
+Preview chưa đăng nhập (Claude đo), 4 trang × 3 lượt: 0 và 0 ở 12/12 lượt. **Hosted, đã
+đăng nhập, `/` (người dùng đo tay, "Preserve log" tắt, một lượt tải, n = 1 mỗi bên):**
+production 1 request 404 (`/gio-hang`, 464 ms) và 1 lỗi Console; preview 0 và 0 (`/gio-hang`
+200, 38–41 ms). Preview chưa đăng nhập (n = 1): 0 lỗi Console.
 5.3. `/gio-hang` có `<meta name="robots" content="noindex">`. Đối chứng: `/sach`
 không có.
 5.4. Ở 375px không cuộn ngang; mọi vùng chạm ≥ 44×44 px; mọi cặp chữ/nền ≥ 4,5:1
@@ -390,11 +435,12 @@ khi giỏ khác rỗng).
 
 ## 9. Hoàn thành khi (cả đợt)
 
-- Các tiêu chí 1.1–1.6, 2.1–2.3, 3.3, 4.1–4.4, 5.1–5.5 đều có số đo trong báo cáo (và
-  3.1, 3.2, 3.4, 3.5 nếu hạng mục 3 được kích hoạt); tiêu chí nào không đạt ghi con
+- Các tiêu chí 1.1–1.6, 2.1–2.3, 3.3, 4.1–4.4, 5.1–5.5 đều có số đo trong báo cáo (3.1,
+  3.2, 3.4, 3.5 không áp dụng vì hạng mục 3 không làm); tiêu chí nào không đạt ghi con
   số và lý do, không nới ngưỡng.
-- Tiêu chí 3.3 (không hồi quy) đo lại sau hạng mục 4, ghi rõ một lượt tải và "Preserve
-  log" tắt. Nếu trượt thì mới kích hoạt hạng mục 3.
+- Tiêu chí 3.3 (không hồi quy) đã đo trên hosted ở cặp production đã đăng nhập so với
+  preview đã đăng nhập, ghi rõ một lượt tải và "Preserve log" tắt: không hồi quy (xem
+  3.3). Tiêu chí 1.6 vẫn chưa có số thô (chỉ có cảm nhận), nên chưa đóng.
 - `npm run build` exit 0, `tsc` 0 lỗi, `lint` 0 lỗi.
 - Tiêu chí 1 (hiệu năng) và 2 (nháy "Đăng nhập") của
   `buoc-2b1-xoa-nhay-trang-thai-header.md` không bị làm xấu đi (đo lại, ghi hai con
@@ -411,8 +457,8 @@ Dừng lại và hỏi, đừng tự chọn, nếu gặp:
   báo lại, đừng tự vá bằng cách đưa lệnh gọi trở lại.
 - Hiện tượng request kéo dài hàng chục giây (xem dưới) **xuất hiện trên hosted**: khi
   đó mới dừng và điều tra; ở local thì không chặn.
-- Tiêu chí 3.3 trượt sau hạng mục 4: kích hoạt hạng mục 3 (prefetch theo ý định), báo
-  số đo trước khi làm.
+- Chỉ khi sau này muốn làm lại hạng mục 3 (đang KHÔNG LÀM): theo ý định (rê chuột /
+  chạm), báo số đo trước khi làm.
 
 **Không chặn đợt: hiện tượng 24,5 s ở `/` khi đã đăng nhập (chỉ ở local).** Nguyên nhân
 ở local chưa xác định: server không chậm (cùng request bằng `curl` có phiên: 47–66 ms;
@@ -426,8 +472,8 @@ bản cục bộ được giữ nguyên.
   "Preserve log", không phải một lượt tải. Kết quả một lượt tải, đã đăng nhập, hosted:
   48 request, Finish 2,18 s, request chậm nhất 1,25 s, 1 request 404 `/gio-hang`, 1
   lỗi Console. Không cần ảnh chụp Network nữa.
-- **Cách giảm prefetch (hạng mục 3): ĐÃ QUYẾT.** Prefetch theo ý định (rê chuột / chạm),
-  không `prefetch={false}` toàn bộ.
+- **Cách giảm prefetch (hạng mục 3): ĐÃ QUYẾT, rồi chốt KHÔNG LÀM.** Nếu về sau có nhu
+  cầu thì prefetch theo ý định (rê chuột / chạm), không `prefetch={false}` toàn bộ.
 
 ## 11. Chưa lên lịch
 
@@ -443,3 +489,21 @@ tối đa 254 ms (384 request); tái tạo `/` sau action còn 0,71–0,98 s so 
 cache `HIT`, tức mỗi lần cache bị vô hiệu vẫn trả một chi phí gấp ~4 lần. Chưa lên
 lịch; cần gộp truy vấn (một lần lấy sách kèm danh mục và tủ sách) trước khi cache
 bị vô hiệu thường xuyên hơn, ví dụ khi đợt 6 có quản trị viên sửa sách.
+
+## 12. Phụ thuộc cho đợt sau
+
+**Sàn 2 request RSC sau đăng nhập/đăng ký phụ thuộc vào cách đợt 3 lưu giỏ khách.**
+Sau hạng mục 2, mỗi lần đăng ký hoặc đăng nhập còn 2 request RSC tới trang đích (xem
+mục 5, "Sàn kỹ thuật"). Sàn này có vì sau action, client phải chạy `mergeGuestCart()`
+rồi mới điều hướng bằng `router.push`, và giỏ khách nằm trong `localStorage` nên chỉ
+client đọc được.
+
+**Nếu đợt 3 chọn lưu giỏ khách bằng cookie** thì server đọc được: gộp giỏ ngay trong
+action được, dùng `redirect()` trong action được, và sàn này kỳ vọng xuống 1 (chưa đo).
+**Chưa chốt.** Đây là một yếu tố cần cân nhắc khi thiết kế giỏ hàng ở đợt 3, không phải
+một quyết định.
+
+Một phụ thuộc cùng loại (người soạn thêm, không có trong yêu cầu gốc): `track("sign_up")`
+và `track("login")` hiện cũng chạy ở client sau action, ghi `events` từ trình duyệt bằng
+phiên của trình duyệt. Dùng `redirect()` trong action thì phải chuyển cả việc ghi sự kiện
+lên server, nên cần làm cùng lúc với việc gộp giỏ.
