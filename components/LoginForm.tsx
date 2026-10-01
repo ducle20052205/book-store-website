@@ -85,9 +85,11 @@ export function LoginForm() {
     // hướng nếu ghi lỗi. metadata chỉ có phương thức — tuyệt đối không có email (FR-8.5).
     track("login", { method: "password" });
 
-    // Nút giữ trạng thái đang xử lý tới khi trang mới hiện.
+    // Nút giữ trạng thái đang xử lý tới khi trang mới hiện. Không gọi router.refresh():
+    // action đã làm client làm mới (cookie đổi) và push tới trang đích chạy với cookie
+    // mới; một refresh nữa chỉ sinh thêm request RSC trùng URL (đo 01/10: 2–3 request
+    // mỗi lần, có lần hai request gửi cùng lúc). Spec buoc-2b1-hieu-nang-hosted hạng mục 2.
     router.push(safeNextPath(new URLSearchParams(window.location.search).get("next")));
-    router.refresh();
   }
 
   return (

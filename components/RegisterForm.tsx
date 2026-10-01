@@ -131,9 +131,9 @@ export function RegisterForm() {
     // hướng nếu ghi lỗi. metadata chỉ có phương thức — tuyệt đối không có email (FR-8.5).
     track("sign_up", { method: "password" });
 
+    // Không gọi router.refresh() sau push: xem giải thích ở LoginForm.
     const target = safeNextPath(new URLSearchParams(window.location.search).get("next"));
     router.push(withWelcomeParam(target));
-    router.refresh();
   }
 
   return (

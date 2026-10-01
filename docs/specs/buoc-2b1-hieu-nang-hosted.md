@@ -213,6 +213,16 @@ không có hai request cùng URL trong cùng 10 ms, 10/10 lần mỗi luồng (�
 dải chào mừng, đăng nhập không hiện (đối chứng của nhau).
 2.3. Tiêu chí 1.2 vẫn đạt sau khi làm mục này.
 
+**Sàn kỹ thuật của cách làm này là 2 request, không phải 1 (đo 01/10 sau khi làm).**
+Sau khi bỏ `router.refresh()`, mỗi lần đăng ký hoặc đăng nhập vẫn còn 1–2 request RSC
+không prefetch tới đúng trang đích (10 lần mỗi luồng, trung vị 2), tuần tự chứ không
+đồng thời (~325 ms rồi ~585 ms ở +160 ms/vòng). Request thứ hai không phải của
+`LoginForm`: một Server Action đã revalidate (ở đây do đổi cookie) bị `router.push`
+huỷ thì Next đặt `needsRefresh` và tự phát một lượt làm mới khi hàng đợi rảnh
+(`next/dist/client/components/app-router-instance.js` dòng 76–92). Muốn còn 1 phải
+đổi cấu trúc (ví dụ `redirect()` ngay trong action), nhưng khi đó `mergeGuestCart()`
+và `track()` ở client không chạy; không nằm trong phạm vi hạng mục này.
+
 ## 6. Hạng mục 3 — Giảm prefetch ở trang chủ và trang danh mục
 
 **Trạng thái: HẠ CẤP (01/10). Chỉ làm nếu tiêu chí 3.3 vẫn trượt sau khi xong hạng
