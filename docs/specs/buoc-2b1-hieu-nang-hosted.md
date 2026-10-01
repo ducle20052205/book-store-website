@@ -6,6 +6,8 @@ Nhánh: chưa tạo. Đợt này đi sau 2B, không nằm trong PR #9.
 Cùng chu kỳ với đợt 2B.2 (`docs/specs/buoc-2b2-xoa-nhay-trang-thai-header.md`, nháy
 "Đăng nhập" ở header). Hai tài liệu độc lập, làm riêng được.
 
+Đợt này đã tiếp nhận và xử lý tiêu chí 3 (hồi quy hiệu năng) của Bước 2B; xem mục 3.3.
+
 Tài liệu liên quan: `docs/specs/buoc-2b-dang-nhap-dang-ky.md`,
 `docs/specs/buoc-2a-ha-tang-auth.md` (mục 5: proxy chỉ lo trải nghiệm),
 `components/Header.tsx`, `components/BookCard.tsx`, `proxy.ts`,

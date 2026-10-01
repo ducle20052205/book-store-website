@@ -1,135 +1,73 @@
-# Đợt 2B.2 — Xoá nháy trạng thái ở header
+# Bước 2B.2 — Xoá nháy trạng thái header
 
-Bước 2 · Tài khoản người dùng · phiên bản 1.0 · 30/09/2026
-Nhánh: chưa tạo. Đợt này đi sau 2B, không nằm trong PR #9.
+Tài liệu liên quan: docs/specs/buoc-2b-dang-nhap-dang-ky.md (tiêu chí 8 gốc), docs/specs/buoc-2b1-hieu-nang-hosted.md (đợt trước), docs/SRS.md (NFR-3.6 chuyển động, NFR-6.2/6.3 accessibility).
 
-Tài liệu liên quan: `docs/specs/buoc-2b-dang-nhap-dang-ky.md` (mục 4, mục 11.4,
-mục 12 tiêu chí 3 và 8), `components/Header.tsx`, `components/headerStyles.ts`.
+## 1. Vấn đề
 
----
+Người đã đăng nhập tải trang, header hiển thị chữ "Đăng nhập" trong khoảng 234–273 ms rồi mới đổi sang trạng thái đúng. Đo ở đợt 2B bằng Edge headless: 3/5 lượt tái hiện.
 
-## 1. Vì sao có đợt này
+Giả thuyết nguyên nhân (chưa xác nhận trên mã ở đợt này): phần auth của header nằm trong một Suspense boundary vì phải đọc cookie; React streaming chỉ hiện nội dung boundary ngay nếu nó xong trước khung vẽ đầu, xong sau thì hiện fallback rồi chờ `$RT+300ms`. Fallback hiện tại nhiều khả năng đang render trạng thái khách ("Đăng nhập"), nên trạng thái trung gian là một thông tin **sai**.
 
-Mục tiêu: **người đã đăng nhập không bao giờ nhìn thấy chữ "Đăng nhập" ở header.**
+## 2. Mục tiêu và không-mục tiêu
 
-Từ đợt 2A, mục tài khoản của header nằm trong
-`<Suspense fallback={<LoginLink />}>` (`components/Header.tsx`), vì đọc cookie thì
-không nằm được trong shell tĩnh. Người đã đăng nhập vì thế nhận HTML có "Đăng
-nhập" trước, phần thật stream vào sau.
+**Mục tiêu:** trạng thái trung gian không còn chứa thông tin sai về việc người dùng đã đăng nhập hay chưa.
 
-Đợt 2B đã bỏ truy vấn `profiles` và đổi sang `getClaims()`, nên phần thật về
-nhanh hơn, nhưng nhãn vẫn đổi thấy được. Số đo 30/09/2026 (Edge headless, rAF
-60 Hz, `MutationObserver` + `PerformanceObserver`, 5 lần tải `/` với phiên thật
-trên stack cục bộ):
+**Không-mục tiêu, ghi rõ để không ai nghiệm thu nhầm:**
+- Không làm cho trạng thái thật đến nhanh hơn. Thời gian chờ ~250 ms giữ nguyên.
+- Không đụng `getClaims()` ở Header hay `getUser()` ở `proxy.ts` (bất đối xứng có chủ đích, xem CLAUDE.md).
+- Không đụng cấu hình prefetch (đã chốt không làm ở 2B.1).
+- Không làm phương án dự phòng cookie gợi ý hiển thị ở đợt này. Chỉ mở ra nếu TC-1 trượt.
 
-| Lần | "Đăng nhập" xuất hiện trong DOM | Nhãn "Tài khoản" xuất hiện | Khung đầu (FCP) | "Đăng nhập" còn hiển thị sau FCP |
-|---|---|---|---|---|
-| 1 | 329 ms | 634 ms | 400 ms | 234 ms |
-| 2 | 76 ms | 85 ms | 124 ms | 0 (đổi trước khi vẽ) |
-| 3 | 77 ms | 91 ms | 128 ms | 0 (đổi trước khi vẽ) |
-| 4 | 90 ms | 409 ms | 136 ms | 273 ms |
-| 5 | 73 ms | 386 ms | 116 ms | 270 ms |
+**Đánh đổi đã chốt:** khách chưa đăng nhập — gần như 100% người xem portfolio — sẽ thấy ô chữ rỗng trong thời gian chờ thay vì thấy ngay chữ "Đăng nhập". Chấp nhận, vì "chưa có thông tin" không phải lỗi còn "thông tin sai" thì có. Vì vậy fallback **vẫn giữ icon người** để ô không trống hoàn toàn.
 
-3/5 lần người dùng thấy sai. Nguyên nhân: runtime Suspense của React (`$RC` và
-`$RV` trong `react-dom`) chỉ hiện boundary ngay nếu nó xong trước khung vẽ đầu;
-xong sau thì chờ `$RT` + 300 ms. Vì vậy rút ngắn thời gian server không xoá được
-lỗi: cái sai nằm ở chỗ fallback là trạng thái sai cho người đã đăng nhập.
+## 3. Bước 0 — Khảo sát bắt buộc trước khi sửa
 
-Lỗi có từ 2A, không phải hồi quy của 2B (xem "Hai tiêu chí chuyển sang 2B.2" ở mục
-12 của spec 2B).
+Trước khi thay đổi bất cứ dòng mã nào, khảo sát và báo cáo:
 
-## 2. Phạm vi
+1. Liệt kê **mọi** vị trí trong giao diện hiển thị trạng thái đăng nhập (header desktop, menu mobile, bất cứ chỗ nào khác). Đợt này phải xử lý hết, không chỉ header desktop.
+2. Với mỗi vị trí: nó nằm trong Suspense boundary nào, fallback hiện tại render ra gì, dữ liệu auth lấy từ đâu (Server Component hay client).
+3. Xác nhận hay bác bỏ giả thuyết ở mục 1: chữ "Đăng nhập" trong giai đoạn trung gian đến từ **Suspense fallback phía server** hay từ **render client trước hydration**.
 
-**Thuộc phạm vi**
-- Fallback của `<Suspense>` ở mục tài khoản của header (phương án A, mục 3).
-- Phương án B (mục 4) chỉ khi A không đạt tiêu chí 2.
-- Đo hai tiêu chí ở mục 5.
+**Nếu giả thuyết bị bác bỏ, dừng lại, báo cáo, không tự chọn cách sửa khác.** Cách sửa ở mục 4 chỉ đúng cho trường hợp fallback server.
 
-**Ngoài phạm vi**
-- `proxy.ts` và `getUser()` (đã chốt ở mục 4 của spec 2B).
-- Logic `getClaims()` trong `AccountItem`, nội dung menu tài khoản.
-- Menu không đóng khi Back/Forward (`docs/specs/dot-1.6-sua-loi-giao-dien.md` mục 7).
-- Mobile header, nếu số đo xác nhận nó chỉ còn biểu tượng (xem mục 3).
+## 4. Thay đổi cần làm
 
-## 3. Phương án chốt (A)
+- **FR-2B2.1** — Fallback của Suspense bao quanh phần auth đổi thành một component không chứa thông tin trạng thái: icon người sẵn có + một ô chữ **rỗng**. Không chữ "Đăng nhập", không tên người dùng, không skeleton nhấp nháy.
+- **FR-2B2.2** — Ô chữ có **bề rộng cố định** (không phải min-width co giãn), giống nhau ở fallback và ở cả hai trạng thái thật; chữ thật dài hơn thì cắt bằng ellipsis. Mục đích: hộp auth không đổi bề rộng khi fallback được thay bằng nội dung thật.
+- **FR-2B2.3** — Fallback **không tương tác và không focusable**: không `<a>`, không `<button>`, không `tabindex` ≥ 0. Lý do: trong lúc chưa biết trạng thái thì không có đích đến đúng cho cú bấm; thà mất một cú bấm hiếm trong 250 ms còn hơn điều hướng sai.
+- **FR-2B2.4** — Icon trong fallback có `aria-hidden="true"`; fallback không có `aria-live`, không thông báo gì cho screen reader. Trạng thái thật khi tới mới mang nhãn và mới focusable.
+- **FR-2B2.5** — Phần tử bọc slot auth mang `data-testid="header-auth"` ở **mọi** vị trí tìm thấy ở Bước 0, và thuộc tính này **chỉ** xuất hiện ở đó. Một `data-testid` riêng cho mỗi vị trí nếu có nhiều hơn một (ví dụ `header-auth`, `header-auth-mobile`).
+- **FR-2B2.6** — Vùng chạm của trạng thái thật giữ tối thiểu 44×44px (NFR-6.2); kích thước hộp fallback bằng đúng kích thước hộp trạng thái thật.
 
-Fallback của `<Suspense>` ở header desktop đổi từ
-`<a href="/dang-nhap">Đăng nhập</a>` thành: giữ nguyên biểu tượng người sẵn có,
-cộng một ô chữ rỗng có `min-width` cố định bằng độ rộng của chuỗi dài hơn trong
-hai chuỗi "Đăng nhập" / "Tài khoản" (cùng 9 ký tự, cùng font Be Vietnam Pro nên
-gần bằng nhau). Mục tiêu CLS của vùng header = 0.
+## 5. Môi trường đo
 
-Mobile header vốn chỉ có biểu tượng nên không nằm trong phạm vi sửa — xác nhận
-lại bằng số đo trước khi kết luận.
+- Stack Supabase cục bộ (Docker), app chạy **bản production** (`next build` rồi `next start`) ở `127.0.0.1:3100`. Không đo trên dev server.
+- Độ trễ Supabase cộng thêm: bắt đầu ở **+160 ms**, đúng thiết lập đã dùng ở 2B.1.
+- Trình duyệt: **Edge headless qua CDP**. Không dùng trình duyệt tích hợp (`requestAnimationFrame` ở đó chạy ~2 Hz, mọi phép đo theo frame đều vô dụng).
+- Dụng cụ: `PerformanceObserver` cho `paint` (lấy FCP) và `layout-shift` (CLS); `MutationObserver` trên node `[data-testid="header-auth"]`, ghi lại mọi giá trị `textContent` kèm `performance.now()`.
+- **Mọi so sánh trước/sau phải cùng một giá trị độ trễ.** Nếu phải đổi, đo lại cả hai phía.
 
-Lưu ý khi làm, rút từ mã hiện tại:
-- `LoginLink` đang vừa là fallback vừa là trạng thái chưa đăng nhập thật
-  (`AccountItem` trả nó khi không có claim). Đổi fallback thì phải tách ra một
-  thành phần fallback riêng, để người chưa đăng nhập vẫn nhận lại "Đăng nhập".
-- Bề rộng cố định đã có: `navAccountWidthClass` (`sm:min-w-[135px]`,
-  `components/headerStyles.ts`) áp cho cả hai trạng thái, và 135px là bề rộng đo
-  ở 2A của nút "Tài khoản ▾" gồm cả mũi tên. Ô rỗng dùng lại hằng này, không thêm
-  hằng mới.
-- Nhãn chữ chỉ hiện từ `sm` (640px) trở lên (`hidden sm:inline`), dưới đó cả hai
-  trạng thái chỉ còn biểu tượng.
+## 6. Tiêu chí nghiệm thu
 
-## 4. Phương án dự phòng (B)
+Mỗi tiêu chí ghi kèm: lệnh/script cho ra con số, số mẫu, và kết quả.
 
-Chỉ làm nếu A không đạt tiêu chí 2.
+- **TC-0 — Selector đặc hiệu.** `data-testid="header-auth"` xuất hiện đúng 1 lần trong mã nguồn (đếm bằng `rg -c`) và `document.querySelectorAll('[data-testid="header-auth"]').length === 1` trên trang đã render. Nếu có slot mobile riêng thì cùng kiểm với testid của nó. **Tiêu chí này phải đạt trước, nếu không mọi số đo bên dưới đều vô giá trị** (bài học tiêu chí 8 đợt 2B: selector `button[aria-haspopup]` khớp cả nút menu điều hướng).
+- **TC-1 — Trạng thái chính.** Phiên **đã đăng nhập**, 10 lượt tải `/`: số lượt mà `textContent` của slot auth chứa chuỗi "Đăng nhập" tại bất kỳ thời điểm nào từ FCP tới khi ổn định = **0/10**.
+- **TC-2 — Đối chứng trạng thái ngược.** Phiên **chưa đăng nhập**, 10 lượt tải `/`: (a) số lượt slot auth chứa tên người dùng hoặc chuỗi của menu tài khoản = **0/10**; (b) số lượt kết thúc bằng chữ "Đăng nhập" = **10/10**. Vế (b) là bằng chứng script thật sự đọc được nội dung; thiếu nó thì 0/10 ở vế (a) không chứng minh được gì.
+- **TC-3 — Đối chứng phép đo trên mã cũ.** Chạy **đúng script của TC-1**, cùng độ trễ, trên commit trước khi sửa (checkout tạm vào worktree riêng, không đụng nhánh làm việc). Phải thấy **≥3/10** lượt có chữ "Đăng nhập" ở phiên đã đăng nhập.
+  - Baseline ra 0/10 → hiện tượng không tái hiện ở điều kiện này. Tăng độ trễ theo bậc +300 ms, +500 ms, đo lại; ghi rõ giá trị cuối cùng dùng được.
+  - Tới +500 ms vẫn không tái hiện → **dừng, báo cáo, không kết luận "đạt"**. Khi đó TC-1 chỉ chứng minh được "mã mới không sai", không chứng minh được "đã chữa".
+- **TC-4 — CLS.** CLS của `/` = **0**, 5 lượt mỗi trạng thái (đã đăng nhập / chưa đăng nhập). Ràng buộc sẵn có: NFR-3.6.
+- **TC-5 — Bề rộng không đổi.** `getBoundingClientRect().width` của slot auth lúc fallback và lúc ổn định chênh **≤ 0,5 px**, 5 lượt mỗi trạng thái. Ngưỡng này là sai số làm tròn của trình duyệt, không phải ngưỡng phần trăm.
+- **TC-6 — Fallback không focusable.** Số phần tử focusable (`a[href], button, [tabindex]:not([tabindex="-1"])`) bên trong slot auth: **0 lúc fallback**, **≥1 sau khi ổn định**, 5 lượt mỗi trạng thái. Hai con số phải khác nhau, nếu bằng nhau thì phép đo hỏng.
+- **TC-7 — Số tham khảo, không đặt ngưỡng.** Ghi lại khoảng cách FCP → lúc chữ thật xuất hiện, 10 lượt mỗi trạng thái, báo cáo trung vị và khoảng. Không có ngưỡng đạt/trượt vì chưa đo được độ nhiễu của chính phép đo này. Con số này là mốc cho lần sau.
+- **TC-8 — Kiểm tay trên preview (người dùng làm, Claude Code không làm được).** Đăng nhập trên preview Vercel, DevTools bật throttle "Slow 4G", tải lại 5 lần, quay Performance panel và xem filmstrip. Ghi nhận có khung hình nào hiện chữ "Đăng nhập" không. Đối chứng: lặp lại ở trạng thái chưa đăng nhập.
+- **TC-9 — Không hồi quy chức năng (kiểm tay).** Sau khi ổn định: dropdown mở được, hiện đúng họ tên và email, đăng xuất chạy; menu mobile tương tự.
 
-Cookie gợi ý hiển thị (KHÔNG httpOnly, giá trị chỉ "1", thuần hiển thị —
-enforcement thật vẫn ở Server Component + RLS), do `proxy.ts` đồng bộ mỗi request
-dựa trên kết quả `getUser()` sẵn có; cộng một script inline trong `<head>` đặt
-`data-auth` trên `<html>` trước khi vẽ; header render cả hai biến thể, CSS ẩn
-một. Mặc định `data-auth="0"` để khi không có JS thì hiện trạng thái chưa đăng
-nhập (an toàn hơn).
+## 7. Phương án dự phòng — chỉ mở khi TC-1 trượt
 
-Rủi ro phải xử lý nếu dùng B: cookie gợi ý lệch với session thật; không được để
-nó tham gia cache key.
+Cookie gợi ý hiển thị do `proxy.ts` đồng bộ: không httpOnly, giá trị chỉ `1`, thuần hiển thị, không mang danh tính và không dùng để phân quyền; script inline đặt `data-auth` trên `<html>` trước khi vẽ. Không làm ở đợt này. Nếu phải mở, viết spec riêng vì nó thêm một nguồn sự thật thứ hai về trạng thái auth và cần ghi rõ cách xử lý khi cookie lệch với phiên thật.
 
-## 5. Hoàn thành khi
+## 8. Phạm vi file dự kiến
 
-1. Không tái diễn hồi quy hiệu năng.
-   Đo cùng phiên, cùng máy, cùng bản production: checkout `main` đo 15 lần mỗi
-   trang, rồi checkout nhánh PR đo 15 lần mỗi trang. Lấy trung vị.
-   Đạt khi: trung vị nhánh PR ≤ trung vị `main` + 1,5 ms VÀ ≤ 2x trung vị
-   `main`, cho cả 4 trang (`/`, `/sach`, `/tu-sach`, `/tu-sach/<slug>`).
-   Ghi cả min–max để thấy độ nhiễu.
-   Lý do đổi: mốc tuyệt đối của 2A đo ở phiên khác; ba lần đo 2A của cùng một
-   trang `/` với cùng mã cho 4,17 / 4,98 / 5,19 ms, chênh 24,5% — lớn hơn ngưỡng
-   20% cũ. Ngưỡng nhỏ hơn nhiễu thì không phân biệt được đạt và trượt. Hồi quy
-   cần bắt là loại 223x (2,9 ms → 647,7 ms).
-
-2. Không lần nào người đã đăng nhập nhìn thấy trạng thái chưa đăng nhập sau khi
-   khung đầu đã vẽ.
-   Tải đầy đủ `/` 10 lần với phiên thật, trình duyệt thật chạy rAF 60 Hz, đo
-   bằng `MutationObserver` + `PerformanceObserver`. Cấm dùng
-   `requestAnimationFrame` trong mã đo. Đếm số lần chữ "Đăng nhập" hiển thị sau
-   mốc FCP: phải bằng 0/10.
-   ĐỐI CHỨNG BẮT BUỘC: chạy lại đúng phép đo với phiên chưa đăng nhập. Nếu đối
-   chứng cũng ra 0 thì phép đo không phân biệt được trạng thái → phép đo hỏng,
-   không phải mã đạt.
-   Mốc trước khi sửa (đo 30/09, Edge headless): 3/5 lần thấy sai, kéo dài
-   234–273 ms. Nguyên nhân: React streaming chỉ hiện Suspense boundary ngay nếu
-   nó xong trước khung vẽ đầu; xong sau thì chờ `$RT`+300 ms.
-
-## 6. Điều cần làm rõ trước khi code
-
-Dừng lại và hỏi, đừng tự chọn, nếu gặp:
-
-- Sau phương án A, tiêu chí 2 vẫn không đạt: báo số đo trước, rồi mới làm B.
-- Đối chứng của tiêu chí 2 cũng ra 0: phép đo hỏng, sửa phép đo trước khi kết luận
-  về mã.
-
-Ba điểm dưới đây do người soạn file này thêm từ việc đọc mã, chưa có quyết định:
-
-- Với A, người chưa đăng nhập thấy ô chữ rỗng thay cho "Đăng nhập" cho tới khi
-  phần thật về (theo cơ chế trên, có thể tới ~300 ms). Chấp nhận không?
-- Khi trình duyệt tắt JavaScript, React thay boundary bằng script inline nên
-  không chạy được, và fallback là thứ còn lại: hiện là liên kết dùng được, với A
-  là ô rỗng, tức header không có liên kết đăng nhập. Cần xác nhận khi làm; nếu
-  đúng thì có giữ một liên kết trong `<noscript>` không?
-- Dưới `sm` (640px), fallback vẫn là liên kết có `aria-label="Đăng nhập"`
-  (`components/LoginNavLink.tsx`), nên người dùng trình đọc màn hình đã đăng nhập
-  vẫn nghe "Đăng nhập" trong khoảng đó dù mắt không thấy chữ. Tiêu chí 2 chỉ đếm
-  chữ hiển thị nên không bắt được. Có đưa vào phạm vi không?
+Chỉ các file của header/menu mobile và component fallback mới. Không đụng `proxy.ts`, `lib/supabase/*`, các Server Action auth.

@@ -81,6 +81,8 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 - Mọi ngưỡng phần trăm phải lớn hơn độ nhiễu đo được của chính phép đo đó. Đo độ nhiễu trước khi đặt ngưỡng.
 - Số request trong DevTools CỘNG DỒN khi bật "Preserve log" (đã gặp: 132 và 223 request ở trang chủ là cộng dồn qua nhiều lượt điều hướng; một lượt tải đo được 41–49). Mọi con số request phải ghi rõ là một lượt tải hay tích luỹ, và ô "Preserve log" bật hay tắt.
 - So sánh phải cùng điều kiện: một lần đo `HIT` từ cache edge không so được với một lần `STALE` có chạy hàm (đã gặp ở TTFB preview 01/10). Không so công bằng được thì nói thẳng, đừng báo con số đẹp.
+- Khi nghiệm thu một lỗi phụ thuộc timing, phải chạy ĐÚNG script đo đó trên commit trước khi sửa. Baseline không tái hiện được lỗi nghĩa là phép đo hỏng hoặc môi trường không đủ điều kiện — không được kết luận "đạt".
+- Mọi phép đo theo frame dùng Edge headless qua CDP. Trình duyệt tích hợp của app không dùng để đo: `requestAnimationFrame` ở đó chạy ~2 Hz (số đo của chủ dự án), và khi pane đang ẩn thì rAF gần như không chạy (01/10/2026: vòng lặp rAF đặt 3 s không hoàn tất sau 45 s, một mẫu).
 - Kiểm giao diện bằng ảnh chụp toàn trang thu nhỏ, không chỉ ảnh cận cảnh.
 - File tạm, route thử, script đo: xoá trước khi commit, chạy `git status` xác nhận sạch.
 
