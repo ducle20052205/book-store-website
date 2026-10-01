@@ -118,6 +118,11 @@ Cookie đổi vẫn khiến Next gắn `x-action-revalidated: 1` nên client t�
 - Cục bộ, Supabase +160 ms/vòng, 5 lần, trung vị [min–max]: đăng ký tới `/` 1625 ms
   [1553–1645]; đăng xuất từ `/` 1501 ms [1490–1508]; đăng nhập tới `/` 1613 ms
   [1609–1616]; đăng xuất từ `/tu-sach` 616 ms [519–621]. **Nhiễu lớn nhất: 102 ms.**
+- **Đo lại ở đầu 2B.1 (01/10, main `18016f8`, cùng harness, 5 lần, +160 ms/vòng):** đăng
+  ký tới `/` 1626 ms [1608–1755]; đăng xuất từ `/` 1487 ms [1482–1505]; đăng nhập tới
+  `/` 1531 ms [1490–1626]; đăng xuất từ `/tu-sach` 501 ms [496–514]. **Nhiễu lớn nhất
+  lần này: 147 ms** (đăng ký). Header đúng trạng thái 55/55, 0 phép đo hỏng. Đây là mốc
+  để so mọi hạng mục của đợt và để đặt ngưỡng.
 - Bản thử (một lần): 1158 / 511 / 1124 / 499 ms; ở +500 ms: đăng ký 4013 xuống 2514
   ms, đăng xuất từ `/` 3872 xuống 1239 ms, đăng nhập 4000 xuống 2767 ms.
 - Response `signOut` không phiên, cục bộ: 54.110 byte; bản thử: 81 byte. Có phiên
@@ -128,9 +133,13 @@ Cookie đổi vẫn khiến Next gắn `x-action-revalidated: 1` nên client t�
 10/10 lần: trạng thái header đúng theo hai cờ ở mục 3, trước và sau F5. Đối chứng:
 mỗi luồng đo đủ cả hai trạng thái (sau đăng nhập phải ĐÃ, sau đăng xuất phải CHƯA).
 1.2. Cục bộ, +160 ms/vòng, 5 lần, trung vị: đăng ký tới `/` ≤ 1325 ms; đăng xuất từ
-`/` ≤ 1200 ms; đăng nhập tới `/` ≤ 1313 ms. (Mỗi ngưỡng là mốc trừ 300 ms, gấp 2,9
-lần nhiễu 102 ms.) Đăng xuất từ `/tu-sach` không có tiêu chí: chênh lệch nằm trong
-nhiễu (bản thử 499 ms so với 519–621 ms).
+`/` ≤ 1200 ms; đăng nhập tới `/` ≤ 1313 ms. (Mỗi ngưỡng là mốc trừ 300 ms. Nhiễu lớn
+nhất đo lại 01/10 là 147 ms, nên 300 ms gấp 2,0 lần nhiễu; vẫn lớn hơn nhiễu như
+`CLAUDE.md` yêu cầu, chỉ là biên không rộng bằng khi nhiễu là 102 ms. Mốc hiện tại
+1626 / 1487 / 1531 ms cho ngưỡng trừ 300 ms là 1326 / 1187 / 1231 ms, chặt hơn hoặc
+bằng các số ở trên, và bản cuối đo 899 / 497 / 883 ms nên đạt với biên rất lớn.)
+Đăng xuất từ `/tu-sach` không có tiêu chí: chênh lệch nằm trong nhiễu (bản thử 499 ms
+so với 519–621 ms).
 1.3. Preview, lặp lại đúng phép đo ở mốc (5 vòng): `GET /` ngay sau POST `signOut`
 không phiên là `HIT` ở 5/5 vòng, TTFB trung vị ≤ 400 ms (mốc `HIT` 209 ms, nhiễu
 36 ms). Đối chứng: trước khi sửa cùng phép đo cho `REVALIDATED` (4/4 vòng sạch).
