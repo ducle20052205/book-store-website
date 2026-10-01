@@ -6,7 +6,10 @@ Nhánh: chưa tạo. Đợt này đi sau 2B, không nằm trong PR #9.
 Cùng chu kỳ với đợt 2B.2 (`docs/specs/buoc-2b2-xoa-nhay-trang-thai-header.md`, nháy
 "Đăng nhập" ở header). Hai tài liệu độc lập, làm riêng được.
 
-Đợt này đã tiếp nhận và xử lý tiêu chí 3 (hồi quy hiệu năng) của Bước 2B; xem mục 3.3.
+Tiêu chí 3 (hồi quy hiệu năng) của Bước 2B **đóng ở đợt này, mục 3.3**, bằng một lượt
+đo tay trên hosted (n = 1). Tiêu chí gốc đòi 15 lượt mỗi trang trên 4 trang, so `main`
+với nhánh PR — phép đo thực tế **yếu hơn tiêu chí gốc**. Kết luận rút ra chỉ ở mức
+"không hồi quy", không có con số phần trăm. Không mở lại ở 2B.2.
 
 Tài liệu liên quan: `docs/specs/buoc-2b-dang-nhap-dang-ky.md`,
 `docs/specs/buoc-2a-ha-tang-auth.md` (mục 5: proxy chỉ lo trải nghiệm),
@@ -444,9 +447,10 @@ khi giỏ khác rỗng).
   preview đã đăng nhập, ghi rõ một lượt tải và "Preserve log" tắt: không hồi quy (xem
   3.3). Tiêu chí 1.6 vẫn chưa có số thô (chỉ có cảm nhận), nên chưa đóng.
 - `npm run build` exit 0, `tsc` 0 lỗi, `lint` 0 lỗi.
-- Tiêu chí 1 (hiệu năng) và 2 (nháy "Đăng nhập") của
+- TC-1 (nháy "Đăng nhập") và TC-4 (CLS) của
   `buoc-2b2-xoa-nhay-trang-thai-header.md` không bị làm xấu đi (đo lại, ghi hai con
-  số).
+  số). Bản hiện tại của spec đó không còn tiêu chí hiệu năng riêng (bản v1.0 có);
+  TC-7 chỉ là số tham khảo, không có ngưỡng.
 - Stack cục bộ và Docker tắt sau khi đo; tài khoản thử đã xoá; `git status` sạch.
 
 ## 10. Điều cần làm rõ trước khi code

@@ -83,6 +83,8 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 - So sánh phải cùng điều kiện: một lần đo `HIT` từ cache edge không so được với một lần `STALE` có chạy hàm (đã gặp ở TTFB preview 01/10). Không so công bằng được thì nói thẳng, đừng báo con số đẹp.
 - Khi nghiệm thu một lỗi phụ thuộc timing, phải chạy ĐÚNG script đo đó trên commit trước khi sửa. Baseline không tái hiện được lỗi nghĩa là phép đo hỏng hoặc môi trường không đủ điều kiện — không được kết luận "đạt".
 - Mọi phép đo theo frame dùng Edge headless qua CDP. Trình duyệt tích hợp của app không dùng để đo: `requestAnimationFrame` ở đó chạy ~2 Hz (số đo của chủ dự án), và khi pane đang ẩn thì rAF gần như không chạy (01/10/2026: vòng lặp rAF đặt 3 s không hoàn tất sau 45 s, một mẫu).
+- Trước khi ghi đè một file trong `docs/specs/`, đọc bản hiện có và báo cáo những mục sẽ mất. Không xoá mục nào mà không hỏi, kể cả khi prompt nói "chép nguyên văn".
+- Khi đóng một tiêu chí bằng phép đo **yếu hơn** tiêu chí gốc, ghi rõ cả hai: tiêu chí gốc đòi gì, phép đo thực tế làm gì, số mẫu. Không ghi "đã xử lý" trống không.
 - Kiểm giao diện bằng ảnh chụp toàn trang thu nhỏ, không chỉ ảnh cận cảnh.
 - File tạm, route thử, script đo: xoá trước khi commit, chạy `git status` xác nhận sạch.
 

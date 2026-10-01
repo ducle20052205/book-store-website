@@ -8,6 +8,20 @@ Người đã đăng nhập tải trang, header hiển thị chữ "Đăng nhậ
 
 Giả thuyết nguyên nhân (chưa xác nhận trên mã ở đợt này): phần auth của header nằm trong một Suspense boundary vì phải đọc cookie; React streaming chỉ hiện nội dung boundary ngay nếu nó xong trước khung vẽ đầu, xong sau thì hiện fallback rồi chờ `$RT+300ms`. Fallback hiện tại nhiều khả năng đang render trạng thái khách ("Đăng nhập"), nên trạng thái trung gian là một thông tin **sai**.
 
+### 1.1 Kết quả khảo sát đã có (bản v1.0, 30/09)
+
+Rút từ việc đọc mã ngày 30/09, đối chiếu lại với `components/Header.tsx`, `components/headerStyles.ts` và `components/LoginNavLink.tsx` ngày 01/10 (các điểm dưới đây còn đúng):
+
+- Từ đợt 2A, mục tài khoản của header nằm trong `<Suspense fallback={<LoginLink />}>` (`components/Header.tsx`), vì đọc cookie thì không nằm được trong shell tĩnh. Người đã đăng nhập vì thế nhận HTML có "Đăng nhập" trước, phần thật stream vào sau.
+- `LoginLink` hiện **vừa là Suspense fallback vừa là trạng thái khách thật**: `AccountItem` trả đúng nó khi không có claim. Đổi fallback thì phải tách ra một component riêng, để khách vẫn nhận lại "Đăng nhập" ở trạng thái thật.
+- Hằng `navAccountWidthClass` (`sm:min-w-[135px]`, `components/headerStyles.ts`) đã tồn tại và áp cho cả hai trạng thái; 135px là bề rộng đo ở 2A của nút "Tài khoản ▾" gồm cả mũi tên. FR-2B2.2 đòi bề rộng cố định thay vì min-width, nên hằng này phải xem lại, không dùng nguyên.
+- Nhãn chữ chỉ hiện từ `sm` (640px) trở lên (`hidden sm:inline`); dưới đó cả hai trạng thái chỉ còn biểu tượng.
+- Dưới `sm`, fallback hiện là liên kết có `aria-label="Đăng nhập"` (`components/LoginNavLink.tsx`), nên người dùng trình đọc màn hình đã đăng nhập vẫn nghe "Đăng nhập" trong khoảng đó dù mắt không thấy chữ.
+- Bản v1.0 cho rằng mobile header vốn chỉ có biểu tượng, nhưng ghi "xác nhận lại bằng số đo" và chưa xác nhận.
+- Bổ sung ngày 01/10: `LoginNavLink` là client component có `<Suspense>` riêng (vì `usePathname`/`useSearchParams`), fallback là `<a href="/dang-nhap">` trần với chữ "Đăng nhập" nằm sẵn trong HTML. Fallback mới của FR-2B2.1 không được dùng lại component này.
+
+Phát hiện `LoginLink` dùng chung cho fallback và trạng thái khách **xác nhận giả thuyết ở mục 1**: trạng thái sai đến từ Suspense fallback phía server, không phải từ render client trước hydration. Khảo sát này thực hiện ngày 30/09, **trước khi PR #10 (2B.1) merge**. 2B.1 không đụng header auth, nhưng Bước 0 vẫn phải xác nhận lại trên mã hiện tại trước khi sửa.
+
 ## 2. Mục tiêu và không-mục tiêu
 
 **Mục tiêu:** trạng thái trung gian không còn chứa thông tin sai về việc người dùng đã đăng nhập hay chưa.
@@ -26,9 +40,10 @@ Trước khi thay đổi bất cứ dòng mã nào, khảo sát và báo cáo:
 
 1. Liệt kê **mọi** vị trí trong giao diện hiển thị trạng thái đăng nhập (header desktop, menu mobile, bất cứ chỗ nào khác). Đợt này phải xử lý hết, không chỉ header desktop.
 2. Với mỗi vị trí: nó nằm trong Suspense boundary nào, fallback hiện tại render ra gì, dữ liệu auth lấy từ đâu (Server Component hay client).
-3. Xác nhận hay bác bỏ giả thuyết ở mục 1: chữ "Đăng nhập" trong giai đoạn trung gian đến từ **Suspense fallback phía server** hay từ **render client trước hydration**.
+3. **Xác nhận lại rằng mô tả ở mục 1.1 vẫn đúng trên mã hiện tại.** Nếu đã khác thì dừng và báo cáo.
+4. **Tắt JavaScript, tải `/`, ghi lại slot auth render ra gì.** Chỉ báo cáo quan sát, không sửa gì (xem mục 6.1).
 
-**Nếu giả thuyết bị bác bỏ, dừng lại, báo cáo, không tự chọn cách sửa khác.** Cách sửa ở mục 4 chỉ đúng cho trường hợp fallback server.
+**Nếu mô tả ở mục 1.1 không còn đúng, dừng lại, báo cáo, không tự chọn cách sửa khác.** Cách sửa ở mục 4 chỉ đúng cho trường hợp fallback server.
 
 ## 4. Thay đổi cần làm
 
@@ -63,6 +78,14 @@ Mỗi tiêu chí ghi kèm: lệnh/script cho ra con số, số mẫu, và kết 
 - **TC-7 — Số tham khảo, không đặt ngưỡng.** Ghi lại khoảng cách FCP → lúc chữ thật xuất hiện, 10 lượt mỗi trạng thái, báo cáo trung vị và khoảng. Không có ngưỡng đạt/trượt vì chưa đo được độ nhiễu của chính phép đo này. Con số này là mốc cho lần sau.
 - **TC-8 — Kiểm tay trên preview (người dùng làm, Claude Code không làm được).** Đăng nhập trên preview Vercel, DevTools bật throttle "Slow 4G", tải lại 5 lần, quay Performance panel và xem filmstrip. Ghi nhận có khung hình nào hiện chữ "Đăng nhập" không. Đối chứng: lặp lại ở trạng thái chưa đăng nhập.
 - **TC-9 — Không hồi quy chức năng (kiểm tay).** Sau khi ổn định: dropdown mở được, hiện đúng họ tên và email, đăng xuất chạy; menu mobile tương tự.
+
+## 6.1 Hạn chế đã biết, chấp nhận
+
+**Trình duyệt tắt JavaScript.** React streaming dùng script inline để thay Suspense fallback bằng nội dung thật; tắt JS thì fallback ở nguyên, nên slot auth là ô rỗng vĩnh viễn và header không có liên kết đăng nhập.
+
+**Không vá bằng `<noscript>`.** `<noscript>` chỉ render được một trạng thái tĩnh, nên nó sẽ hiện "Đăng nhập" cho cả người đã đăng nhập — tái tạo đúng lỗi đợt này đang chữa, chỉ khác là vĩnh viễn thay vì ~250 ms. Vá riêng header cũng không cứu được trang: giỏ hàng, menu và dropdown đều cần JS.
+
+Ghi nhận ở đây để không ai coi là sót.
 
 ## 7. Phương án dự phòng — chỉ mở khi TC-1 trượt
 
