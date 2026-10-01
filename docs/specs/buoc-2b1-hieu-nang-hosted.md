@@ -161,6 +161,34 @@ trình duyệt khác là `HIT` (mốc: chưa đo; đây là phép kiểm biên �
 - **Giả thuyết cạnh tranh:** khởi động lạnh của hàm (thao tác đầu tiên sau một lúc
   không có request). Để tách hai nguyên nhân, làm nóng hàm trước mỗi lần đo (ít nhất
   5 lượt tải trang trong 1 phút ngay trước đó) và ghi rõ đã làm hay chưa.
+- **Ứng viên thứ ba, đã đo bằng log (01/10): `signUp` vốn chậm hơn `signInWithPassword`**
+  (băm mật khẩu bằng bcrypt cộng ghi `auth.users`, `auth.identities` và trigger
+  `handle_new_user` chèn vào `profiles`). `origin_time` ở cạnh Supabase, chỉ đọc log
+  hosted, các lần gọi từ Vercel:
+
+  | Lời gọi | 30/09 (hàm ở `iad1`) | 01/10 (hàm ở `hnd1`) |
+  |---|---|---|
+  | `POST /auth/v1/signup`, 200 | 236, 356, 595 ms; 3270 ms ở lần đầu sau lúc im (11:33, năm phút sau là 236 ms) | **448 ms** (n = 1) |
+  | `POST /auth/v1/token?grant_type=password`, 200 | không có lần thành công nào | **173 ms** (n = 1) |
+  | cùng lời gọi `token`, sai mật khẩu (400) | 284, 298, 327, 507 ms | không có |
+  | `POST /auth/v1/logout`, 204 | 198 ms | 46 và 13 ms |
+
+  Chênh lệch `signup` so với `token` ở `hnd1`: **+275 ms** (448 so với 173), mỗi bên
+  chỉ một mẫu. Mẫu quá nhỏ để coi là hằng số, nhưng cùng chiều với việc `signup` làm
+  nhiều ghi hơn.
+- **Xếp theo mức tin dựa trên số đo** (giải thích được bao nhiêu trong 2–3 s):
+  1. **`signUp` chậm hơn `signIn`: có số đo trực tiếp, giải thích ~0,28 s** (n = 1 mỗi
+     bên). Đây là phần duy nhất giải thích được *chênh lệch* giữa hai thao tác.
+  2. **Dựng lại cache `/`: có số đo trực tiếp (5 vòng), ~0,62 s** (`REVALIDATED`
+     0,71–0,98 s so với `HIT` 0,21 s). Áp dụng cho cả đăng nhập (cùng
+     `revalidatePath`) nên giải thích thời gian *chung*, không giải thích chênh lệch.
+  3. **Khởi động lạnh: chưa đo ở Vercel**; chỉ có một dấu hiệu gián tiếp ở Supabase
+     (3270 ms ở lần đầu sau lúc im so với 236 ms năm phút sau, một cặp mẫu). Mức tin
+     thấp nhất, nhưng là ứng viên duy nhất đủ lớn.
+  Phần đo được cộng lại khoảng 0,9 s trên 2–3 s, **còn ≥ 1,1 s chưa có số đo**.
+- **Phép đo tiếp theo** (người dùng làm, "Preserve log" tắt): với một lần đăng ký thật,
+  ghi cột Name / Status / Time của từng request (POST action, các GET RSC `/?chao=1`)
+  để biết đoạn nào chiếm 2–3 s. Không gửi HAR vì chứa cookie phiên.
 
 ## 5. Hạng mục 2 — Bỏ `router.refresh()` thừa
 
