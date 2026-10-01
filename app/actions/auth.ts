@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { type AuthErrorKind, classifyAuthError } from "@/lib/authErrors";
 import { FULL_NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/lib/authRules";
 import { createClient } from "@/lib/supabase/server";
@@ -29,9 +28,12 @@ export async function signIn(input: { email: string; password: string }): Promis
     return { ok: false, kind: classifyAuthError(error) };
   }
 
-  // Header nằm ở layout gốc và không tự render lại khi điều hướng phía client,
-  // nên làm mới toàn bộ cây để mục tài khoản hiện đúng trạng thái đã đăng nhập.
-  revalidatePath("/", "layout");
+  // Cố ý KHÔNG gọi revalidatePath. Đổi cookie phiên đã đủ để Next đánh dấu action là
+  // đã revalidate (next/dist/server/web/spec-extension/adapters/request-cookies.js dòng
+  // 130), nên client tự làm mới; Header đọc cookie lúc request, nằm sau <Suspense>, nên
+  // hiện đúng trạng thái. revalidatePath("/", "layout") còn vô hiệu hoá cache dữ liệu
+  // của cả site (đo 01/10 trên hosted: `/` từ HIT sang REVALIDATED, chậm ~4 lần) mà
+  // không đem lại gì thêm. Spec docs/specs/buoc-2b1-hieu-nang-hosted.md hạng mục 1.
   return { ok: true };
 }
 
@@ -69,18 +71,18 @@ export async function signUp(input: { fullName: string; email: string; password:
     return { ok: false, kind: "unknown" };
   }
 
-  revalidatePath("/", "layout");
+  // Không revalidatePath, cùng lý do với signIn.
   return { ok: true };
 }
 
 /**
- * Đăng xuất (đợt 2A, spec mục 6): gọi signOut() trong Server Action rồi
- * revalidatePath('/'). Chỉ xoá phiên HIỆN TẠI (scope "local") — FR-5.3 quy
- * định "đăng xuất xóa session hiện tại"; mặc định của Supabase là "global"
- * (đăng xuất mọi thiết bị của người dùng), không phải điều spec yêu cầu.
+ * Đăng xuất (đợt 2A, spec mục 6): gọi signOut() trong Server Action. Chỉ xoá
+ * phiên HIỆN TẠI (scope "local") — FR-5.3 quy định "đăng xuất xóa session hiện
+ * tại"; mặc định của Supabase là "global" (đăng xuất mọi thiết bị của người
+ * dùng), không phải điều spec yêu cầu. Không revalidatePath: cookie bị xoá đã đủ
+ * để client làm mới (xem signIn).
  */
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut({ scope: "local" });
-  revalidatePath("/");
 }
