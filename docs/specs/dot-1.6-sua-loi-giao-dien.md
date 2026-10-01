@@ -80,3 +80,36 @@ Hiện `Toast` chỉ được dùng ở `components/PurchasePanel.tsx` (trang ch
 **Cần làm:** đọc `?q=` và truyền vào `defaultValue` của ô. Lưu ý khi làm: Header nằm trong layout gốc, mà layout không đọc được `searchParams` (Next.js: layout không render lại khi điều hướng, xem `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/layout.md`, mục "Query params"). Vì vậy không dùng được prop `searchParams` của trang. Cách hợp lệ là tách ô tìm kiếm thành một Client Component dùng `useSearchParams()`, bọc trong `<Suspense>` (Cache Components bắt buộc). `defaultValue` chỉ có tác dụng lúc mount, nên cần thêm `key` theo giá trị `q` để ô cập nhật khi điều hướng phía client (Back/Forward giữa hai lần tìm).
 
 **Trạng thái:** chưa xử lý.
+
+## 6. Viền ô tìm kiếm ở header không đạt WCAG 1.4.11
+
+**Hiện trạng:** ô tìm kiếm ở header (`components/Header.tsx`, `input#site-search`) dùng `border-line-warm` (`#E3DCCE`) trên nền ô `bg-field` (`#F6F2E9`), đặt trong topbar nền trắng. Viền là thứ chính nhận diện ô, nên phải đạt ≥ 3:1 (WCAG 1.4.11, thành phần giao diện). Số đo (tính từ độ sáng tương đối theo công thức WCAG):
+
+| Cặp | Tỷ số |
+|---|---|
+| Viền `#E3DCCE` so với nền ô `#F6F2E9` (phía trong) | 1,22:1 |
+| Viền `#E3DCCE` so với nền topbar `#FFFFFF` (phía ngoài) | 1,36:1 |
+| Nền ô `#F6F2E9` so với nền topbar `#FFFFFF` | 1,12:1 |
+
+Cả ba đều dưới 3:1, nên ô không nhận diện được chỉ bằng viền hay chỉ bằng nền. Đây cùng loại lỗi vừa sửa ở viền ô nhập của form (`--color-line-field`, từng là `#CFC7B8`, 1,68:1).
+
+Giá trị này đến từ mockup: `docs/mockups/buoc-2/header-2a.html` ghi viền ô tìm kiếm `#E3DCCE`, và code làm đúng như vậy. Viền dưới của topbar cũng dùng `line-warm` nhưng chỉ là đường phân vùng, không nhận diện thành phần nên không thuộc phạm vi 1.4.11.
+
+**Cần làm:** đổi viền ô tìm kiếm sang `line-field` (đạt 3,20:1 trên nền trắng của topbar), và sửa `header-2a.html` (khai báo `.search` và dòng "Ô tìm kiếm" trong bảng "Số đo bắt buộc") cho khớp.
+
+**Trạng thái:** chưa xử lý.
+
+## 7. Sheet và dropdown không đóng khi bấm Back/Forward của trình duyệt
+
+**Hiện trạng:** sheet menu mobile và dropdown tài khoản (`components/AccountMenu.tsx`) nằm trong root layout nên state không reset khi điều hướng bằng nút Back/Forward. Không phải lỗi Cache Components: layout gốc không bị huỷ hay ẩn khi đổi trang, nên state sống qua mọi điều hướng, kể cả khi tắt Cache Components.
+
+**Số đo (30/09/2026, bản production trỏ Supabase cục bộ, khung 375px, phiên đăng nhập):** mở sheet ở `/sach?sort=newest`, bấm Back tới `/`: sheet vẫn mở (`aria-expanded = true`), cuộn nền vẫn bị khoá; bấm Forward: vẫn mở. URL và nội dung phía sau đổi, sheet giữ nguyên. Ngược lại, đóng sheet bằng cách bấm liên kết trong sheet rồi Back thì đúng: sheet đóng, cuộn nền mở khoá. Dropdown chưa đo riêng bằng Back/Forward, nhưng dùng cùng state `open` trong cùng component.
+
+**Cần làm:** đóng menu khi đường dẫn đổi (đọc `usePathname()` và `useSearchParams()` trong `AccountMenu`, đặt lại `open` khi một trong hai thay đổi), sao cho Back/Forward cũng đóng menu như bấm liên kết.
+
+**Hoàn thành khi:**
+- Mở sheet rồi bấm Back, sheet đóng sau đúng 1 lần điều hướng (và cuộn nền được mở khoá).
+- Kiểm tra ở cả hai trạng thái: đã đăng nhập (sheet tài khoản) và chưa đăng nhập (không có sheet để mở; kiểm rằng Back không để lại trạng thái lạ ở header).
+- Ảnh chụp toàn trang trước và sau khi sửa, ở 375px (sheet) và 1280px (dropdown).
+
+**Trạng thái:** chưa xử lý.

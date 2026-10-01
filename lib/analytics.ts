@@ -15,7 +15,14 @@ function getSessionId(): string | null {
   }
 }
 
-export type EventType = "page_view" | "search" | "add_to_cart" | "checkout_started" | "order_placed";
+export type EventType =
+  | "page_view"
+  | "search"
+  | "add_to_cart"
+  | "checkout_started"
+  | "order_placed"
+  | "sign_up"
+  | "login";
 
 /**
  * 1c.3: ghi 1 dòng vào bảng `events`, fire-and-forget — không bao giờ throw,

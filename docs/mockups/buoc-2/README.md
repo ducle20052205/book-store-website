@@ -35,7 +35,7 @@ file đó thay vì đoán từ ảnh.
 | Chữ chính | `#1A1C2E` |
 | Chữ phụ | `#5F6379` |
 | Thành công | `#266E48` |
-| Viền ô nhập | `#A29376` |
+| Viền ô nhập | `#9E8E70` |
 | Viền thẻ | `#E3DCCE` |
 | Nền ô tìm kiếm và khối phụ | `#F6F2E9` |
 | Nền mục đang chọn | `#F4F2F8` |

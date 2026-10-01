@@ -28,8 +28,13 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  // getUser() (không phải getSession()) hỏi thẳng máy chủ Auth để xác thực
-  // token — getSession() chỉ đọc cookie, không đáng tin để quyết định quyền.
+  // GIỮ getUser(), CỐ Ý khác Header (Header dùng getClaims(), spec 2B mục 4):
+  // getUser() hỏi thẳng máy chủ Auth nên phát hiện được token đã bị thu hồi
+  // (đăng xuất ở thiết bị khác, xoá tài khoản); getClaims() chỉ xác minh chữ ký
+  // cục bộ nên vẫn tin token đó tới khi hết hạn. Đây là hàng rào bảo vệ nên cần
+  // mức chắc chắn cao hơn; Header chỉ hiển thị nên không cần. Đổi lại proxy tốn
+  // một round trip (~99 ms) ở mọi request có phiên. Không getSession(): nó chỉ
+  // đọc cookie, không đáng tin để quyết định quyền. Đừng đồng nhất hai chỗ này.
   const {
     data: { user },
   } = await supabase.auth.getUser();

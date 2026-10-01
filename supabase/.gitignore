@@ -1,0 +1,11 @@
+# Supabase
+.branches
+.temp
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local
+
+# Khoá ký JWT cục bộ (private key) — tuyệt đối không commit
+signing_keys.json

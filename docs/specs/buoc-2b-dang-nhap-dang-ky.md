@@ -75,7 +75,30 @@ Cách sửa:
 
 Đánh đổi phải ghi vào spec và vào SRS: JWT làm mới mỗi giờ, nên khi đợt 2D cho
 sửa họ tên thì dropdown hiện tên cũ tới lần refresh kế tiếp. Vá ở 2D bằng
-`refreshSession()` ngay sau khi lưu hồ sơ.
+`refreshSession()` ngay sau khi lưu hồ sơ — kèm điều kiện ở đoạn tiếp theo, không
+có thì `refreshSession()` không đổi được tên.
+
+**Quyết định cho đợt 2D — họ tên có hai nguồn.** Tên hiển thị ở Header lấy từ JWT,
+tức từ `auth.users.raw_user_meta_data.full_name`, không phải từ
+`profiles.full_name`. Khi 2D cho sửa họ tên, nếu chỉ cập nhật `profiles` thì hai
+nơi lệch nhau, và `refreshSession()` cũng không cứu được vì nó chỉ phát lại token
+từ metadata của Auth.
+
+Hướng đã chốt, cùng mô hình đã dùng cho email: **`auth.users` là nguồn,
+`profiles.full_name` là bản sao.**
+1. Trang hồ sơ gọi `updateUser({ data: { full_name } })`.
+2. Một trigger `sync_profile_name` trên `auth.users` đồng bộ xuống
+   `profiles.full_name` khi `raw_user_meta_data` đổi, cùng kiểu với
+   `sync_profile_email` ở đợt 2A.
+3. Ứng dụng gọi `refreshSession()` để JWT mang tên mới.
+4. Ứng dụng **không** ghi thẳng vào `profiles.full_name`.
+
+Đây là việc của **2D**, không làm ở 2B; 2B chỉ ghi lại quyết định để 2D không phải
+suy lại. Hai điều 2D còn phải tự quyết: (a) có khoá `profiles.full_name` bằng
+trigger như đã khoá `email` ở `profiles_protect_role` hay không — policy
+`profiles_update_own` hiện cho sửa mọi cột của dòng mình, nên nếu không khoá thì
+điều 4 chỉ là quy ước, không phải ràng buộc ở database; (b) khi cập nhật SRS
+(FR-5.2, FR-5.5) nhớ ghi mô hình này.
 
 ## 5. Trang `/dang-nhap`
 
@@ -156,9 +179,18 @@ bàn phím hoặc trình đọc màn hình thường chưa kịp đọc đã m�
 - Không bắt đầu bằng `/\`
 - Không hợp lệ hoặc không có thì về `/`
 
-Logic này đã có ở `proxy.ts` từ 2A. Tách thành một hàm dùng chung
-(`lib/nextParam.ts`), gọi ở cả proxy lẫn hai trang, để không có hai bản luật
-lệch nhau.
+Luật này **chưa có** ở `proxy.ts` từ 2A (proxy chỉ tạo giá trị `next` từ đường
+dẫn của chính request, chưa kiểm tra gì). Viết thành một hàm dùng chung
+(`lib/nextParam.ts`, `safeNextPath`), gọi ở proxy, hai form và mọi nơi khác đọc
+hay ghi `?next=`, để không có hai bản luật lệch nhau. Ngoài ba luật trên, hàm còn
+dựng URL thật rồi so origin, bắt trường hợp chèn tab hoặc xuống dòng (`/<tab>/host`
+bị bộ phân tích URL đọc thành `//host`).
+
+**Liên kết "Đăng nhập" ở header** mang `?next=` là đường dẫn hiện tại (kèm query),
+tạo bằng `safeNextPath`; đường dẫn hiện tại là `/` thì không thêm tham số; ở
+`/dang-nhap` và `/dang-ky` giữ nguyên `next` mà trang đang có thay vì lấy chính
+trang đó làm đích. Nhờ vậy câu "Đăng nhập xong bạn quay lại đúng trang đang xem"
+ở cuối form đăng nhập là đúng sự thật.
 
 **`mergeGuestCart()`** — tạo `lib/cart/mergeGuestCart.ts`:
 ```ts
@@ -224,22 +256,39 @@ khoản thử sau khi kiểm xong.
 `profiles.email` khớp theo, cờ `app.sync_auth_email` tắt lại sau trigger, một
 `UPDATE profiles.email` khác trong cùng transaction vẫn bị khoá.
 
+**Vì sao cách kiểm khác bản đầu.** Project hosted bật Secure email change (xem
+`docs/runbooks/cau-hinh-supabase-auth.md`): đổi email phải xác nhận ở cả địa chỉ
+cũ lẫn địa chỉ mới, nên `auth.users.email` **không** đổi ngay khi gọi
+`updateUser({ email })`. Đòi cả hai cột bằng địa chỉ mới ngay sau lệnh gọi là
+không đạt được. Thứ cần chứng minh là trigger `sync_profile_email`, chạy khi
+`auth.users.email` thật sự đổi.
+
 Cách kiểm:
 
 1. Đăng nhập bằng tài khoản thử tại `/dang-nhap`.
 2. Gọi `createClient().auth.updateUser({ email: '<địa chỉ mới>' })` (client
    trình duyệt ở `lib/supabase/client.ts`) từ một Client Component hoặc script
-   tạm, không commit. Địa chỉ mới phải là hộp thư mình kiểm soát được.
-3. Ghi lại hành vi quan sát được khi email confirmation đang tắt: đổi áp dụng
-   ngay, hay Supabase vẫn gửi thư xác nhận (tới địa chỉ nào). Nếu cần xác nhận
-   thì mở thư, hoàn tất bước đó rồi mới đọc lại.
-4. Đọc lại: `select p.email as profiles_email, u.email as auth_email from
+   tạm, không commit.
+3. Ghi lại hành vi quan sát được: Supabase trả về gì (`data.user` có `new_email`
+   không), có gửi thư xác nhận không và tới những địa chỉ nào; xác nhận
+   `auth.users.email` chưa đổi. Đây là ghi nhận hành vi, không phải điều kiện
+   đạt.
+4. Làm cho `auth.users.email` thật sự đổi, bằng một trong hai cách: (a) xác nhận
+   ở cả hai địa chỉ — chỉ làm được khi cả địa chỉ cũ lẫn mới đều là hộp thư mình
+   kiểm soát được (tài khoản thử đăng ký bằng địa chỉ `@example.com` thì không
+   nhận được thư); (b) thao tác admin: Dashboard → Authentication → Users → sửa
+   email của tài khoản thử, hoặc trong SQL Editor `update auth.users set email =
+   '<địa chỉ mới>' where id = '<id tài khoản thử>';`.
+5. Đọc lại: `select p.email as profiles_email, u.email as auth_email from
    public.profiles p join auth.users u on u.id = p.id where p.id = '<id tài khoản
    thử>';`
 
-Đạt khi: `profiles_email` và `auth_email` **cùng bằng địa chỉ mới**. Hai cột cùng
-giữ email cũ cũng là "khớp nhau" nhưng nghĩa là email chưa đổi — không đạt
-(tiêu chí 23).
+Đạt khi: sau khi `auth.users.email` đổi, `profiles.email` khớp giá trị mới
+(`profiles_email` = `auth_email` = địa chỉ mới) (tiêu chí 23).
+
+Phần khoá ở tầng DB đã kiểm chứng (PATCH email trả 200, cột email và role không
+đổi, cả customer lẫn admin). Phần hành vi xác nhận hai đầu khi đổi email chuyển
+sang 2D, vì đổi email là chức năng của trang hồ sơ, không thuộc 2B.
 
 ### 11.2 `/admin` với tài khoản `customer` (tiêu chí 22 của 2A)
 
@@ -362,12 +411,17 @@ Mỗi mục kèm số đo hoặc kết quả lệnh trong báo cáo.
 1. Bước 0 cho kết quả rõ ràng: JWT có hay không có `user_metadata.full_name`.
    Tài khoản thử đã xoá, `auth.users` và `profiles` về đúng số dòng ban đầu.
 2. `npm run build` exit 0, `tsc` 0 lỗi, `lint` 0 lỗi.
-3. TTFB trung vị 5 lần, **đo ở trạng thái chưa đăng nhập** (mốc 2A đo ở trạng
-   thái đó), không xấu hơn mốc 2A quá 20%: `/` 4,2ms, `/tu-sach` 4,3ms, `/sach`
-   4,6ms. Ghi cả thời gian tải xong (`/` 22,5ms, `/tu-sach` 17,4ms, `/sach`
-   113–119ms). Request có phiên dự kiến TTFB khoảng 100ms vì `proxy.ts` giữ
-   `getUser()` (mục 4); đo và ghi lại con số đó riêng, không dùng để đánh giá
-   đạt/trượt.
+3. Không tái diễn hồi quy hiệu năng.
+   Đo cùng phiên, cùng máy, cùng bản production: checkout `main` đo 15 lần mỗi
+   trang, rồi checkout nhánh PR đo 15 lần mỗi trang. Lấy trung vị.
+   Đạt khi: trung vị nhánh PR ≤ trung vị `main` + 1,5 ms VÀ ≤ 2x trung vị
+   `main`, cho cả 4 trang (`/`, `/sach`, `/tu-sach`, `/tu-sach/<slug>`).
+   Ghi cả min–max để thấy độ nhiễu.
+   Lý do đổi: mốc tuyệt đối của 2A đo ở phiên khác; ba lần đo 2A của cùng một
+   trang `/` với cùng mã cho 4,17 / 4,98 / 5,19 ms, chênh 24,5% — lớn hơn ngưỡng
+   20% cũ. Ngưỡng nhỏ hơn nhiễu thì không phân biệt được đạt và trượt. Hồi quy
+   cần bắt là loại 223x (2,9 ms → 647,7 ms).
+   Trạng thái: CHUYỂN SANG ĐỢT 2B.1.
 4. `/sach` trang 1 có 20 thẻ, `?page=2` có 20, tổng 40. `?q=nha gia kim` ra 1
    kết quả. `?category=van-hoc` ra 10 sách.
 5. `grep -rn "SERVICE_ROLE" .next/static` trả 0 dòng.
@@ -377,10 +431,19 @@ Mỗi mục kèm số đo hoặc kết quả lệnh trong báo cáo.
    còn `getUser()`.
 7. Header không còn truy vấn `profiles`: đếm số truy vấn database khi render
    `/` lúc chưa đăng nhập và lúc đã đăng nhập, hai con số phải bằng nhau.
-8. Thời gian từ lúc shell hiện tới lúc nhãn tài khoản đổi, đo với phiên thật
-   trên bản `npm run build && npm start`, bằng Performance API hoặc
-   `MutationObserver`, ít nhất 5 lần: **dưới 50ms**, trung vị. Không đạt thì ghi
-   số thật và nói rõ vướng ở đâu, đừng nới mục tiêu.
+8. Không lần nào người đã đăng nhập nhìn thấy trạng thái chưa đăng nhập sau khi
+   khung đầu đã vẽ.
+   Tải đầy đủ `/` 10 lần với phiên thật, trình duyệt thật chạy rAF 60 Hz, đo
+   bằng `MutationObserver` + `PerformanceObserver`. Cấm dùng
+   `requestAnimationFrame` trong mã đo. Đếm số lần chữ "Đăng nhập" hiển thị sau
+   mốc FCP: phải bằng 0/10.
+   ĐỐI CHỨNG BẮT BUỘC: chạy lại đúng phép đo với phiên chưa đăng nhập. Nếu đối
+   chứng cũng ra 0 thì phép đo không phân biệt được trạng thái → phép đo hỏng,
+   không phải mã đạt.
+   Mốc trước khi sửa (đo 30/09, Edge headless): 3/5 lần thấy sai, kéo dài
+   234–273 ms. Nguyên nhân: React streaming chỉ hiện Suspense boundary ngay nếu
+   nó xong trước khung vẽ đầu; xong sau thì chờ `$RT`+300 ms.
+   Trạng thái: CHUYỂN SANG ĐỢT 2B.1.
 9. Dropdown hiện đúng họ tên và email của tài khoản đang đăng nhập.
 
 **Đăng nhập**
@@ -419,10 +482,12 @@ Mỗi mục kèm số đo hoặc kết quả lệnh trong báo cáo.
     chuỗi `@`** trong `metadata`.
 
 **Kế thừa từ 2A** (cách kiểm chi tiết ở mục 11)
-23. Tiêu chí 15 của 2A (mục 11.1): sau `updateUser({ email })` với phiên thật,
-    `profiles.email` **và** `auth.users.email` cùng bằng địa chỉ **mới** — hai cột
-    cùng giữ email cũ là "khớp" nhưng không đạt. Ghi rõ hành vi khi email
-    confirmation tắt: áp dụng ngay hay vẫn gửi thư xác nhận, tới địa chỉ nào.
+23. Tiêu chí 15 của 2A (mục 11.1): gọi `updateUser({ email })` bằng phiên thật,
+    ghi lại Supabase trả về gì và có gửi thư xác nhận không (ghi nhận hành vi,
+    không phải điều kiện đạt; Secure email change đang bật nên `auth.users.email`
+    chưa đổi ngay, xem `docs/runbooks/cau-hinh-supabase-auth.md`). Điều kiện đạt:
+    sau khi `auth.users.email` đổi (qua xác nhận cả hai địa chỉ, hoặc qua thao
+    tác admin), `profiles.email` khớp giá trị mới.
 24. Tiêu chí 22 của 2A (mục 11.2): phiên `customer` mở `/admin` và `/admin/sach`,
     cả hai trả HTTP 307 về `/`, không render giao diện quản trị; ghi mã và URL
     cuối từ tab Network. Đối chứng bằng tài khoản admin: `/admin` không bị chuyển
@@ -480,6 +545,12 @@ liệu hoặc trạng thái của một phiên lọt sang phiên khác, hiển t
 36. Mọi tài khoản thử đã xoá, kể cả tài khoản admin thử ở mục 11.7. `auth.users`
     và `profiles` chỉ còn các dòng có trước đợt này; số admin về đúng như trước.
     Không còn file hay route tạm nào trong `git status`.
+
+### Hai tiêu chí chuyển sang 2B.1
+
+Tiêu chí 3 và 8 chuyển sang đợt 2B.1 (`docs/specs/buoc-2b1-xoa-nhay-trang-thai-header.md`).
+Lỗi nhấp nháy có từ 2A chứ không phải hồi quy của 2B; 2B làm nhẹ đi bằng cách
+bỏ truy vấn `profiles`. Giữ PR chờ một lỗi kế thừa không đem lại gì.
 
 ## 13. Điều cần làm rõ trước khi code
 

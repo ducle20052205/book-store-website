@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { safeNextPath } from "@/lib/nextParam";
 import { updateSession } from "@/lib/supabase/proxy";
 
 /**
@@ -36,7 +37,8 @@ export async function proxy(request: NextRequest) {
 
   if (!user && (needsLogin || needsAdmin)) {
     const loginUrl = new URL("/dang-nhap", request.url);
-    loginUrl.searchParams.set("next", `${pathname}${search}`);
+    // Cùng luật với hai trang đọc `?next=` (lib/nextParam.ts) — một bản duy nhất.
+    loginUrl.searchParams.set("next", safeNextPath(`${pathname}${search}`));
     return redirectKeepingSession(response, loginUrl);
   }
 
