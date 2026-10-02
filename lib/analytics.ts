@@ -1,14 +1,21 @@
+import { isSessionId, SESSION_COOKIE, SESSION_COOKIE_MAX_AGE_SECONDS } from "@/lib/sessionId";
 import { createClient } from "@/lib/supabase/client";
 
-const SESSION_ID_KEY = "na_sid";
-
+/**
+ * `session_id` đọc từ cookie `na_sid` (spec FR-3A.14, trước đây là `localStorage`);
+ * chưa có thì tự sinh UUID và ghi bằng document.cookie. Cookie KHÔNG httpOnly nên
+ * đọc được ở đây; Server Action ghi sự kiện dùng cùng cookie (lib/sessionId.server.ts).
+ * Không đặt ở proxy.ts: xem lý do ở lib/sessionId.ts.
+ */
 function getSessionId(): string | null {
   try {
-    let sessionId = localStorage.getItem(SESSION_ID_KEY);
-    if (!sessionId) {
-      sessionId = crypto.randomUUID();
-      localStorage.setItem(SESSION_ID_KEY, sessionId);
-    }
+    const match = document.cookie.split("; ").find((part) => part.startsWith(`${SESSION_COOKIE}=`));
+    const existing = match?.slice(SESSION_COOKIE.length + 1);
+    if (isSessionId(existing)) return existing;
+
+    const sessionId = crypto.randomUUID();
+    const secure = window.location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `${SESSION_COOKIE}=${sessionId}; Max-Age=${SESSION_COOKIE_MAX_AGE_SECONDS}; Path=/; SameSite=Lax${secure}`;
     return sessionId;
   } catch {
     return null;
