@@ -4,11 +4,13 @@ import { Suspense } from "react";
 import { BookCover } from "@/components/BookCover";
 import { CartLineControls } from "@/components/cart/CartLineControls";
 import { RepairCartCookie } from "@/components/cart/RepairCartCookie";
+import { StockNotice } from "@/components/cart/StockNotice";
 import { BottomBarGate } from "@/components/BottomBarGate";
 import { formatVnd, Price } from "@/components/Price";
 import { StockLabel } from "@/components/StockLabel";
 import { MAX_LINE_QUANTITY } from "@/lib/cart/cookie";
 import { overStockMessage } from "@/lib/cart/messages";
+import { STOCK_NOTICE_PARAM, type StockNoticeItem } from "@/lib/checkout/stockNotice";
 import { type CartView, getCartView } from "@/lib/cart/view";
 import { getBookCollectionRefMap, getCategoryCounts, getCategoryNameMap, getCollections } from "@/lib/queries";
 
@@ -44,7 +46,7 @@ function PageTitle({ count }: { count?: number }) {
   );
 }
 
-export default function GioHangPage() {
+export default function GioHangPage({ searchParams }: PageProps<"/gio-hang">) {
   return (
     <div className={containerClass}>
       <Suspense
@@ -55,14 +57,22 @@ export default function GioHangPage() {
           </>
         }
       >
-        <CartContent />
+        <CartContent searchParams={searchParams} />
       </Suspense>
     </div>
   );
 }
 
-async function CartContent() {
-  const view = await getCartView();
+async function CartContent({ searchParams }: { searchParams: PageProps<"/gio-hang">["searchParams"] }) {
+  const [view, params] = await Promise.all([getCartView(), searchParams]);
+  // Đợt 3B (FR-3B.9): /thanh-toan chuyển về đây kèm cờ khi kho không đủ. Cờ chỉ là TÍN HIỆU; nội dung
+  // banner dựng từ tồn kho vừa tính lại, không bao giờ từ URL. Hết vấn đề thì không có gì để hiện.
+  const stockItems: StockNoticeItem[] =
+    params[STOCK_NOTICE_PARAM] === "1"
+      ? view.lines
+          .filter((line) => line.outOfStock || line.overStock)
+          .map((line) => ({ title: line.book.title, remaining: line.book.stockQuantity, inCart: line.quantity }))
+      : [];
   const repair = view.needsRepair ? <RepairCartCookie /> : null;
 
   if (view.lines.length === 0) {
@@ -81,6 +91,7 @@ async function CartContent() {
     <>
       {repair}
       <PageTitle count={view.totalQuantity} />
+      <StockNotice items={stockItems} />
 
       <div className="mt-6 grid items-start gap-6 bottom-bar:grid-cols-[minmax(0,1fr)_332px] bottom-bar:gap-10">
         <ul className={`${cardClass} divide-y divide-menu-sep`}>

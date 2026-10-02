@@ -1,7 +1,7 @@
 # Đợt 3B — Checkout
 
 Phiên bản 1.1 · 02/10/2026 · Thay trang `/thanh-toan` tạm bằng trang thật. Bản 1.1 ghi các quyết định cho 8 câu hỏi ở mục 11.
-Nhánh: chưa tạo.
+Nhánh: hai chặng, mỗi chặng một PR — chặng 1 dữ liệu `feat/3b-1-du-lieu` (PR #13), chặng 2 giao diện và email `feat/3b-2-giao-dien` (xếp chồng lên chặng 1).
 
 Tài liệu tham chiếu, KHÔNG chép lại nội dung vào đây:
 - `docs/SRS.md` mục 5.4 (FR-4.1→4.6), 5.5 (FR-5.5), 5.8 (FR-8.x), 5.10 (RLS) và FR-5.8 (dữ liệu hành chính).

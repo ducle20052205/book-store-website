@@ -31,7 +31,8 @@ function redirectKeepingSession(sessionResponse: NextResponse, to: URL) {
 export async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
-  const needsLogin = isUnder(pathname, "/tai-khoan");
+  // /thanh-toan (đợt 3B, FR-3B.6): checkout và trang xác nhận đơn cần đăng nhập, như /tai-khoan.
+  const needsLogin = isUnder(pathname, "/tai-khoan") || isUnder(pathname, "/thanh-toan");
   const needsAdmin = isUnder(pathname, "/admin");
 
   const { supabase, user, response } = await updateSession(request);
@@ -57,24 +58,29 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Mọi request tới trang, trừ tệp tĩnh của Next, ảnh tối ưu, favicon, các đuôi ảnh
-    // VÀ trừ request prefetch. Request prefetch do <Link> phát khi liên kết vào khung
+    // Mọi request tới trang, trừ tệp tĩnh của Next, ảnh tối ưu, favicon, các đuôi ảnh,
+    // `api/dia-chi` VÀ trừ request prefetch. Request prefetch do <Link> phát khi liên kết vào khung
     // nhìn (header `next-router-prefetch: 1`, đã kiểm 171/171 request RSC prefetch trong
     // 11 lượt tải, 01/10/2026) chỉ lấy phần tĩnh của trang và không đọc phiên, nên
     // không cần getUser() — một lượt gọi Auth cho mỗi liên kết trong khung nhìn, 17–24
     // lần mỗi lần tải trang có phiên — và cũng không cần làm mới cookie.
+    //
+    // `api/dia-chi` (đợt 3B, FR-3B.12): NGUYÊN TẮC — một route phải cache công khai thì không được đi
+    // qua proxy.ts, vì `getUser()` ở đây có thể đặt cookie làm mới token lên response, mà response
+    // mang `Set-Cookie` thì CDN không lưu. Route đó là dữ liệu hành chính công khai, không cần phiên.
     //
     // PHẢI loại bằng `missing` ở đây, không kiểm header trong hàm `proxy`: Next xoá các
     // header Flight (`rsc`, `next-router-prefetch`...) khỏi `request` trước khi gọi proxy
     // (node_modules/next/dist/server/web/adapter.js, và docs proxy.md mục "RSC requests
     // and rewrites"), nên `request.headers.get("next-router-prefetch")` luôn là null.
     {
-      source: "/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+      source: "/((?!_next/static|_next/image|favicon\\.ico|api/dia-chi|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
       missing: [{ type: "header", key: "next-router-prefetch" }],
     },
     // Đường dẫn được bảo vệ KHÔNG được miễn: prefetch tới đây vẫn chạy đủ logic chuyển
     // hướng. Hàng rào thật vẫn là Server Component và RLS (xem NGUYÊN TẮC HAI LỚP ở trên).
     { source: "/tai-khoan/:path*" },
+    { source: "/thanh-toan/:path*" },
     { source: "/admin/:path*" },
   ],
 };
