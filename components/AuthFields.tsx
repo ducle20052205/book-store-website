@@ -10,10 +10,10 @@ import { type InputHTMLAttributes, type ReactNode, type Ref, useId, useState } f
  * trắng — WCAG 1.4.11), viền `danger` khi có lỗi.
  */
 
-const inputClass =
+export const inputClass =
   "h-12 w-full rounded-field border bg-surface px-3.5 text-base text-ink-900 md:h-[46px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 disabled:opacity-60";
 
-interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "className"> {
+export interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "className"> {
   label: string;
   /** Lời nhắn thường trực dưới ô (vd. yêu cầu mật khẩu) — hiện từ đầu, không đợi báo lỗi. */
   hint?: ReactNode;
@@ -23,7 +23,7 @@ interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "id" | 
 }
 
 /** Nhãn + ô + gợi ý + lỗi, nối nhau bằng aria-describedby; `renderInput` nhận các thuộc tính đã ghép sẵn. */
-function FieldFrame({
+export function FieldFrame({
   id,
   label,
   hint,
