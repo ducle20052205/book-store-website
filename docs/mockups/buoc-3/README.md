@@ -38,6 +38,7 @@ cần thành phần chưa có thì thêm vào hệ trước, rồi mới dùng.
   thành bước riêng.
 - Bỏ dải "trust strip" 4 icon kiểu các nhà sách thật — nó là ngôn ngữ của shop
   thật, đặt vào portfolio thành nhiễu.
+- Luồng tập trung (`/gio-hang`, `/thanh-toan`): dưới 768px, footer đầy đủ được thay bằng một dòng "Dữ liệu sách chỉ nhằm minh họa cho dự án portfolio." (nền `paper`, chữ 12px `ink-400`, canh giữa); từ 768px trở lên footer đầy đủ như mọi trang.
 
 ## Dữ liệu trong ảnh
 

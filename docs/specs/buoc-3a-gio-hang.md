@@ -1,6 +1,6 @@
 # Bước 3A — Giỏ hàng
 
-Bước 3 · Giỏ hàng và thanh toán · phiên bản 2.2 · 02/10/2026
+Bước 3 · Giỏ hàng và thanh toán · phiên bản 2.3 · 02/10/2026
 Nhánh: chưa tạo.
 
 Tài liệu liên quan: docs/SRS.md (mục 5.3), docs/mockups/buoc-3/ (gio-hang.png, gio-hang-trong.png, gio-hang-mobile.png, he-layout-dong-bang.png), docs/trang-quyet-dinh-dac-ta-tong.md mục 5.1 và mục 9.
@@ -41,6 +41,7 @@ Hai hệ quả kéo theo: `mergeGuestCart()` chuyển lên Server Action; `signI
 
   Hai đường dùng chung đúng một tên cookie và cùng định dạng, nên chỉ có một nguồn sự thật. Không giữ tương thích ngược với giá trị cũ trong `localStorage`: 69 dòng `events` hiện có giữ `session_id` cũ và không nối được với giá trị mới, nên việc giữ lại không mang thêm thông tin nào.
 - **FR-3A.15** — Badge số lượng giỏ hàng nằm trong **Suspense boundary RIÊNG**, tách khỏi boundary của trạng thái auth. Phần tử bọc mang `data-testid="header-cart-count"`, và testid này chỉ xuất hiện ở đó. Không sửa, không di chuyển, không đổi tên `data-testid="header-auth"` của đợt 2B.2 — phép đo TC-1 của đợt đó phải còn chạy đúng sau 3A.
+- **FR-3A.16** — Luồng tập trung: trên `/gio-hang` và `/thanh-toan`, dưới 768px, footer đầy đủ được thay bằng một dòng duy nhất: nền `paper` (không phải khối `cham-900`); đúng một câu "Dữ liệu sách chỉ nhằm minh họa cho dự án portfolio."; chữ 12px, màu `ink-400`, canh giữa, padding 16px trên dưới; không cột liên kết, không đoạn giới thiệu thương hiệu, không liên kết GitHub. Footer đầy đủ không có trong DOM ở dưới 768px (không chỉ ẩn bằng CSS). Từ 768px trở lên: footer đầy đủ như hiện tại, không đổi. Quy tắc chỉ áp cho luồng tập trung, không phải cho toàn site.
 
 ## 4. Tiêu chí nghiệm thu
 
@@ -64,6 +65,21 @@ Hai hệ quả kéo theo: `mergeGuestCart()` chuyển lên Server Action; `signI
   **Đối chứng baseline bắt buộc:** chạy đúng phép đo đó trên `main` trước khi sửa, cùng điều kiện (cùng khách mới, cùng trang, cùng số lượt). So phân bố `x-vercel-cache` trước và sau; khác nhau thì dừng và báo cáo, đừng kết luận "đạt". Nếu baseline đã không có lượt `HIT` nào thì phép đo này không phân biệt được gì — nói thẳng như vậy thay vì báo một con số đẹp.
 
   **Kết quả (02/10/2026).** Khách hoàn toàn mới (mỗi lượt một tiến trình `curl` riêng, không cookie), `GET /` xen kẽ preview (`book-store-website-1d4gybcn6-duc-75bf.vercel.app`, commit `f7a67a1`) và production (`book-store-website-dun.vercel.app`, baseline `main` `8462236`), 5 lượt mỗi phía. `Set-Cookie` cho `na_sid`: **không có** ở 10/10 response, và không có header `Set-Cookie` nào ở cả hai phía. `x-vercel-cache`: preview PRERENDER ×1, HIT ×4; production STALE ×1, HIT ×4. Baseline có 4/5 lượt `HIT` nên phép đo phân biệt được; sau lượt đầu, hai bên cùng `HIT` ở 4/4 lượt còn lại. **Hạn chế:** lượt đầu của hai bên không cùng điều kiện (preview vừa dựng nên là PRERENDER, production là STALE với `age` 2.404 s), nên không so được lượt đó; phép đo chỉ thấy header HTTP, không thấy cookie do JavaScript ghi bằng `document.cookie` (`track()` ở client), vốn không nằm trên response được cache.
+
+- **TC-15 — Thanh thao tác đáy của `/gio-hang` cố định ở đáy khung nhìn.** Dưới 1024px (cột tóm tắt bị ẩn), thanh "Tổng cộng" và nút "Thanh toán" nằm cố định ở đáy khung nhìn trên mọi nội dung (mockup `gio-hang-mobile.png`); đệm đáy của `<body>` bằng đúng chiều cao thanh nên footer không bị che. Edge headless, 390×844:
+  - **TC-15a** — giỏ 1 cuốn: `|rect.bottom − window.innerHeight| ≤ 1px`, 5/5.
+  - **TC-15b** — giỏ 5 cuốn, tại `scrollY = 0` và tại cuối trang: cả hai vị trí `|rect.bottom − window.innerHeight| ≤ 1px`, 5/5 mỗi vị trí.
+  - **TC-15c** — cuộn tới cuối trang: dòng cuối cùng của footer ("Dữ liệu sách chỉ nhằm minh họa…") có `rect.bottom ≤ rect.top` của thanh, 5/5.
+  - **TC-15d** — đối chứng desktop 1280px: `querySelector('[data-bottom-bar]')` trả `null`, 5/5; nếu thanh vẫn có thì phép đo trên mobile không chứng minh được gì về breakpoint.
+  - **TC-15e** — CLS của `/gio-hang` ở 390px, 5 lượt: ghi lại, không đặt ngưỡng.
+- **TC-16 — Footer thu gọn ở luồng tập trung (FR-3A.16).**
+  - **TC-16a** — 390px, `/gio-hang` và `/thanh-toan`: đếm liên kết trong `<footer>` = 0 và câu "Dữ liệu sách chỉ nhằm minh họa" vẫn có mặt; 3 lượt mỗi trang.
+  - **TC-16b** — đối chứng 1280px, cùng hai trang: footer đầy đủ với đủ các cột liên kết; 3 lượt mỗi trang. Nếu ở 1280px footer cũng bị thu gọn thì phép đo breakpoint hỏng, không kết luận "đạt".
+  - **TC-16c** — đối chứng trang khác: 390px trên `/` và `/sach`, footer đầy đủ vẫn có mặt; 3 lượt mỗi trang.
+
+  **Khảo sát trước khi sửa (preview PR #12, 390×844).** Thanh là `position: sticky; bottom: 0; z-index: auto`, không có tổ tiên `overflow` khác `visible`. Giỏ 1 cuốn: `rect.bottom` = 650,1 px, cách đáy khung nhìn (844) 193,9 px, trên footer (đỉnh 682) một dải nền 32 px. Giỏ 5 cuốn: ở `scrollY = 0` chênh 0 (đang dính), nhưng ở `scrollY = 777` chênh 204,7 px và ở cuối trang `rect.bottom` = −136,7 px, tức thanh trôi mất khỏi khung nhìn khi tới footer. Nguyên nhân: `sticky` chỉ dính trong khối chứa nó.
+
+  **Kết quả (02/10/2026, commit `5caa9f5`).** Preview `book-store-website-p3gtwvlko-duc-75bf.vercel.app` và bản `next start` cục bộ cho cùng kết quả (số ghi ở đây là của preview). Thanh sau khi sửa: `position: fixed; bottom: 0; z-index: 30`, cao 113 px = đệm đáy `<body>` 113 px. **TC-15a** đạt 5/5 (chênh 0, 0, 0, 0, 0). **TC-15b** đạt 5/5 ở cả `scrollY = 0` và cuối trang (chênh 0). **TC-15c** đạt 5/5 khi đo đúng *dòng chữ* (Range trên text node): thanh.top − dòng.bottom = 16,69 px ở 5/5 lượt. Lần đo đầu của tôi lấy hộp `<footer>` (gồm 16 px padding) cho −0,31 px ở 5/5 lượt: hộp footer chạm thanh 0,31 px do chiều cao tài liệu lẻ, nhưng không che chữ nào; ghi lại để không ai đo lại bằng hộp rồi tưởng là lỗi mới. **TC-15d** đạt 5/5: thanh `null`, cột tóm tắt có mặt, đệm `<body>` 0 px. **TC-15e** (390px, giỏ 3 cuốn, 5 lượt): 0, 0, 0, 0, 0 trên preview. Một lần đo đầu cục bộ (server vừa khởi động) ra 0,0325, 0, 0,0091, 0,0325, 0; nguồn ghi được ở một lượt gỡ lỗi là hộp footer thu gọn dịch 113 px rồi bị gỡ khỏi DOM khoảng 3,6 s sau khi tải; không tái hiện được trong 12 lượt có đo chẩn đoán (0 dịch chuyển) và hai lần đo đầy đủ sau đó (0 ở 10/10 lượt), chưa rõ nguyên nhân. **TC-16a** đạt 3/3 mỗi trang (1 `<footer>`, 0 liên kết, có câu minh hoạ; nền `rgb(237, 230, 217)` = `paper`, 12px, `rgb(95, 99, 121)` = `ink-400`, canh giữa, padding 16px/16px). **TC-16b** đạt 3/3 mỗi trang (9 liên kết, đủ ba cột và GitHub). **TC-16c** đạt 3/3 mỗi trang (9 liên kết).
 
 ## 5. Hạn chế đã biết
 
@@ -91,3 +107,8 @@ Năm điểm sau được nêu khi đọc mã ngày 02/10/2026 và đã có quy�
 - **`mergeGuestCart` chặn số lượng theo tồn kho** — spec v2.1 không nói, nhưng để nguyên thì gộp giỏ vượt được giới hạn mà FR-3A.8 đặt ra (số lượng sau gộp bị chặn ở min(tồn kho, 99); sách hết hàng vẫn được giữ để dòng hiện nhãn "Hết hàng").
 - **`lib/nextRedirect.ts`** — `redirect()` trong Server Action làm lời gọi action ở client bị từ chối bằng lỗi redirect, nên form đăng nhập/đăng ký cần phân biệt redirect với lỗi thật; không phải mã thừa.
 - **Nút "Thanh toán" trỏ trang `/thanh-toan` tạm cho tới đợt 3B** — nếu không có trang này thì liên kết trỏ vào 404 và mỗi lần tải `/gio-hang`, prefetch sinh một request lỗi.
+- **Thanh thao tác đáy cố định dưới 1024px, không chỉ dưới 768px (v2.3)** — cột tóm tắt chỉ hiện từ 1024px, nên ở 768–1023px thanh là đường duy nhất tới "Thanh toán"; footer thu gọn thì chỉ áp dưới 768px đúng như FR-3A.16.
+- **`MediaGate` và `FooterSwitch` bỏ phần tử khỏi DOM sau hydrate, không ẩn bằng CSS (v2.3)** — TC-15d và TC-16a đòi `querySelector` trả `null` và 0 liên kết trong `<footer>`; HTML server mang cả hai biến thể (class breakpoint chọn cái hiển thị) rồi gỡ biến thể thừa sau hydrate để không nháy và không CLS.
+- **`<Suspense fallback={<Footer />}>` quanh `FooterSwitch` ở layout gốc (v2.3)** — `usePathname()` ở route có tham số động (`/sach/[slug]`) cần Suspense, nếu không `next build` lỗi.
+- **Đệm đáy `<body>` dùng chung biến `--bottom-bar-h` với thanh (v2.3)** — `body:has([data-bottom-bar])` thêm đệm SAU footer, vì đệm trong nội dung trang không giúp footer: thanh cố định phủ đáy khung nhìn nên dòng cuối của footer sẽ nằm dưới thanh.
+- **Chữ "Trong giỏ có sách đã hết hàng…" chuyển khỏi thanh đáy (v2.3)** — thanh cao cố định 113 px nên chỉ chứa dòng tổng và nút; chữ hiện ngay dưới danh sách (dưới 1024px) hoặc dưới nút ở cột tóm tắt.
