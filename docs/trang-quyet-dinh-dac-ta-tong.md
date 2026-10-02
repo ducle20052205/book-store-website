@@ -4,7 +4,7 @@
 >
 > **Ai được sửa phần nào.** Bản gốc là bản trong Claude.ai Project; file `docs/trang-quyet-dinh-dac-ta-tong.md` trong repo là bản đồng bộ. Claude Code **được sửa mục 7** (bảng tiến độ, số đo, số commit/PR) vì nó biết chính xác hơn. **Mọi mục khác chỉ chủ dự án ghi**, vì chúng chốt trong chat mà Claude Code không đọc được; thấy lệch thì báo cáo, không tự sửa. Mọi lần sửa file này là **commit riêng**, không gộp vào commit mã. Trong file chỉ ghi sự kiện và số đo kèm số mẫu — không có câu tự thuật tiến độ, không có đánh giá chất lượng công việc; file này sẽ nằm trong portfolio.
 >
-> **Hướng đồng bộ.** Mục 1–6, 8, 9 chảy từ bản gốc sang repo. **Mục 7 chảy ngược:** Claude Code ghi trong repo, bản gốc lấy lại từ repo. Khi dán bản gốc đè lên repo, phải giữ mục 7 của repo chứ không ghi đè nó.
+> **Hướng đồng bộ.** Bản gốc này giữ mục 1–6, 8, 9. **Mục 7 chỉ nằm ở repo**, do Claude Code ghi — bản gốc không giữ bản sao của nó. Khi dán bản gốc đè lên repo, phải nối lại mục 7 của repo bằng cách cắt–dán theo dòng, không viết lại. **`docs/SRS.md` chỉ nằm ở repo** — Project knowledge không giữ bản sao nào. Bản sao ở đó không có chủ sở hữu và đã lệch thật (v1.3 trong Project knowledge so với v1.5 trong repo, phát hiện 02/10). Cần đọc SRS thì gắn repo vào chat và đọc `docs/SRS.md`.
 >
 > **Cập nhật lần cuối:** 02/10/2026
 > **Nguồn chân lý:** repo `github.com/ducle20052205/book-store-website`. Các file `docs/SRS.md`, `docs/specs/*`, `CLAUDE.md` trong repo là bản gốc; file này là bản tóm tắt cấp quyết định.
@@ -63,7 +63,7 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 
 ### Thứ tự còn lại và định nghĩa "xong" (chốt 02/10)
 
-**Thứ tự:** 3B checkout (gồm tỉnh/phường và Make.com) → lịch sử đơn → admin → 2C quên mật khẩu → 2D trang hồ sơ → seed dữ liệu demo → chữa N+1 trang chủ → dashboard thống kê → chatbot → đợt 1.6 → rà accessibility → README cho nhà tuyển dụng.
+**Thứ tự:** 3B checkout (gồm tỉnh/phường; email xác nhận qua API Brevo) → lịch sử đơn → admin (gồm các scenario Make.com) → 2C quên mật khẩu → 2D trang hồ sơ → seed dữ liệu demo → chữa N+1 trang chủ → dashboard thống kê → chatbot → đợt 1.6 → rà accessibility → README cho nhà tuyển dụng.
 
 **Định nghĩa "xong"** — bảy bước một người lạ phải làm được, viết trước để không bị dời:
 
@@ -88,7 +88,7 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 |---|---|
 | Frontend | Next.js 16 (App Router) + React 19.2 + Tailwind CSS v4 (không có config file) |
 | Backend | Supabase — Postgres + Auth + Storage + Edge Functions |
-| Automation | Make.com (chưa làm) — email xác nhận đơn, báo admin đơn mới |
+| Automation | Make.com — lớp vận hành back-office (sổ đơn hàng, báo đơn mới, digest kho); làm ở đợt admin, **không gửi email cho khách** |
 | Deploy | Vercel, nhánh `main` là production |
 
 - **Database: 9 bảng**, tất cả bật RLS: `profiles`, `categories`, `books`, `cart_items`, `orders`, `order_items`, `events`, `collections`, `collection_books`. Đợt 3B sẽ thêm `provinces`, `wards` (thành 11).
@@ -97,6 +97,10 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 - Tìm kiếm theo tên sách và tác giả, không phân biệt dấu qua `unaccent`; toàn bộ lọc/sắp xếp/phân trang gói trong hàm RPC `search_books` (`SECURITY DEFINER` để tính "bán chạy" vượt qua RLS của `orders`).
 - **Danh mục 2 tầng:** 5 danh mục cha (Văn học, Kinh tế, Tâm lý – Kỹ năng, Khoa học – Xã hội, Manga – Light novel), 17 danh mục con. Không có danh mục Thiếu nhi (ngoài nhóm tuổi mục tiêu).
 - Route tiếng Việt: `/sach`, `/sach/[slug]`, `/tu-sach`, `/tu-sach/[slug]`, `/gio-hang`, `/thanh-toan`.
+- **Email cho khách do ứng dụng gửi, không qua Make.com (chốt 02/10).** Email xác nhận đơn gọi **HTTP API Brevo** từ Server Action (không dùng SMTP — trong serverless đó là kết nối dài, chậm, thường bị chặn), `await` với timeout 4s rồi mới `redirect()`; `orders.confirmation_email_sent_at` ghi lại kết quả, null thì trang xác nhận nói thật thay vì "đang gửi". Lý do: email xác nhận là bước 4 của định nghĩa "xong", nên phải chắc chắn và kiểm được bằng test trong repo — hai thứ Make.com không cho.
+  - **Quy tắc phân định: khách đang chờ thì app lo, cửa hàng dùng thì Make lo.** Không email nào gửi cho khách đi qua Make.
+  - Make.com giữ lại với việc thật ở đợt admin: sổ đơn hàng Google Sheet, báo đơn mới qua Discord/Telegram (không Slack — cần workspace, phơi tài khoản cá nhân), digest sách `stock_quantity <= 3`, nhắc giỏ bỏ quên. Google Sheet sẽ chứa tên/SĐT/địa chỉ của người đặt thử, nên chỉ dùng dữ liệu demo.
+  - **Chưa xác minh** gói Make miễn phí có cho webhook chạy tức thì hay ép chu kỳ tối thiểu. Ngưỡng chốt trước: email chậm hơn 2 phút ở 3 lần thử thì bỏ Make khỏi đường đó.
 - Cloud/DevOps nâng cao (CI/CD): gác lại, chỉ làm nếu còn thời gian sau MVP.
 
 ### 5.1 Auth và rendering (chốt ở đợt 2A/2B/2B.1/2B.2/3A)
@@ -148,6 +152,7 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 - **Nguyên tắc trung thực:** tên sách và tác giả là thật; ISBN, số trang, NXB, người dịch để trống vì không xác minh được; mô tả tự viết, không chép của nhà xuất bản. Footer ghi rõ "Dữ liệu sách chỉ nhằm minh họa cho dự án portfolio."
 - 16/40 cuốn có giảm giá, 4 cuốn hết hàng để demo đủ trạng thái UI.
 - **Repo là PUBLIC.** Không bao giờ commit email cá nhân, API key hay mật khẩu — kể cả trong mockup, ảnh chụp, chú thích và tài liệu. Dữ liệu mẫu dùng `ban.doc@example.com` (domain dành riêng theo RFC 2606).
+- **Bí mật chỉ nằm ở biến môi trường.** API key, webhook URL, token đặt ở Vercel environment variables và `.env.local`; **không dán vào chat, không đưa vào prompt, không vào repo, không vào migration.** Mục này trước đây chỉ nói về repo, nhưng đường rò thực tế là chat → prompt → file.
 - **Tài khoản thử trên hosted phải xoá sau mỗi đợt kiểm** (tiêu chí dọn dẹp). Quy trình: SELECT trước và in ra, xoá `events` của tài khoản đó trước (khoá ngoại NO ACTION), rồi xoá `auth.users` bằng id tường minh trong một transaction có chốt số dòng.
 - **Ảnh mockup phải là bản xuất từ canvas ở 2×, không phải ảnh chụp màn hình** — ảnh chụp mang theo giao diện công cụ, không đạt chuẩn cho repo public. Lưu ở `docs/mockups/buoc-N/`, kèm README ghi quyết định thiết kế và phạm vi.
 
@@ -371,8 +376,8 @@ PR #12 đã merge (squash) vào `main` ngày 02/10/2026, commit `8f05b91`; CI 2/
 **Về tài liệu**
 
 - **Tài liệu cũng lệch được mà không ai thấy.** Bản repo của chính file này lệch bản gốc 7 ngày (24/09 trong git, 29/09 trên đĩa, 01/10 ở bản gốc), ghi sai bảng màu và sai font, trong khi repo là public và đây là file nhà tuyển dụng đọc. `git status` có báo suốt thời gian đó. Hệ quả: đồng bộ file này là một bước có tên trong quy trình đóng đợt, không phải việc nhớ thì làm.
-- **Dòng "Cập nhật lần cuối" chỉ chứa ngày**, không có chú thích mô tả lần sửa. Chú thích mô tả sẽ lệch ở lần sửa kế tiếp; lịch sử nằm ở git log.
 - **Khi hợp nhất hai bản của một tài liệu, hãy ghép cơ học, đừng dựng lại từ báo cáo.** Bản hợp nhất sau đợt 3A được viết lại mục 7 từ báo cáo thay vì giữ nguyên bản trong git, và làm mất hơn hai chục số đo, cỡ mẫu và cảnh báo về selector. Phần nào đã có bản đúng thì cắt và dán phần đó, chỉ viết tay những phần thật sự mới.
+- **Dòng "Cập nhật lần cuối" chỉ chứa ngày**, không có chú thích mô tả lần sửa. Chú thích mô tả sẽ lệch ở lần sửa kế tiếp; lịch sử nằm ở git log.
 
 **Về thiết kế và giao diện**
 
@@ -396,5 +401,5 @@ PR #12 đã merge (squash) vào `main` ngày 02/10/2026, commit `8f05b91`; CI 2/
 - Logo chính thức.
 - System prompt cho chatbot.
 - Nội dung README cho nhà tuyển dụng.
-- Mockup cho: checkout (3B), admin.
+- Mockup cho: admin. (Mockup checkout đã xong, 8 artboard, xuất 2× vào `docs/mockups/buoc-3/`.)
 - Viết lại mô tả 3 tủ sách bằng giọng của chủ dự án (nội dung hiện tại do AI viết).
