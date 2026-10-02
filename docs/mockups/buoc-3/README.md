@@ -20,11 +20,7 @@ là ảnh tĩnh, không có hai hành vi này.
 | `gio-hang-mobile.png` | Giỏ hàng ở 390px | 390×844 |
 | `he-layout-dong-bang.png` | Hệ layout tham chiếu | 1280×1040 |
 
-Kích thước khung là kích thước artboard. File PNG là ảnh chụp cả khung canvas
-nên có số pixel khác (đo ngày 02/10/2026: `gio-hang.png` 1449×1067,
-`gio-hang-trong.png` 1444×732, `checkout.png` 1171×1095, `xac-nhan-don.png`
-1455×942, `gio-hang-mobile.png` 373×798, `he-layout-dong-bang.png` 1167×988).
-Đừng đo px trực tiếp từ ảnh.
+Kích thước khung là kích thước artboard; ảnh xuất ở 2× so với khung.
 
 ## Phạm vi
 
