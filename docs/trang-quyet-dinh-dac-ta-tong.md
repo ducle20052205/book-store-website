@@ -131,7 +131,7 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 | Bước 2A: Hạ tầng auth | Xong, đã merge (PR #7) |
 | Bước 2B: Đăng nhập / đăng ký | Xong, đã merge (PR #9, `18016f8`) |
 | Bước 2B.1: Hiệu năng trên hosted | Xong, đã merge (PR #10, `d49ff1a`) |
-| Bước 2B.2: Nháy trạng thái header | **Xong, chờ PR** — nhánh `fix/2b2-xoa-nhay-header`, mã ở commit `65269fb` |
+| Bước 2B.2: Nháy trạng thái header | Xong, đã merge (PR #11, `8f90eaf`) |
 | Bước 2C: Quên/đặt lại mật khẩu | Chưa bắt đầu |
 | Bước 2D: Trang hồ sơ, tỉnh/phường, đổi mật khẩu | Chưa bắt đầu |
 | Đợt 1.6: Sửa lỗi giao diện tồn đọng | Chưa bắt đầu |
@@ -230,6 +230,8 @@ Spec: `docs/specs/buoc-2b2-xoa-nhay-trang-thai-header.md` (bản v2, ghi đè b�
 | TC-6: số phần tử focusable trong slot, fallback / ổn định | 10 mỗi trạng thái | 0 / 1 ở 20/20 lượt |
 | TC-7: FCP đến lúc chữ thật xuất hiện, trung vị (khoảng) | 10 mỗi dòng | Đã đăng nhập 285 ms (269–291); khách 279 ms (158–288); baseline đã đăng nhập 398 ms (261–449). Không có ngưỡng; chưa đo độ nhiễu của phép đo |
 | `tsc`, `eslint`, `next build` | 1 lần | 0 lỗi, 0 lỗi, exit 0 |
+
+**Merge:** PR #11 đã merge (squash) vào `main` ngày 02/10/2026, commit `8f90eaf`; CI 2/2 đạt (Vercel, Vercel Preview Comments). Kết quả TC-9: 6/6 lượt cho mỗi mục (dropdown/sheet hiện, họ tên khớp, email khớp, đăng xuất về khách, `/tai-khoan` chuyển hướng), 3 lượt mỗi viewport ở 1280px và 390px.
 
 **TC-8 — chốt không chạy.** Sau khi đổi vùng sang `hnd1`, PostgREST từ Vercel có trung vị 12,5 ms, trong khi cửa sổ lỗi ở cục bộ chỉ mở được khi cộng +160 ms. Baseline trên production nhiều khả năng ra 0/10, tức "không tái hiện được" theo luật đối chứng của TC-3, không phải "đạt". Bằng chứng cho bản sửa là phép đo cục bộ: baseline 10/10 → 0/10, cùng script, cùng độ trễ, 10 mẫu mỗi phía.
 
