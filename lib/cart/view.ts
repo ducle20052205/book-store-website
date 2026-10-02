@@ -24,6 +24,8 @@ export interface CartViewLine {
   book: CartBook;
   /** Số lượng đã lưu trong giỏ. */
   quantity: number;
+  /** Số lượng hiển thị: bằng `quantity` nhưng không vượt tồn kho (sách còn hàng); sách hết hàng giữ nguyên. */
+  displayQuantity: number;
   /** Số lượng tính tiền: bằng `quantity` nhưng không vượt tồn kho; 0 khi hết hàng. */
   billableQuantity: number;
   unitPrice: number;
@@ -36,7 +38,7 @@ export interface CartViewLine {
 export interface CartView {
   mode: "guest" | "user";
   lines: CartViewLine[];
-  /** Tổng số lượng các dòng còn hàng, dùng cho tiêu đề trang. */
+  /** Tổng số lượng hiển thị của mọi dòng trong giỏ, dùng cho tiêu đề trang. */
   totalQuantity: number;
   subtotal: number;
   hasOutOfStock: boolean;
@@ -85,6 +87,7 @@ function buildLines(entries: { book: CartBook; quantity: number }[]): CartViewLi
     return {
       book,
       quantity,
+      displayQuantity: outOfStock ? quantity : Math.min(quantity, book.stockQuantity),
       billableQuantity,
       unitPrice,
       lineTotal: billableQuantity * unitPrice,
@@ -104,7 +107,7 @@ function summarize(mode: CartView["mode"], lines: CartViewLine[], needsRepair: b
   return {
     mode,
     lines,
-    totalQuantity: lines.reduce((sum, line) => sum + line.billableQuantity, 0),
+    totalQuantity: lines.reduce((sum, line) => sum + line.displayQuantity, 0),
     subtotal: lines.reduce((sum, line) => sum + line.lineTotal, 0),
     hasOutOfStock: lines.some((line) => line.outOfStock),
     needsRepair,

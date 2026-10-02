@@ -12,6 +12,11 @@ const currencyFormatter = new Intl.NumberFormat("vi-VN", {
   maximumFractionDigits: 0,
 });
 
+/** Định dạng tiền đồng cho giá, tổng tiền, tạm tính (dùng chung với trang giỏ hàng). */
+export function formatVnd(amount: number): string {
+  return currencyFormatter.format(amount);
+}
+
 export function getPercentOff(price: number, discountPrice: number): number {
   return Math.round(((price - discountPrice) / price) * 100);
 }
