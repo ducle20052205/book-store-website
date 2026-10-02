@@ -1,6 +1,6 @@
 # Bước 3A — Giỏ hàng
 
-Bước 3 · Giỏ hàng và thanh toán · phiên bản 2.0 · 02/10/2026
+Bước 3 · Giỏ hàng và thanh toán · phiên bản 2.1 · 02/10/2026
 Nhánh: chưa tạo.
 
 Tài liệu liên quan: docs/SRS.md (mục 5.3), docs/mockups/buoc-3/ (gio-hang.png, gio-hang-trong.png, gio-hang-mobile.png, he-layout-dong-bang.png), docs/trang-quyet-dinh-dac-ta-tong.md mục 5.1 và mục 9.
@@ -32,7 +32,14 @@ Hai hệ quả kéo theo: `mergeGuestCart()` chuyển lên Server Action; `signI
 - **FR-3A.11** — Cookie không parse được, sai schema, hoặc chứa `book_id` không phải UUID: coi như giỏ rỗng, ghi đè cookie bằng giá trị hợp lệ, không ném lỗi ra giao diện.
 - **FR-3A.12** — RLS `cart_items` giữ nguyên như FR-3.8.
 - **FR-3A.13** — Nút "Thêm vào giỏ" và "Mua ngay" ở `PurchasePanel.tsx` (trang chi tiết sách) hiện chỉ hiện Toast. Nối chúng vào `addToCart`. "Mua ngay" = `addToCart` rồi điều hướng tới `/gio-hang`. Thanh dính đáy trên mobile (FR-2.7) dùng chung hành vi. Đây là đường vào duy nhất của giỏ hàng trong phạm vi 3A; thiếu nó thì FR-3A.10 không bao giờ chạy.
-- **FR-3A.14** — `session_id` chuyển từ `localStorage` sang cookie `na_sid`: UUID v4, KHÔNG `httpOnly` (client `track()` vẫn đọc được), `SameSite=Lax`, `Path=/`, `Max-Age` 1 năm. `proxy.ts` đặt cookie khi request chưa có. Cả `track()` ở client lẫn lời gọi ghi sự kiện ở server đều lấy `session_id` từ cookie này — một nguồn duy nhất. Không giữ tương thích ngược với giá trị cũ trong `localStorage`: bảng `events` trên hosted hiện có 69 dòng (60 `page_view`, 9 `search`, 14 giá trị `session_id` khác nhau; đếm ngày 02/10/2026) mang `session_id` cũ; các dòng đó giữ nguyên và sẽ không nối được với `session_id` mới, chấp nhận.
+- **FR-3A.14** — `session_id` chuyển từ `localStorage` sang cookie `na_sid`: UUID v4, KHÔNG `httpOnly`, `SameSite=Lax`, `Path=/`, `Max-Age` 1 năm.
+
+  **`proxy.ts` KHÔNG đặt cookie này.** Response GET mang `Set-Cookie` thì CDN không lưu được, và khách xem portfolio gần như toàn bộ là khách lần đầu — đặt ở proxy sẽ làm mọi lượt tải đầu tiên mất cache edge. Cookie được tạo lúc cần, ở hai chỗ, cả hai đều không nằm trên response được cache:
+
+  1. `track()` ở client: chưa có cookie thì tự sinh UUID, ghi bằng `document.cookie`, rồi gửi kèm sự kiện.
+  2. Server Action ghi sự kiện (`sign_up`, `login`): chưa có cookie thì sinh UUID, ghi vào response của action (POST, không bao giờ được cache).
+
+  Hai đường dùng chung đúng một tên cookie và cùng định dạng, nên chỉ có một nguồn sự thật. Không giữ tương thích ngược với giá trị cũ trong `localStorage`: 69 dòng `events` hiện có giữ `session_id` cũ và không nối được với giá trị mới, nên việc giữ lại không mang thêm thông tin nào.
 - **FR-3A.15** — Badge số lượng giỏ hàng nằm trong **Suspense boundary RIÊNG**, tách khỏi boundary của trạng thái auth. Phần tử bọc mang `data-testid="header-cart-count"`, và testid này chỉ xuất hiện ở đó. Không sửa, không di chuyển, không đổi tên `data-testid="header-auth"` của đợt 2B.2 — phép đo TC-1 của đợt đó phải còn chạy đúng sau 3A.
 
 ## 4. Tiêu chí nghiệm thu
@@ -52,6 +59,9 @@ Hai hệ quả kéo theo: `mergeGuestCart()` chuyển lên Server Action; `signI
 - **TC-11 — Không hồi quy kiểu.** `tsc --noEmit`, `eslint`, `next build`: 0 lỗi, exit 0.
 - **TC-12 — Testid của 2B.2 không bị động tới.** `rg -c 'data-testid="header-auth"'` vẫn trả về đúng 1, và `document.querySelectorAll('[data-testid="header-auth"]').length === 1` trên trang đã render. Chạy lại TC-1 của đợt 2B.2 (0/10 hiện "Đăng nhập" khi đã đăng nhập, kèm đối chứng trạng thái khách) sau khi sửa xong 3A.
 - **TC-13 — session_id có mặt ở cả hai phía.** Chưa đăng nhập, thêm một cuốn vào giỏ rồi đăng ký tài khoản. Trong bảng `events`: dòng `add_to_cart` (ghi từ client) và dòng `sign_up` (ghi từ server) có CÙNG một `session_id`, và giá trị đó khớp cookie `na_sid` trong trình duyệt. 3 lần.
+- **TC-14 — Không thêm `Set-Cookie` vào response được cache.** Với một khách hoàn toàn mới (profile sạch, không cookie), tải `GET /` 5 lần: response KHÔNG chứa `Set-Cookie` cho `na_sid`. Đồng thời ghi lại header `x-vercel-cache` của 5 lượt đó trên preview.
+
+  **Đối chứng baseline bắt buộc:** chạy đúng phép đo đó trên `main` trước khi sửa, cùng điều kiện (cùng khách mới, cùng trang, cùng số lượt). So phân bố `x-vercel-cache` trước và sau; khác nhau thì dừng và báo cáo, đừng kết luận "đạt". Nếu baseline đã không có lượt `HIT` nào thì phép đo này không phân biệt được gì — nói thẳng như vậy thay vì báo một con số đẹp.
 
 ## 5. Hạn chế đã biết
 
@@ -59,12 +69,14 @@ Cookie gửi kèm mọi request tới cùng origin. Với trần 20 dòng, kích
 
 **Cookie không có read-modify-write nguyên tử.** Hai request thay đổi giỏ gửi đi thật sự đồng thời đều đọc cùng một giá trị cookie cũ, và `Set-Cookie` tới sau ghi đè cái tới trước, nên một dòng có thể mất. Giảm nhẹ bằng cách vô hiệu hóa nút trong lúc action đang chạy, nên luồng của người dùng là tuần tự; không chữa triệt để trong phạm vi 3A. Chưa đo trên Next 16.3.5 — nếu về sau thấy mất dòng trong thực tế thì chuyển sang bảng `guest_carts` với một id trong cookie, và khi đó phải có spec riêng.
 
+**Khách tắt cookie** thì giỏ hàng không hoạt động và sự kiện không ghi được. Không vá: toàn bộ auth của site đã dựa trên cookie từ đợt 2A, nên vá riêng giỏ hàng không cứu được trang.
+
 ## 6. Những điểm đã làm rõ
 
 Năm điểm sau được nêu khi đọc mã ngày 02/10/2026 và đã có quyết định cùng ngày; ghi lại để người đọc sau thấy chúng đã được cân nhắc.
 
 - **Nút "Thêm vào giỏ" chưa được nối** → nối `PurchasePanel.tsx` vào `addToCart`, "Mua ngay" thêm rồi sang `/gio-hang`, thanh dính đáy mobile dùng chung (FR-3A.13).
-- **`session_id` của sự kiện ghi từ server** → chuyển sang cookie `na_sid` không `httpOnly`, `proxy.ts` đặt, client và server cùng đọc; không giữ tương thích ngược (FR-3A.14, TC-13).
+- **`session_id` của sự kiện ghi từ server** → chuyển sang cookie `na_sid` không `httpOnly`, tạo lúc cần ở client (`track()`) hoặc ở Server Action, KHÔNG qua `proxy.ts` để không làm mất cache edge; không giữ tương thích ngược (FR-3A.14, TC-13, TC-14).
 - **TC-4 và tính nguyên tử của cookie** → TC-4 đo thao tác nối tiếp (luồng thật của người dùng, nút bị vô hiệu hóa khi action chạy); truy cập đồng thời thật không chữa trong 3A và ghi ở mục 5.
 - **Phạm vi của TC-10** → chỉ quét file có `"use client"`, kèm đối chứng với `add_to_cart` (TC-10).
 - **Cùng Suspense boundary ở FR-3A.4** → badge có boundary riêng với `data-testid="header-cart-count"`; không đụng `header-auth` (FR-3A.15, TC-12).
