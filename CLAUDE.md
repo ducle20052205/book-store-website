@@ -91,6 +91,7 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 - Không lấy một chỉ số đã nằm sâu dưới ngưỡng làm bằng chứng cho giá trị của một thay đổi. CLS baseline 0,0002 (ngưỡng "tốt" 0,1) nghĩa là CLS không phải vấn đề; nêu đúng cái thay đổi đó chữa.
 - Kiểm giao diện bằng ảnh chụp toàn trang thu nhỏ, không chỉ ảnh cận cảnh.
 - File tạm, route thử, script đo: xoá trước khi commit, chạy `git status` xác nhận sạch.
+- **Không bao giờ chạy `taskkill /IM node.exe` hay lệnh tương đương giết mọi tiến trình Node.** Máy của chủ dự án có thể đang chạy tiến trình Node khác. Dừng đúng tiến trình mình tạo: ghi lại PID khi khởi động, hoặc tìm theo cổng đang nghe (`netstat -ano | findstr :3100`) rồi `taskkill /PID <pid>`.
 - Đóng đợt: trước khi mở PR, chạy `git status --short` và liệt kê mọi file modified nằm ngoài phạm vi đợt.
 
 ## Ranh giới sửa file
