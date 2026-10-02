@@ -1,8 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import { addToCart } from "@/app/actions/cart";
 import { Toast } from "@/components/Toast";
+import { track } from "@/lib/analytics";
+import { cartErrorMessage, overStockMessage } from "@/lib/cart/messages";
 
 function subscribeNoop() {
   return () => {};
@@ -31,24 +35,53 @@ const secondaryButtonClass =
   "pressable inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-control border border-line px-6 text-button font-medium text-ink-900 hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 disabled:cursor-not-allowed disabled:opacity-40";
 
 interface PurchasePanelProps {
+  bookId: string;
   stockQuantity: number;
 }
 
 /**
- * 1c.2: bộ chọn số lượng + 2 nút hành động. Giỏ hàng chưa có (bước 3) nên cả
- * 2 nút chỉ hiện Toast. Mobile (<768px): 2 nút chuyển vào thanh dính đáy màn
- * hình, bộ chọn số lượng vẫn ở trong nội dung trang.
+ * 1c.2: bộ chọn số lượng + 2 nút hành động. Đợt 3A (FR-3A.13): "Thêm vào giỏ hàng"
+ * gọi Server Action `addToCart` rồi hiện Toast xác nhận; "Mua ngay" = `addToCart`
+ * rồi chuyển tới /gio-hang. Cảnh báo (vượt tồn) và lỗi hiện thành dải trong trang,
+ * không tự tắt, vì là thông tin người dùng cần đọc. Mọi nút bị vô hiệu hóa trong
+ * lúc action chạy. Mobile (<768px): 2 nút chuyển vào thanh dính đáy màn hình, bộ
+ * chọn số lượng vẫn ở trong nội dung trang; thanh dính dùng chung hành vi này.
  */
-export function PurchasePanel({ stockQuantity }: PurchasePanelProps) {
+export function PurchasePanel({ bookId, stockQuantity }: PurchasePanelProps) {
   const outOfStock = stockQuantity <= 0;
   const maxQty = Math.max(1, Math.min(stockQuantity, MAX_QTY_CAP));
 
   const [quantity, setQuantity] = useState(1);
   const [toastOpen, setToastOpen] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const mounted = useMounted();
+  const router = useRouter();
 
-  function handleCartAction() {
-    setToastOpen(true);
+  async function handleCartAction(goToCart: boolean) {
+    if (pending || outOfStock) return;
+    setPending(true);
+    setNotice(null);
+    setToastOpen(false);
+    try {
+      const result = await addToCart(bookId, quantity);
+      if (!result.ok) {
+        setNotice(cartErrorMessage(result.kind));
+        return;
+      }
+      // Ghi sau khi giỏ đã lưu; không chặn giao diện, metadata chỉ có book_id và số lượng thêm (FR-3A.10).
+      track("add_to_cart", { book_id: bookId, quantity });
+      if (goToCart) {
+        router.push("/gio-hang");
+        return;
+      }
+      if (result.warning) setNotice(overStockMessage(result.warning.max));
+      else setToastOpen(true);
+    } catch {
+      setNotice(cartErrorMessage("unknown"));
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -97,16 +130,16 @@ export function PurchasePanel({ stockQuantity }: PurchasePanelProps) {
         <div className="hidden flex-wrap items-center gap-3 md:flex">
           <button
             type="button"
-            disabled={outOfStock}
-            onClick={handleCartAction}
+            disabled={outOfStock || pending}
+            onClick={() => handleCartAction(false)}
             className={`${secondaryButtonClass} shrink-0`}
           >
             Thêm vào giỏ hàng
           </button>
           <button
             type="button"
-            disabled={outOfStock}
-            onClick={handleCartAction}
+            disabled={outOfStock || pending}
+            onClick={() => handleCartAction(true)}
             className={`${primaryButtonClass} shrink-0`}
           >
             Mua ngay
@@ -120,16 +153,16 @@ export function PurchasePanel({ stockQuantity }: PurchasePanelProps) {
       >
         <button
           type="button"
-          disabled={outOfStock}
-          onClick={handleCartAction}
+          disabled={outOfStock || pending}
+          onClick={() => handleCartAction(false)}
           className={`${secondaryButtonClass} flex-1`}
         >
           Thêm vào giỏ hàng
         </button>
         <button
           type="button"
-          disabled={outOfStock}
-          onClick={handleCartAction}
+          disabled={outOfStock || pending}
+          onClick={() => handleCartAction(true)}
           className={`${primaryButtonClass} flex-1`}
         >
           Mua ngay
@@ -139,8 +172,17 @@ export function PurchasePanel({ stockQuantity }: PurchasePanelProps) {
       <Toast
         open={toastOpen}
         onClose={() => setToastOpen(false)}
-        message="Giỏ hàng đang được hoàn thiện, bạn quay lại sau nhé."
+        message="Đã thêm vào giỏ hàng."
       />
+
+      {notice && (
+        <p
+          role="status"
+          className="mt-3 rounded-notice border border-nghe-400 bg-field px-3 py-2 text-body-sm text-ink-900"
+        >
+          {notice}
+        </p>
+      )}
 
       {/*
         Footer là sibling của trang (root layout render sau <main>), nên
