@@ -213,7 +213,7 @@ function CheckoutAction({ view }: { view: CartView }) {
     );
   }
   return (
-    <Link href="/thanh-toan" prefetch={false} className={primaryButtonClass}>
+    <Link href="/thanh-toan" className={primaryButtonClass}>
       Thanh toán
     </Link>
   );
