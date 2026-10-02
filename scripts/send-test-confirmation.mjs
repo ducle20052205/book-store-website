@@ -68,4 +68,6 @@ const response = await fetch(url, {
 
 console.log("HTTP", response.status);
 console.log(await response.text());
-process.exit(response.ok ? 0 : 1);
+// Đặt exitCode rồi để tiến trình tự kết thúc: gọi process.exit() ngay sau fetch làm Node trên Windows
+// báo "Assertion failed … UV_HANDLE_CLOSING" và thoát với mã lạ dù thư đã gửi xong.
+process.exitCode = response.ok ? 0 : 1;
