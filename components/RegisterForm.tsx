@@ -1,17 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { type FormEvent, type ReactNode, type RefObject, useRef, useState } from "react";
 import { signUp } from "@/app/actions/auth";
 import { AuthAlert, AuthErrorMessage } from "@/components/AuthAlert";
 import { PasswordField, TextField } from "@/components/AuthFields";
 import { PasswordStrength } from "@/components/PasswordStrength";
-import { track } from "@/lib/analytics";
 import type { AuthErrorKind } from "@/lib/authErrors";
 import { FULL_NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/lib/authRules";
-import { mergeGuestCart } from "@/lib/cart/mergeGuestCart";
-import { safeNextPath } from "@/lib/nextParam";
-import { withWelcomeParam } from "@/lib/welcome";
+import { isNextRedirect } from "@/lib/nextRedirect";
 
 type FieldName = "fullName" | "email" | "emailConfirm" | "password";
 type FieldErrors = Partial<Record<FieldName, ReactNode>>;
@@ -32,7 +28,6 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * - `noValidate`: kiểm tra bằng chữ của mình, không dùng bong bóng của trình duyệt.
  */
 export function RegisterForm() {
-  const router = useRouter();
   const fullNameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const emailConfirmRef = useRef<HTMLInputElement>(null);
@@ -95,45 +90,35 @@ export function RegisterForm() {
     }
 
     setPending(true);
+    // Đăng ký đúng (có session ngay vì Confirm email tắt) thì action gộp giỏ, ghi sự kiện
+    // rồi gọi redirect() theo ?next= kèm cờ chào mừng — xem signUp. Lời gọi bị từ chối bằng
+    // lỗi redirect, router tự điều hướng; không gọi router.push/refresh (spec 3A, TC-6).
     let result: Awaited<ReturnType<typeof signUp>>;
     try {
-      result = await signUp({ fullName: fullName.trim(), email: email.trim(), password });
-    } catch {
+      result = await signUp({
+        fullName: fullName.trim(),
+        email: email.trim(),
+        password,
+        next: new URLSearchParams(window.location.search).get("next"),
+      });
+    } catch (caught) {
+      if (isNextRedirect(caught)) return;
       // Không tới được máy chủ (mất mạng…): cùng câu với lỗi không rõ.
       result = { ok: false, kind: "unknown" };
     }
 
-    if (!result.ok) {
-      setPending(false);
-      if (result.kind === "user_exists" || result.kind === "invalid_email") {
-        const inline = { email: <AuthErrorMessage kind={result.kind} /> };
-        setFieldErrors(inline);
-        focusField("email");
-      } else if (result.kind === "weak_password") {
-        setFieldErrors({ password: <AuthErrorMessage kind="weak_password" /> });
-        focusField("password");
-      } else {
-        attemptRef.current += 1;
-        setFormError({ attempt: attemptRef.current, kind: result.kind });
-      }
-      return;
+    setPending(false);
+    if (result.kind === "user_exists" || result.kind === "invalid_email") {
+      const inline = { email: <AuthErrorMessage kind={result.kind} /> };
+      setFieldErrors(inline);
+      focusField("email");
+    } else if (result.kind === "weak_password") {
+      setFieldErrors({ password: <AuthErrorMessage kind="weak_password" /> });
+      focusField("password");
+    } else {
+      attemptRef.current += 1;
+      setFormError({ attempt: attemptRef.current, kind: result.kind });
     }
-
-    // Đăng ký xong có session ngay (Confirm email tắt): gộp giỏ khách (hàm rỗng ở
-    // đợt này; lỗi không được chặn người dùng), rồi điều hướng theo ?next= (không
-    // hợp lệ hoặc không có thì về "/") kèm cờ để trang đích hiện dải chào mừng.
-    try {
-      await mergeGuestCart();
-    } catch {
-      // bỏ qua có chủ ý
-    }
-    // Ghi sự kiện SAU khi đã có phiên (để track() gắn đúng user_id), không chặn điều
-    // hướng nếu ghi lỗi. metadata chỉ có phương thức — tuyệt đối không có email (FR-8.5).
-    track("sign_up", { method: "password" });
-
-    // Không gọi router.refresh() sau push: xem giải thích ở LoginForm.
-    const target = safeNextPath(new URLSearchParams(window.location.search).get("next"));
-    router.push(withWelcomeParam(target));
   }
 
   return (
