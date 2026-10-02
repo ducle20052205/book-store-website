@@ -63,6 +63,8 @@ Hai hệ quả kéo theo: `mergeGuestCart()` chuyển lên Server Action; `signI
 
   **Đối chứng baseline bắt buộc:** chạy đúng phép đo đó trên `main` trước khi sửa, cùng điều kiện (cùng khách mới, cùng trang, cùng số lượt). So phân bố `x-vercel-cache` trước và sau; khác nhau thì dừng và báo cáo, đừng kết luận "đạt". Nếu baseline đã không có lượt `HIT` nào thì phép đo này không phân biệt được gì — nói thẳng như vậy thay vì báo một con số đẹp.
 
+  **Kết quả (02/10/2026).** Khách hoàn toàn mới (mỗi lượt một tiến trình `curl` riêng, không cookie), `GET /` xen kẽ preview (`book-store-website-1d4gybcn6-duc-75bf.vercel.app`, commit `f7a67a1`) và production (`book-store-website-dun.vercel.app`, baseline `main` `8462236`), 5 lượt mỗi phía. `Set-Cookie` cho `na_sid`: **không có** ở 10/10 response, và không có header `Set-Cookie` nào ở cả hai phía. `x-vercel-cache`: preview PRERENDER ×1, HIT ×4; production STALE ×1, HIT ×4. Baseline có 4/5 lượt `HIT` nên phép đo phân biệt được; sau lượt đầu, hai bên cùng `HIT` ở 4/4 lượt còn lại. **Hạn chế:** lượt đầu của hai bên không cùng điều kiện (preview vừa dựng nên là PRERENDER, production là STALE với `age` 2.404 s), nên không so được lượt đó; phép đo chỉ thấy header HTTP, không thấy cookie do JavaScript ghi bằng `document.cookie` (`track()` ở client), vốn không nằm trên response được cache.
+
 ## 5. Hạn chế đã biết
 
 Cookie gửi kèm mọi request tới cùng origin. Với trần 20 dòng, kích thước thực tế khoảng 1,0 KB dạng JSON và 1,5 KB sau khi mã hoá URL (đo ngày 02/10/2026 trên 3 mẫu 20 dòng, UUID ngẫu nhiên, `q` = 1, 99, 999: 1.021, 1.041, 1.061 byte JSON; 1.503, 1.523, 1.543 byte mã hoá), chấp nhận được. Nếu về sau cần giỏ lớn hơn thì chuyển sang bảng `guest_carts` với một id trong cookie, và khi đó phải có spec riêng.
