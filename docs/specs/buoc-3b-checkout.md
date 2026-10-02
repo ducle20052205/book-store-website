@@ -178,9 +178,11 @@ Một email thật, gửi bằng `scripts/send-test-confirmation.mjs` lúc 23:31
 - **(a)** HTTP 201, có `messageId`. Brevo nhận thân gồm cả `htmlContent` và `textContent`, nên nhánh dự phòng "hạ về chỉ `htmlContent`" ở FR-3B.27 không phải dùng.
 - **(b)** `From` thực tế là `NA Books <…@12302835.brevosend.com>`: địa chỉ gửi BỊ viết lại. Hạn chế ghi ở mục 5.1 file quyết định cũng áp dụng cho đường API (xem mục 7.1).
 - **Hộp thư:** thư vào Inbox của Gmail, không vào Spam.
-- **(c)** Đích thật của link ở nút "Xem đơn hàng": **chưa ghi nhận**. Chủ dự án chưa ghi lại quan sát này nên TC-38 chưa đóng.
+- **(c)** Link ở nút "Xem đơn hàng" trỏ THẲNG tới `SITE_URL`, không bị bọc qua tên miền theo dõi nào. URL đầy đủ quan sát được là `http://localhost:3000/thanh-toan/hoan-tat/NA-2026-0042`: đúng route của spec, không có tham số theo dõi, không có tên miền trung gian. Trang không mở được vì server dev không chạy, không liên quan tới link. **Mức quan sát: 1 thư, đường API.** Chủ dự án nhận định rằng với thư này Brevo gắn header huỷ đăng ký nhưng không bật click tracking cho đường API, khác với hạn chế "không tắt được click tracking" ghi ở mục 5.1 file quyết định cho đường SMTP. TC-38 không đo cài đặt click tracking, chỉ đo link của một thư, và lần này không đo đường SMTP.
 - **(d)** Bản HTML hiển thị đúng. Bản `.txt` chưa kiểm riêng vì Gmail ưu tiên HTML. Tiêu chí đòi biết bản `.txt` và bản HTML cùng đến hay chỉ một bản; phép đo thực tế yếu hơn: chỉ biết HTML hiển thị đúng, `.txt` chưa được mở riêng, nên câu hỏi gốc **chưa được trả lời**.
 - **Hạn mức 300 email/ngày:** không có quan sát nào về trang giá chính thức trong lần này; giữ nhãn "chưa kiểm".
+
+**TC-38 đóng ngày 02/10/2026 theo quyết định của chủ dự án.** Tiêu chí (d) được đóng bằng phép đo yếu hơn tiêu chí gốc, như ghi ở trên: tiêu chí đòi biết cả hai bản có đến không, phép đo chỉ cho biết HTML hiển thị đúng, số mẫu 1.
 
 ## 8. Việc chỉ chủ dự án làm được
 
