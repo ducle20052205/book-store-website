@@ -189,7 +189,7 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
           </div>
 
           <div className="mt-5">
-            <PurchasePanel stockQuantity={book.stockQuantity} />
+            <PurchasePanel bookId={book.id} stockQuantity={book.stockQuantity} />
           </div>
 
           <BookInfoBlock rows={infoRows} />

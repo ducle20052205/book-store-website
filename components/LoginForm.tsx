@@ -1,15 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { type FormEvent, useRef, useState } from "react";
 import { signIn } from "@/app/actions/auth";
 import { AuthAlert, AuthErrorMessage } from "@/components/AuthAlert";
 import { PasswordField, TextField } from "@/components/AuthFields";
-import { track } from "@/lib/analytics";
 import type { AuthErrorKind } from "@/lib/authErrors";
-import { mergeGuestCart } from "@/lib/cart/mergeGuestCart";
-import { safeNextPath } from "@/lib/nextParam";
+import { isNextRedirect } from "@/lib/nextRedirect";
 
 /** Lỗi kiểm tra ngay ở trình duyệt (chưa gọi Auth) hoặc lỗi Auth đã phân loại. */
 type LoginError = { attempt: number; kind: AuthErrorKind | "missing_email" | "missing_password" };
@@ -26,7 +23,6 @@ type LoginError = { attempt: number; kind: AuthErrorKind | "missing_email" | "mi
  *   trình duyệt (chữ theo ngôn ngữ trình duyệt, không đúng giọng NA Books).
  */
 export function LoginForm() {
-  const router = useRouter();
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const [email, setEmail] = useState("");
@@ -58,38 +54,28 @@ export function LoginForm() {
     setPending(true);
     setError(null);
 
+    // Đăng nhập đúng thì action gọi redirect() (gộp giỏ và ghi sự kiện đã làm ở server):
+    // lời gọi bị từ chối bằng lỗi redirect và router tự điều hướng. Nút giữ trạng thái
+    // đang xử lý tới khi trang mới hiện. Không gọi router.push/refresh nữa — một
+    // request RSC duy nhất do chính action sinh ra (spec 3A, TC-6).
+    // `next` gửi nguyên giá trị thô của ?next=; server kiểm lại bằng safeNextPath.
     let result: Awaited<ReturnType<typeof signIn>>;
     try {
-      result = await signIn({ email: email.trim(), password });
-    } catch {
+      result = await signIn({
+        email: email.trim(),
+        password,
+        next: new URLSearchParams(window.location.search).get("next"),
+      });
+    } catch (caught) {
+      if (isNextRedirect(caught)) return;
       // Không tới được máy chủ (mất mạng…): cùng câu với lỗi không rõ.
       result = { ok: false, kind: "unknown" };
     }
 
-    if (!result.ok) {
-      setPassword("");
-      setPending(false);
-      fail(result.kind);
-      passwordRef.current?.focus();
-      return;
-    }
-
-    // Đăng nhập xong: gộp giỏ khách vào giỏ của tài khoản (đợt 3 điền ruột; hiện là
-    // hàm rỗng) rồi điều hướng. Gộp giỏ lỗi không được chặn người dùng vào tài khoản.
-    try {
-      await mergeGuestCart();
-    } catch {
-      // bỏ qua có chủ ý
-    }
-    // Ghi sự kiện SAU khi đã có phiên (để track() gắn đúng user_id), không chặn điều
-    // hướng nếu ghi lỗi. metadata chỉ có phương thức — tuyệt đối không có email (FR-8.5).
-    track("login", { method: "password" });
-
-    // Nút giữ trạng thái đang xử lý tới khi trang mới hiện. Không gọi router.refresh():
-    // action đã làm client làm mới (cookie đổi) và push tới trang đích chạy với cookie
-    // mới; một refresh nữa chỉ sinh thêm request RSC trùng URL (đo 01/10: 2–3 request
-    // mỗi lần, có lần hai request gửi cùng lúc). Spec buoc-2b1-hieu-nang-hosted hạng mục 2.
-    router.push(safeNextPath(new URLSearchParams(window.location.search).get("next")));
+    setPassword("");
+    setPending(false);
+    fail(result.kind);
+    passwordRef.current?.focus();
   }
 
   return (

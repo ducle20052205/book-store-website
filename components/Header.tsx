@@ -12,6 +12,7 @@ import {
   navItemClass,
 } from "@/components/headerStyles";
 import { LoginNavLink } from "@/components/LoginNavLink";
+import { getCartCount } from "@/lib/cart/view";
 import { type CategoryNode, getCategoryTree } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,7 +20,8 @@ interface HeaderViewProps {
   categories: CategoryNode[];
   /** Mục "Đăng nhập" hoặc menu "Tài khoản" — Header truyền vào một <Suspense>, xem bên dưới. */
   accountItem: ReactNode;
-  cartCount?: number;
+  /** Badge số lượng giỏ hàng — Header truyền vào một slot có <Suspense> RIÊNG, xem Header(). */
+  cartBadge: ReactNode;
 }
 
 /** Mục "Đăng nhập" — CHỈ là trạng thái chưa đăng nhập thật (fallback là AccountFallback). */
@@ -54,7 +56,7 @@ function AccountFallback() {
  * mục — "Đăng nhập" hoặc "Tài khoản", và "Giỏ hàng" (đã gỡ mục "Yêu thích" vì
  * trang đó chưa tồn tại).
  */
-export function HeaderView({ categories, accountItem, cartCount = 0 }: HeaderViewProps) {
+export function HeaderView({ categories, accountItem, cartBadge }: HeaderViewProps) {
   return (
     <HeaderShell
       topbar={
@@ -97,21 +99,11 @@ export function HeaderView({ categories, accountItem, cartCount = 0 }: HeaderVie
           >
             {accountItem}
 
-            <Link
-              href="/gio-hang"
-              aria-label={`Giỏ hàng${cartCount > 0 ? `, ${cartCount} sản phẩm` : ""}`}
-              className={`relative ${navItemClass}`}
-            >
+            <Link href="/gio-hang" className={`relative ${navItemClass}`}>
               <BagIcon className={navIconClass} />
-              <span className="hidden sm:inline">Giỏ hàng</span>
-              {cartCount > 0 && (
-                <span
-                  aria-hidden="true"
-                  className="absolute -top-1 right-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-nghe-400 px-1 text-xs font-semibold leading-none text-ink-900"
-                >
-                  {cartCount > 99 ? "99+" : cartCount}
-                </span>
-              )}
+              {/* Tên truy cập là "Giỏ hàng" (cộng ", N sản phẩm" từ badge); từ sm mới hiện chữ. */}
+              <span className="sr-only sm:not-sr-only">Giỏ hàng</span>
+              {cartBadge}
             </Link>
           </nav>
         </div>
@@ -156,8 +148,26 @@ async function AccountItem() {
   );
 }
 
-interface HeaderProps {
-  cartCount?: number;
+/**
+ * Badge số lượng giỏ hàng (đợt 3A, FR-3A.4): render phía server từ cookie `na_cart`
+ * (khách) hoặc bảng `cart_items` (đã đăng nhập), nên số trong HTML đầu đã đúng. Đọc
+ * cookie nên nằm sau <Suspense> RIÊNG, tách khỏi slot auth — hai boundary độc lập.
+ * Giỏ rỗng thì không hiện gì.
+ */
+async function CartCount() {
+  const count = await getCartCount();
+  if (count <= 0) return null;
+  return (
+    <>
+      <span
+        aria-hidden="true"
+        className="flex h-5 min-w-5 items-center justify-center rounded-full bg-nghe-400 px-1 text-xs font-semibold leading-none text-ink-900"
+      >
+        {count > 99 ? "99+" : count}
+      </span>
+      <span className="sr-only">, {count} sản phẩm</span>
+    </>
+  );
 }
 
 /**
@@ -174,13 +184,24 @@ interface HeaderProps {
  * Thuộc tính testid ở thẻ bọc dưới đánh dấu đúng một slot auth (dùng cho phép
  * đo, spec 2B.2 TC-0). Mobile dùng chung slot này, không có slot riêng.
  */
-export async function Header({ cartCount = 0 }: HeaderProps) {
+export async function Header() {
   const categories = await getCategoryTree();
 
   return (
     <HeaderView
       categories={categories}
-      cartCount={cartCount}
+      cartBadge={
+        // Phần tử bọc cố định 20×20px, KHÔNG chứa số khi chưa biết giỏ (fallback rỗng): thà chưa
+        // có thông tin còn hơn hiện "0" sai (nguyên tắc 2B.2). Tuyệt đối vị trí nên không đổi bố cục.
+        <span
+          data-testid="header-cart-count"
+          className="pointer-events-none absolute -top-1 right-0 flex h-5 min-w-5 items-center justify-center"
+        >
+          <Suspense fallback={null}>
+            <CartCount />
+          </Suspense>
+        </span>
+      }
       accountItem={
         <div data-testid="header-auth" className="flex">
           <Suspense fallback={<AccountFallback />}>
