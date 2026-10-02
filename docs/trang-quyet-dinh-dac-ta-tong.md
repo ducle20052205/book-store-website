@@ -239,6 +239,8 @@ Spec: `docs/specs/buoc-2b2-xoa-nhay-trang-thai-header.md` (bản v2, ghi đè b�
 
 **Phát hiện khi làm:** chuỗi "Đăng nhập" rộng 74,9 px, dài hơn "Tài khoản" 66,0 px (Be Vietnam Pro, 1280px, 1 mẫu mỗi chuỗi), ngược với ghi chú cũ ở `components/headerStyles.ts` và spec v1.0. Ô chữ vì vậy là 80 px và hộp là 149 px (trước đó `min-w` 135 px). Cả ba trạng thái căn từ trái, chừa chỗ cho mũi tên, để biểu tượng không dịch chỗ khi fallback được thay bằng nội dung thật.
 
+**Ghi chú bổ sung (02/10, đo ở đợt 3A):** tiêu chí CLS = 0 của 2B.2 không ổn định. Đo xen kẽ A/B giữa `main` và nhánh 3A: `main` cho 0/10, 8/10 và 9/10 lượt có CLS khác 0, giá trị tối đa 0,0002; nhánh 3A cũng dao động, có lượt 0/30. Nguồn dịch chuyển là độ rộng nav và chữ danh mục (font hoặc thanh cuộn), không phải slot auth hay badge giỏ hàng. Kết luận "CLS = 0 ở cả 20 lần" của 2B.2 vì vậy chỉ đúng với môi trường đo lúc đó, không phải một tính chất của mã.
+
 ## 8. Bài học đã rút ra (giữ lại để không lặp)
 
 **Về tiêu chí nghiệm thu**
