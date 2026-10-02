@@ -4,7 +4,7 @@
 >
 > **Ai được sửa phần nào.** Bản gốc là bản trong Claude.ai Project này; file `docs/trang-quyet-dinh-dac-ta-tong.md` trong repo là bản đồng bộ. Claude Code **được sửa mục 7** (bảng tiến độ, số đo, số commit/PR) vì nó biết chính xác hơn. **Mọi mục khác chỉ chủ dự án ghi**, vì chúng chốt trong chat mà Claude Code không đọc được; thấy lệch thì báo cáo, không tự sửa. Mọi lần sửa file này là **commit riêng**, không gộp vào commit mã. Trong file chỉ ghi sự kiện và số đo kèm số mẫu — không có câu tự thuật tiến độ, không có đánh giá chất lượng công việc; file này sẽ nằm trong portfolio.
 >
-> **Cập nhật lần cuối:** 01/10/2026 (bản thứ hai trong ngày — sau khi chốt spec 2B.2 và ranh giới sửa file này).
+> **Cập nhật lần cuối:** 02/10/2026 (bản thứ hai trong ngày — sau khi chốt spec 2B.2 và ranh giới sửa file này).
 > **Nguồn chân lý:** repo `github.com/ducle20052205/book-store-website`. Các file `docs/SRS.md`, `docs/specs/*`, `CLAUDE.md` trong repo là bản gốc; file này là bản tóm tắt cấp quyết định.
 
 ## 1. Bối cảnh & mục tiêu (đã chốt)
