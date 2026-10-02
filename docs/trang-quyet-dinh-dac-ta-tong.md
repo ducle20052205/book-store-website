@@ -131,7 +131,7 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 | Bước 2A: Hạ tầng auth | Xong, đã merge (PR #7) |
 | Bước 2B: Đăng nhập / đăng ký | Xong, đã merge (PR #9, `18016f8`) |
 | Bước 2B.1: Hiệu năng trên hosted | Xong, đã merge (PR #10, `d49ff1a`) |
-| Bước 2B.2: Nháy trạng thái header | **Đang làm** — spec v2 đã viết (nhánh `fix/2b2-xoa-nhay-header`, commit `255c30e`), chưa sửa mã |
+| Bước 2B.2: Nháy trạng thái header | **Xong, chờ PR** — nhánh `fix/2b2-xoa-nhay-header`, mã ở commit `65269fb` |
 | Bước 2C: Quên/đặt lại mật khẩu | Chưa bắt đầu |
 | Bước 2D: Trang hồ sơ, tỉnh/phường, đổi mật khẩu | Chưa bắt đầu |
 | Đợt 1.6: Sửa lỗi giao diện tồn đọng | Chưa bắt đầu |
@@ -201,7 +201,7 @@ Kết luận ghi trong spec: **không hồi quy, cải thiện nhất quán về
 
 **Chưa lên lịch:** N+1 ở trang chủ — ~25–30 truy vấn PostgREST xếp 4–5 bậc nối tiếp cho một trang 40 cuốn sách. Đổi vùng chỉ che bớt chứ không chữa.
 
-### 7.3 Đợt 2B.2 — phạm vi và tiêu chí đã chốt (01/10/2026, chưa sửa mã)
+### 7.3 Đợt 2B.2 — phạm vi, tiêu chí và kết quả đo (01/10/2026)
 
 Spec: `docs/specs/buoc-2b2-xoa-nhay-trang-thai-header.md` (bản v2, ghi đè bản v1.0 ngày 30/09).
 
@@ -211,6 +211,31 @@ Spec: `docs/specs/buoc-2b2-xoa-nhay-trang-thai-header.md` (bản v2, ghi đè b�
 - **Loại tiêu chí mới — đối chứng baseline (TC-3):** chạy đúng script đo trên commit **trước khi sửa**, phải thấy lỗi tái hiện ≥3/10. Baseline 0/10 nghĩa là phép đo hỏng hoặc môi trường không đủ điều kiện, **không được kết luận "đạt"**. Nếu tăng độ trễ Supabase tới +500 ms vẫn không tái hiện thì dừng và báo cáo.
 - **Hạn chế đã biết, không vá:** tắt JavaScript thì fallback ở nguyên nên header không có liên kết đăng nhập. Không vá bằng `<noscript>` vì nó chỉ render được một trạng thái tĩnh, sẽ hiện "Đăng nhập" cho cả người đã đăng nhập — tái tạo đúng lỗi đang chữa, chỉ khác là vĩnh viễn. Vá riêng header cũng không cứu được trang: giỏ hàng, menu, dropdown đều cần JS.
 - **Phương án cookie gợi ý hiển thị để ngoài phạm vi 2B.2**, chỉ mở khi TC-1 trượt, và khi đó phải có spec riêng vì nó thêm một nguồn sự thật thứ hai về trạng thái auth.
+
+**Kết quả đo (01/10/2026).** Điều kiện: stack Supabase cục bộ, bản production (`next build` rồi `next start`) ở `127.0.0.1:3100`, Edge headless qua CDP, 1280px, tắt cache, độ trễ Supabase +160 ms/vòng ở cả hai phía. Mã mới ở commit `65269fb`; baseline là mã ứng dụng của `87ba18c`. Một lượt tải là một mẫu.
+
+| Phép đo | Số mẫu | Kết quả |
+|---|---|---|
+| Bước 0: vị trí hiển thị trạng thái auth | 1 lần đọc mã | 1 vị trí (`components/Header.tsx`); mobile dùng chung slot |
+| Bước 0: HTML ban đầu của baseline, đã đăng nhập | 1 lượt tải | Chứa "Đăng nhập" trong fallback phía server |
+| Bước 0: tắt JS, tải `/` | 1 lượt mỗi trạng thái | Baseline hiện "Đăng nhập" cho cả người đã đăng nhập; mã mới hiện ô rỗng cho cả hai trạng thái |
+| TC-0: `data-testid="header-auth"` | `rg -c`; 20 lượt tải | 1 lần trong mã; 1 phần tử trong DOM ở cả 20 lượt |
+| TC-3: baseline, đã đăng nhập | 10 | **10/10** thấy "Đăng nhập" sau FCP (selector `nav[aria-label="Tài khoản và giỏ hàng"]`, khác selector của TC-1; xem ghi chú dưới TC-3 trong spec) |
+| TC-1: mã mới, đã đăng nhập | 10 | **0/10** |
+| TC-2a: mã mới, khách, thấy tên hoặc "Tài khoản" | 10 | **0/10** |
+| TC-2b: mã mới, khách, kết thúc bằng "Đăng nhập" | 10 | **10/10** |
+| TC-4: CLS của `/` | 10 mỗi trạng thái | **0** ở 20/20 lượt. Baseline đã đăng nhập: 9/10 lượt khác 0, tối đa 0,0002 (ngưỡng "tốt" 0,1) |
+| TC-5: bề rộng slot, fallback so với ổn định | 10 mỗi trạng thái | 149,00 px và 149,00 px ở 20/20 lượt, chênh 0 px |
+| Mobile 390px: kích thước slot, fallback / ổn định | 5 mỗi trạng thái | 44×44 px / 44×44 px; TC-1 0/5; CLS 0 |
+| TC-6: số phần tử focusable trong slot, fallback / ổn định | 10 mỗi trạng thái | 0 / 1 ở 20/20 lượt |
+| TC-7: FCP đến lúc chữ thật xuất hiện, trung vị (khoảng) | 10 mỗi dòng | Đã đăng nhập 285 ms (269–291); khách 279 ms (158–288); baseline đã đăng nhập 398 ms (261–449). Không có ngưỡng; chưa đo độ nhiễu của phép đo |
+| `tsc`, `eslint`, `next build` | 1 lần | 0 lỗi, 0 lỗi, exit 0 |
+
+**TC-8 — chốt không chạy.** Sau khi đổi vùng sang `hnd1`, PostgREST từ Vercel có trung vị 12,5 ms, trong khi cửa sổ lỗi ở cục bộ chỉ mở được khi cộng +160 ms. Baseline trên production nhiều khả năng ra 0/10, tức "không tái hiện được" theo luật đối chứng của TC-3, không phải "đạt". Bằng chứng cho bản sửa là phép đo cục bộ: baseline 10/10 → 0/10, cùng script, cùng độ trễ, 10 mẫu mỗi phía.
+
+**TC-9 — tự động qua CDP, cục bộ, không thêm độ trễ.** 3 lượt mỗi viewport (1280px và 390px), 6/6 lượt đạt: menu mở hiện đúng dropdown (1280px) hoặc sheet (390px); họ tên và email hiển thị khớp tài khoản thử; "Đăng xuất" đưa slot về khách; `/tai-khoan` sau đăng xuất chuyển về `/dang-nhap?next=%2Ftai-khoan`. Đối chứng: khi còn đăng nhập, `/tai-khoan` không bị chuyển hướng, 6/6.
+
+**Phát hiện khi làm:** chuỗi "Đăng nhập" rộng 74,9 px, dài hơn "Tài khoản" 66,0 px (Be Vietnam Pro, 1280px, 1 mẫu mỗi chuỗi), ngược với ghi chú cũ ở `components/headerStyles.ts` và spec v1.0. Ô chữ vì vậy là 80 px và hộp là 149 px (trước đó `min-w` 135 px). Cả ba trạng thái căn từ trái, chừa chỗ cho mũi tên, để biểu tượng không dịch chỗ khi fallback được thay bằng nội dung thật.
 
 ## 8. Bài học đã rút ra (giữ lại để không lặp)
 
