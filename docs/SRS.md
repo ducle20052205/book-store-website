@@ -1,6 +1,6 @@
 # Đặc tả Yêu cầu Phần mềm (SRS) – NA Books – 7 Tính năng Core
 
-Phiên bản 1.4 · 29/09/2026 · Soạn bởi Lê Minh Đức
+Phiên bản 1.5 · 02/10/2026 · Soạn bởi Lê Minh Đức
 
 Tài liệu liên quan: docs/specs/claude-code-brand-update.md (nhận diện thương hiệu), docs/specs/buoc-1-catalog-chi-tiet.md (triển khai bước 1), docs/mockups/ (mockup giao diện).
 
@@ -191,7 +191,7 @@ flowchart LR
     C --> UC16
 ```
 
-Ghi chú: UC3 (Quản lý giỏ hàng) khả dụng cho cả hai actor nhưng lưu dữ liệu khác nơi — giỏ của Khách vãng lai ở `localStorage`, giỏ của Khách hàng ở bảng `cart_items` (chi tiết mục 5.3). UC8 chỉ Khách hàng thực hiện được — Khách vãng lai bấm "Thanh toán" bị chuyển hướng sang UC4/UC5 trước.
+Ghi chú: UC3 (Quản lý giỏ hàng) khả dụng cho cả hai actor nhưng lưu dữ liệu khác nơi — giỏ của Khách vãng lai ở cookie `na_cart`, giỏ của Khách hàng ở bảng `cart_items` (chi tiết mục 5.3). UC8 chỉ Khách hàng thực hiện được — Khách vãng lai bấm "Thanh toán" bị chuyển hướng sang UC4/UC5 trước.
 
 ### B. Quản trị viên & Automation
 
@@ -306,10 +306,10 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 
 ### 5.3 Giỏ hàng
 
-- **FR-3.1** — Khách vãng lai thêm sách vào giỏ được lưu tại `localStorage` của trình duyệt, dạng mảng `{book_id, quantity}`.
+- **FR-3.1** — Khách vãng lai thêm sách vào giỏ được lưu trong cookie `na_cart` (httpOnly, chỉ sửa qua Server Action), dạng mảng các dòng `{book_id, quantity}`; chi tiết ở `docs/specs/buoc-3a-gio-hang.md` (FR-3A.1). Lý do không dùng `localStorage`: badge số lượng giỏ hàng trên header phải đúng ngay trong HTML đầu, không chờ JavaScript chạy.
 - **FR-3.2** — Khách hàng thêm sách vào giỏ được lưu vào bảng `cart_items` (`user_id`, `book_id`, `quantity`).
 - **FR-3.3** — Thêm sách đã có sẵn trong giỏ → cộng dồn `quantity`, không tạo dòng mới. Áp dụng ràng buộc `UNIQUE (user_id, book_id)` ở tầng database.
-- **FR-3.4** — Ngay sau khi Khách vãng lai đăng nhập/đăng ký thành công: với mỗi item trong `localStorage`, nếu `book_id` đã tồn tại trong `cart_items` của user thì cộng dồn `quantity`, chưa có thì insert dòng mới; merge xong thì xóa dữ liệu giỏ khỏi `localStorage`.
+- **FR-3.4** — Ngay sau khi Khách vãng lai đăng nhập/đăng ký thành công: với mỗi dòng trong cookie `na_cart`, nếu `book_id` đã tồn tại trong `cart_items` của user thì cộng dồn `quantity`, chưa có thì insert dòng mới; merge xong thì xóa cookie `na_cart` trong cùng response. `mergeGuestCart` chạy phía server, trong Server Action đăng nhập/đăng ký, trước khi điều hướng.
 - **FR-3.5** — Cho phép đổi số lượng (`quantity ≥ 1`) hoặc xóa từng dòng khỏi giỏ.
 - **FR-3.6** — `quantity` nhập vào vượt `stock_quantity` hiện có → giới hạn tối đa bằng `stock_quantity`, hiển thị cảnh báo.
 - **FR-3.7** — Tổng tiền giỏ hàng = `SUM(quantity × giá thực tế)` từng sách, cập nhật theo thời gian thực khi có thay đổi.
@@ -362,7 +362,7 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 ### 5.8 Ghi log sự kiện
 
 - **FR-8.1** — Hệ thống ghi sự kiện hành vi vào bảng `events` qua hàm `track(event_type, metadata)` phía client, theo kiểu fire-and-forget: không chặn giao diện, lỗi không hiển thị cho người dùng.
-- **FR-8.2** — Mỗi sự kiện có `session_id` (UUID ẩn danh lưu trong `localStorage`) và `user_id` (null nếu chưa đăng nhập).
+- **FR-8.2** — Mỗi sự kiện có `session_id` (UUID ẩn danh lưu trong cookie `na_sid`, không httpOnly để `track()` phía client đọc được; không dùng `localStorage`) và `user_id` (null nếu chưa đăng nhập).
 - **FR-8.3** — Các loại sự kiện hợp lệ: `page_view`, `search`, `add_to_cart`, `checkout_started`, `order_placed`, `sign_up`, `login` (ràng buộc CHECK ở database).
 - **FR-8.4** — `page_view` được ghi khi mở trang chi tiết sách (`metadata`: `book_id`, `slug`). `search` được ghi khi trang catalog có từ khóa (`metadata`: `q`, `results_count`, `category`, `sort`), kể cả khi không có kết quả. `add_to_cart`, `checkout_started`, `order_placed` được ghi ở các tính năng Giỏ hàng và Checkout. `sign_up` được ghi khi đăng ký thành công, `login` được ghi khi đăng nhập thành công; `metadata` của cả hai có dạng `{"method":"password"}`.
 - **FR-8.5** — `metadata` không chứa dữ liệu cá nhân (email, tên, địa chỉ, số điện thoại) và tối đa 2KB. Riêng `sign_up` và `login`: `metadata` tuyệt đối không chứa email.
@@ -448,3 +448,4 @@ Ghi chú: TRIG (Đặt hàng thành công — chính là UC8 ở sơ đồ A) «
 | 1.2 | 24/09/2026 | Chính thức hoá chính sách bìa sách: không dùng ảnh bìa bản quyền, toàn bộ bìa do `<BookCover>` sinh tự động từ `title`/`author`/`slug` (FR-2.8 mới); `cover_image_url` giữ trong schema `books` cho khả năng mở rộng sau này nhưng không dùng ở phạm vi hiện tại; cập nhật FR-1.1, FR-2.1 cho khớp. |
 | 1.3 | 29/09/2026 | Ghi nhận các quyết định thiết kế của bước 1.5 (đợt A→F, chi tiết xem `docs/specs/dot-e-design-plan.md`): chữ ký thị giác riêng — ghi chú biên tập ở lề nối bằng nét kẻ tay, quy tắc chữ nghiêng/đứng theo người nói; hợp nhất hệ màu tối `cham-900` và phân lớp nền trang/thẻ `paper`/`surface` (NFR-3.5 mới); chuyển động có mục đích, chỉ animate transform/opacity, CLS = 0, tôn trọng `prefers-reduced-motion` (NFR-3.6 mới); yêu cầu tái kiểm WCAG AA sau mỗi lần đổi token màu (NFR-6.7 mới); nhãn danh mục con, chip "Trong tủ sách" và giới thiệu ngắn theo danh mục cha trên trang catalog. |
 | 1.4 | 29/09/2026 | Chốt quyết định thiết kế bước 2 (Tài khoản người dùng) và sửa các chỗ bản 1.3 mô tả sai database thật. Sửa cho đúng thực tế: FR-5.2 (trigger `handle_new_user()` insert `id, role, email, full_name`; `profiles` có cột `email`), FR-7.1 (route protection bằng `proxy.ts` của Next.js 16, nguyên tắc hai lớp), FR-8.3/8.4/8.5 (thêm sự kiện `sign_up`, `login`), schema 11 bảng. Viết lại/bổ sung mục 5.5: FR-5.1 (mật khẩu ≥ 8 ký tự theo NIST SP 800-63B rev 4, ô "Nhập lại email"), FR-5.3 (`?next=` chống open redirect), FR-5.4 (custom SMTP, 3 route), FR-5.5 (địa chỉ 3 trường), FR-5.6 (ghi chú và hạn chế đã biết). Thêm mới: FR-5.7 (đổi mật khẩu), FR-5.8 (`provinces`, `wards`, mô hình 2 cấp từ 01/07/2025), US-5.5, UC16, NFR-2.6, 2 dòng RLS ở mục 5.10; ngoài phạm vi: magic link, Google, wishlist; runbook `docs/runbooks/tao-admin-dau-tien.md`. Đếm lại: 63 FR (bản 1.3 ghi 60, thực tế 61), 30 US, 26 NFR. Rà soát bổ sung: khoá `profiles.email` ở tầng trigger (FR-5.2, FR-5.6), template `token_hash` cho email đặt lại mật khẩu (FR-5.4), chặn `/\` trong `?next=` (FR-5.3), khoá ngoại kép cho cặp tỉnh/phường và cách seed (FR-5.8), ghép chuỗi `address` ở tầng server (FR-5.5), đồng bộ form địa chỉ ở checkout (FR-4.2), sửa NFR-1.2 cho khớp FR-2.8, NFR-2.5 dùng `proxy.ts`, US-5.3 đổi actor thành Khách vãng lai. Lần rà thứ hai: khoá `email` vô điều kiện thay vì chỉ với người không phải Admin (FR-5.2, FR-5.6), khoá ngoại kép dùng `MATCH FULL` (FR-5.8), viết lại FR-4.2 cho nhất quán với form địa chỉ ba trường. Lần rà thứ ba: thêm trigger `sync_profile_email` đồng bộ email từ `auth.users` xuống `profiles` (FR-5.2, FR-5.5), sửa sơ đồ ER cho khớp khoá ngoại kép, làm rõ thời điểm ghép `shipping_address` (FR-4.2). Lần rà thứ tư: đặt lại cờ đồng bộ ngay sau khi dùng, dọn các câu chữ lệch nhau sau khi thêm trigger đồng bộ. |
+| 1.5 | 02/10/2026 | Giỏ của khách vãng lai lưu bằng cookie `na_cart` thay cho `localStorage` (FR-3.1, FR-3.4, ghi chú UC3), vì badge số lượng giỏ hàng trên header phải đúng ngay trong HTML đầu mà không chờ JavaScript; `mergeGuestCart` vì thế chạy phía server trong Server Action đăng nhập/đăng ký. `session_id` của `events` lưu ở cookie `na_sid` thay cho `localStorage` (FR-8.2), vì sự kiện ghi từ server cần đọc được cùng một `session_id` với sự kiện ghi từ client. |
