@@ -4,8 +4,8 @@
 **ảnh là nguồn cho bố cục, màu và khoảng cách**; số đo cụ thể lấy từ spec
 trong `docs/specs/`. Hai bên mâu thuẫn thì theo spec — và báo lại chỗ mâu thuẫn.
 
-Nguồn: canvas Claude Design "NA Books — Giỏ hàng & Checkout", 02/10/2026. Sáu
-artboard, hai trong số đó bấm được: giỏ hàng (nút +/− đổi số lượng và tổng
+Nguồn: canvas Claude Design "NA Books — Giỏ hàng & Checkout", 02/10/2026. Tám
+artboard (sáu bản đầu và hai bản mobile của checkout, xác nhận đơn), hai trong số đó bấm được: giỏ hàng (nút +/− đổi số lượng và tổng
 tiền) và checkout (chọn chuyển khoản thì mở khối thông tin ngân hàng). Ảnh PNG
 là ảnh tĩnh, không có hai hành vi này.
 
@@ -18,6 +18,8 @@ là ảnh tĩnh, không có hai hành vi này.
 | `checkout.png` | Thanh toán một bước | 1280×1180 |
 | `xac-nhan-don.png` | Xác nhận đơn hàng | 1280×800 |
 | `gio-hang-mobile.png` | Giỏ hàng ở 390px | 390×844 |
+| `checkout-mobile.png` | Thanh toán một bước ở 390px | 390×1340 |
+| `xac-nhan-don-mobile.png` | Xác nhận đơn hàng ở 390px | 390×980 |
 | `he-layout-dong-bang.png` | Hệ layout tham chiếu | 1280×1040 |
 
 Kích thước khung là kích thước artboard; ảnh xuất ở 2× so với khung.
@@ -39,6 +41,9 @@ cần thành phần chưa có thì thêm vào hệ trước, rồi mới dùng.
 - Bỏ dải "trust strip" 4 icon kiểu các nhà sách thật — nó là ngôn ngữ của shop
   thật, đặt vào portfolio thành nhiễu.
 - Luồng tập trung (`/gio-hang`, `/thanh-toan`): ở đúng những kích thước có thanh thao tác cố định (dưới 1024px), footer đầy đủ được thay bằng một dòng "Dữ liệu sách chỉ nhằm minh họa cho dự án portfolio." (nền `paper`, chữ 12px `ink-400`, canh giữa); từ 1024px trở lên footer đầy đủ như mọi trang.
+- Dưới breakpoint `--breakpoint-bottom-bar` (64rem), cột tóm tắt của `/thanh-toan` biến mất nên nút "Đặt hàng" chuyển xuống thanh đáy cố định, cùng khuôn và cùng breakpoint với `/gio-hang` (`checkout-mobile.png`).
+- Tóm tắt đơn trên mobile là một hàng gập mở ở đầu form, không phải cột bên cạnh: thấy tổng tiền trước khi điền, mở ra xem từng cuốn nếu muốn. **Đây là chỗ lệch quy ước:** Fahasa và Phương Nam đặt khối tóm tắt cố định ở cuối form.
+- Trang xác nhận đơn (`xac-nhan-don.png`, `xac-nhan-don-mobile.png`) KHÔNG thuộc luồng tập trung (route riêng), nên không có thanh đáy và giữ footer đầy đủ.
 
 ## Dữ liệu trong ảnh
 
