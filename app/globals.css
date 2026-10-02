@@ -188,6 +188,18 @@
    không tự ép dark mode và đảo màu (mockup header-2a.html, điểm khác biệt số 3). */
 :root {
   color-scheme: light;
+  /* Chiều cao thanh thao tác đáy của /gio-hang (đợt 3A): viền 1 + đệm 12 + dòng tổng 28 + cách 12 +
+     nút 48 + đệm 12 = 113px, cộng vùng an toàn của thiết bị. Thanh và đệm đáy của trang dùng chung
+     đúng biến này nên luôn bằng nhau. */
+  --bottom-bar-h: calc(7rem + 1px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Có thanh thao tác đáy cố định (dưới 1024px) thì chừa chỗ ở đáy tài liệu, SAU footer, để dòng
+   cuối của footer không bị thanh che khi cuộn hết trang. */
+@media (max-width: 1023px) {
+  body:has([data-bottom-bar]) {
+    padding-bottom: var(--bottom-bar-h);
+  }
 }
 
 /* D: khung nội dung rộng 1440px (từ 1200px) dùng chung cho header, nav, nội

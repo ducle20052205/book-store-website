@@ -21,6 +21,20 @@ const linkClass =
   "block rounded-control py-3 text-cham-50 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
 
 /**
+ * Footer thu gọn của luồng tập trung (/gio-hang, /thanh-toan) dưới 768px — đợt 3A,
+ * FR-3A.16, xem components/FooterSwitch.tsx. Đúng một câu, nền `paper`, chữ 12px
+ * `ink-400`, canh giữa, đệm 16px trên dưới (dòng cao đúng 16px để chiều cao là số nguyên, không sinh lẻ px ở đáy tài liệu); không cột liên kết, không giới thiệu
+ * thương hiệu, không liên kết GitHub.
+ */
+export function FooterCompact() {
+  return (
+    <footer className="mt-auto bg-paper px-4 py-4 text-center text-micro leading-4 text-ink-400">
+      Dữ liệu sách chỉ nhằm minh họa cho dự án portfolio.
+    </footer>
+  );
+}
+
+/**
  * C.1: footer 4 cột (mobile xếp dọc) — trước đó chỉ có 1 dòng ghi chú dữ
  * liệu minh hoạ. Tự lấy category/collection giống Header, không cần
  * layout.tsx truyền props xuống.

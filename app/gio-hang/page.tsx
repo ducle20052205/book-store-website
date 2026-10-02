@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { BookCover } from "@/components/BookCover";
 import { CartLineControls } from "@/components/cart/CartLineControls";
 import { RepairCartCookie } from "@/components/cart/RepairCartCookie";
+import { MediaGate } from "@/components/MediaGate";
 import { formatVnd, Price } from "@/components/Price";
 import { StockLabel } from "@/components/StockLabel";
 import { MAX_LINE_QUANTITY } from "@/lib/cart/cookie";
@@ -151,6 +152,11 @@ async function CartContent() {
             <SummaryRows view={view} />
             <div className="mt-5">
               <CheckoutAction view={view} />
+              {view.hasOutOfStock && (
+                <p role="status" className="mt-2 text-meta text-ink-600">
+                  {OUT_OF_STOCK_NOTE}
+                </p>
+              )}
             </div>
             <p className="mt-4 text-meta text-ink-600">
               Đây là dự án portfolio: không có cổng thanh toán thật và không có đơn hàng nào được giao.
@@ -165,14 +171,35 @@ async function CartContent() {
         </Link>
       </p>
 
-      {/* Mobile và tablet: thanh tổng dính đáy, nằm trong luồng trang nên không che footer. */}
-      <div className="sticky bottom-0 -mx-4 mt-6 border-t border-line-warm bg-surface px-4 py-3 md:-mx-6 md:px-6 lg:hidden">
-        <div className="mb-3 flex items-baseline justify-between gap-3">
-          <p className="text-body-sm text-ink-600">Tổng cộng · miễn phí giao hàng</p>
-          <p className="font-serif text-xl font-semibold text-cham-700">{formatVnd(view.subtotal)}</p>
+      {view.hasOutOfStock && (
+        <p role="status" className="mt-4 text-body-sm text-ink-600 lg:hidden">
+          {OUT_OF_STOCK_NOTE}
+        </p>
+      )}
+
+      {/*
+        Dưới 1024px (cột tóm tắt ở trên bị ẩn): thanh tổng + nút Thanh toán CỐ ĐỊNH ở đáy khung nhìn,
+        trên mọi nội dung (mockup gio-hang-mobile.png). Không dùng sticky: sticky chỉ dính trong
+        phạm vi khối chứa nó nên nội dung ngắn thì thanh nằm lửng giữa trang, nội dung dài thì
+        trôi mất khi tới footer. Cao đúng --bottom-bar-h (app/globals.css), cũng là đệm đáy của
+        <body>, nên footer không bị che. Từ 1024px thanh bị gỡ khỏi DOM (MediaGate).
+      */}
+      <MediaGate query="(max-width: 1023px)">
+        <div
+          data-bottom-bar
+          className="fixed inset-x-0 bottom-0 z-30 box-border h-[var(--bottom-bar-h)] border-t border-line-warm bg-surface px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:px-6 lg:hidden"
+        >
+          <div className="flex h-7 items-center justify-between gap-3">
+            <p className="min-w-0 truncate text-body-sm text-ink-600">Tổng cộng · miễn phí giao hàng</p>
+            <p className="shrink-0 whitespace-nowrap font-serif text-xl font-semibold leading-none text-cham-700">
+              {formatVnd(view.subtotal)}
+            </p>
+          </div>
+          <div className="mt-3 h-12">
+            <CheckoutAction view={view} />
+          </div>
         </div>
-        <CheckoutAction view={view} />
-      </div>
+      </MediaGate>
     </>
   );
 }
@@ -198,18 +225,15 @@ function SummaryRows({ view }: { view: CartView }) {
   );
 }
 
-/** Sách hết hàng trong giỏ thì chặn đi tiếp sang thanh toán (FR-3A.9). */
+const OUT_OF_STOCK_NOTE = "Trong giỏ có sách đã hết hàng. Bạn xóa khỏi giỏ để tiếp tục thanh toán nhé.";
+
+/** Sách hết hàng trong giỏ thì chặn đi tiếp sang thanh toán (FR-3A.9). Chỉ có nút, không có chữ kèm theo: thanh đáy cao cố định. */
 function CheckoutAction({ view }: { view: CartView }) {
   if (view.hasOutOfStock) {
     return (
-      <>
-        <button type="button" disabled className={primaryButtonClass}>
-          Thanh toán
-        </button>
-        <p role="status" className="mt-2 text-meta text-ink-600">
-          Trong giỏ có sách đã hết hàng. Bạn xóa khỏi giỏ để tiếp tục thanh toán nhé.
-        </p>
-      </>
+      <button type="button" disabled className={primaryButtonClass}>
+        Thanh toán
+      </button>
     );
   }
   return (

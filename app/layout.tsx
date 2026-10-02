@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, Newsreader } from "next/font/google";
-import { Footer } from "@/components/Footer";
+import { Suspense } from "react";
+import { Footer, FooterCompact } from "@/components/Footer";
+import { FooterSwitch } from "@/components/FooterSwitch";
 import { Header } from "@/components/Header";
 import { WelcomeStrip } from "@/components/WelcomeStrip";
 import "./globals.css";
@@ -42,7 +44,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Header />
         <WelcomeStrip />
         <main className="flex-1">{children}</main>
-        <Footer />
+        {/* usePathname() trong FooterSwitch cần <Suspense> ở route có tham số động; fallback là footer đầy đủ. */}
+        <Suspense fallback={<Footer />}>
+          <FooterSwitch full={<Footer />} compact={<FooterCompact />} />
+        </Suspense>
       </body>
     </html>
   );
