@@ -4,7 +4,13 @@ import { AccountMenu } from "@/components/AccountMenu";
 import { CategoryNav } from "@/components/CategoryNav";
 import { HeaderShell } from "@/components/HeaderShell";
 import { BagIcon, SearchIcon, UserIcon } from "@/components/HeaderIcons";
-import { navAccountWidthClass, navIconClass, navItemClass } from "@/components/headerStyles";
+import {
+  navAccountLabelClass,
+  navAccountWidthClass,
+  navFallbackClass,
+  navIconClass,
+  navItemClass,
+} from "@/components/headerStyles";
 import { LoginNavLink } from "@/components/LoginNavLink";
 import { type CategoryNode, getCategoryTree } from "@/lib/queries";
 import { createClient } from "@/lib/supabase/server";
@@ -16,13 +22,28 @@ interface HeaderViewProps {
   cartCount?: number;
 }
 
-/** Mục "Đăng nhập" — vừa là trạng thái chưa đăng nhập thật, vừa là fallback trong lúc đọc phiên. */
+/** Mục "Đăng nhập" — CHỈ là trạng thái chưa đăng nhập thật (fallback là AccountFallback). */
 function LoginLink() {
   return (
     <LoginNavLink className={`${navItemClass} ${navAccountWidthClass}`}>
       <UserIcon className={navIconClass} />
-      <span className="hidden sm:inline">Đăng nhập</span>
+      <span className={navAccountLabelClass}>Đăng nhập</span>
     </LoginNavLink>
+  );
+}
+
+/**
+ * Fallback của <Suspense> ở mục tài khoản (đợt 2B.2). Trong lúc chưa đọc xong
+ * phiên thì chưa biết người dùng đã đăng nhập hay chưa, nên không được nói gì:
+ * chỉ có biểu tượng người (trang trí) và một ô chữ rỗng cùng kích thước với
+ * trạng thái thật. Không phải liên kết, không focusable, không aria-live.
+ */
+function AccountFallback() {
+  return (
+    <div className={navFallbackClass}>
+      <UserIcon className={navIconClass} />
+      <span aria-hidden="true" className={navAccountLabelClass} />
+    </div>
   );
 }
 
@@ -142,10 +163,16 @@ interface HeaderProps {
 /**
  * Header của layout gốc (đợt 2A). Phần tĩnh — logo, ô tìm kiếm, thanh danh mục
  * (dữ liệu qua `use cache`) — prerender vào shell. Chỉ mục tài khoản phụ thuộc
- * phiên nên bọc riêng trong <Suspense> với fallback là trạng thái chưa đăng nhập:
- * layout gốc không đọc cookie ở tầng trên cùng nên các trang bên trong vẫn tĩnh
- * được. Người đã đăng nhập sẽ thấy "Đăng nhập" trong khoảnh khắc ngắn cho tới
- * khi phần streaming về, rồi đổi sang "Tài khoản".
+ * phiên nên bọc riêng trong <Suspense>: layout gốc không đọc cookie ở tầng trên
+ * cùng nên các trang bên trong vẫn tĩnh được.
+ *
+ * Fallback KHÔNG nói trạng thái nào (đợt 2B.2): fallback "Đăng nhập" là thông
+ * tin sai với người đã đăng nhập, và React chỉ lật boundary sau ≥300 ms nếu
+ * nó xong sau khung vẽ đầu. Đánh đổi có chủ đích: khách chưa đăng nhập thấy ô
+ * chữ rỗng trong khoảng chờ đó.
+ *
+ * Thuộc tính testid ở thẻ bọc dưới đánh dấu đúng một slot auth (dùng cho phép
+ * đo, spec 2B.2 TC-0). Mobile dùng chung slot này, không có slot riêng.
  */
 export async function Header({ cartCount = 0 }: HeaderProps) {
   const categories = await getCategoryTree();
@@ -155,9 +182,11 @@ export async function Header({ cartCount = 0 }: HeaderProps) {
       categories={categories}
       cartCount={cartCount}
       accountItem={
-        <Suspense fallback={<LoginLink />}>
-          <AccountItem />
-        </Suspense>
+        <div data-testid="header-auth" className="flex">
+          <Suspense fallback={<AccountFallback />}>
+            <AccountItem />
+          </Suspense>
+        </div>
       }
     />
   );

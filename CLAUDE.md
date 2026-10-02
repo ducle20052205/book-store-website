@@ -81,8 +81,19 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 - Mọi ngưỡng phần trăm phải lớn hơn độ nhiễu đo được của chính phép đo đó. Đo độ nhiễu trước khi đặt ngưỡng.
 - Số request trong DevTools CỘNG DỒN khi bật "Preserve log" (đã gặp: 132 và 223 request ở trang chủ là cộng dồn qua nhiều lượt điều hướng; một lượt tải đo được 41–49). Mọi con số request phải ghi rõ là một lượt tải hay tích luỹ, và ô "Preserve log" bật hay tắt.
 - So sánh phải cùng điều kiện: một lần đo `HIT` từ cache edge không so được với một lần `STALE` có chạy hàm (đã gặp ở TTFB preview 01/10). Không so công bằng được thì nói thẳng, đừng báo con số đẹp.
+- Khi nghiệm thu một lỗi phụ thuộc timing, phải chạy ĐÚNG script đo đó trên commit trước khi sửa. Baseline không tái hiện được lỗi nghĩa là phép đo hỏng hoặc môi trường không đủ điều kiện — không được kết luận "đạt".
+- Mọi phép đo theo frame dùng Edge headless qua CDP. Trình duyệt tích hợp của app không dùng để đo: `requestAnimationFrame` ở đó chạy ~2 Hz (số đo của chủ dự án), và khi pane đang ẩn thì rAF gần như không chạy (01/10/2026: vòng lặp rAF đặt 3 s không hoàn tất sau 45 s, một mẫu).
+- Trước khi ghi đè một file trong `docs/specs/`, đọc bản hiện có và báo cáo những mục sẽ mất. Không xoá mục nào mà không hỏi, kể cả khi prompt nói "chép nguyên văn".
+- Khi đóng một tiêu chí bằng phép đo **yếu hơn** tiêu chí gốc, ghi rõ cả hai: tiêu chí gốc đòi gì, phép đo thực tế làm gì, số mẫu. Không ghi "đã xử lý" trống không.
+- Khi so hai nhánh mã, selector và script phải giống hệt ở cả hai phía. Không thay được selector ở phía cũ thì nói rõ đã thay gì, và chỉ ra selector nào lệch về phía kết quả mong muốn.
+- Không lấy một chỉ số đã nằm sâu dưới ngưỡng làm bằng chứng cho giá trị của một thay đổi. CLS baseline 0,0002 (ngưỡng "tốt" 0,1) nghĩa là CLS không phải vấn đề; nêu đúng cái thay đổi đó chữa.
 - Kiểm giao diện bằng ảnh chụp toàn trang thu nhỏ, không chỉ ảnh cận cảnh.
 - File tạm, route thử, script đo: xoá trước khi commit, chạy `git status` xác nhận sạch.
+- Đóng đợt: trước khi mở PR, chạy `git status --short` và liệt kê mọi file modified nằm ngoài phạm vi đợt.
+
+## Ranh giới sửa file
+
+- `docs/trang-quyet-dinh-dac-ta-tong.md`: được sửa mục 7 và 7.x (tiến độ, số đo, commit/PR). Mọi mục khác chỉ chủ dự án ghi — thấy lệch thì báo cáo, không tự sửa. Chỉ ghi sự kiện và số đo kèm số mẫu, không viết câu tự thuật tiến độ hay đánh giá chất lượng. Sửa file này luôn là commit riêng.
 
 ## Tài liệu tham khảo
 
