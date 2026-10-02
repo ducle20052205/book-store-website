@@ -1,6 +1,6 @@
 # Bước 3A — Giỏ hàng
 
-Bước 3 · Giỏ hàng và thanh toán · phiên bản 2.1 · 02/10/2026
+Bước 3 · Giỏ hàng và thanh toán · phiên bản 2.2 · 02/10/2026
 Nhánh: chưa tạo.
 
 Tài liệu liên quan: docs/SRS.md (mục 5.3), docs/mockups/buoc-3/ (gio-hang.png, gio-hang-trong.png, gio-hang-mobile.png, he-layout-dong-bang.png), docs/trang-quyet-dinh-dac-ta-tong.md mục 5.1 và mục 9.
@@ -51,7 +51,7 @@ Hai hệ quả kéo theo: `mergeGuestCart()` chuyển lên Server Action; `signI
 - **TC-3 — Chặn vượt tồn.** Chọn một cuốn có `stock_quantity = 2`. Gửi thẳng Server Action với `q = 5` (không qua giao diện): kết quả lưu là 2, action trả về cảnh báo. Làm cả hai trạng thái: chưa đăng nhập và đã đăng nhập. Đối chứng: `q = 2` thì lưu 2 và KHÔNG có cảnh báo.
 - **TC-4 — Thao tác nối tiếp không mất dòng.** Gửi `addToCart` cho cuốn A, ĐỢI action trả về, rồi gửi cho cuốn B. Lặp 10 lần: cookie cuối cùng luôn có đủ 2 dòng, 10/10. Giao diện phải vô hiệu hóa nút trong lúc action đang chạy, nên luồng tuần tự là luồng thật của người dùng. Đối chứng: sau lần gửi thứ nhất, cookie có đúng 1 dòng.
 - **TC-5 — Badge không hiện số sai.** Edge headless qua CDP, độ trễ Supabase +160 ms, 10 lượt tải `/` khi giỏ có 3 cuốn (selector `[data-testid="header-cart-count"]`): số lượt mà badge hiển thị `0` hoặc số khác 3 ở bất kỳ thời điểm nào từ FCP tới khi ổn định = **0/10**. Đối chứng bắt buộc: giỏ rỗng, 10 lượt, badge không bao giờ hiện số nào (0/10 có số), và sau khi ổn định vẫn không có số (chứng minh script đọc được đúng chỗ).
-- **TC-6 — Sàn RSC xuống 1.** Đếm số request RSC phát ra sau khi `signIn` thành công, 10 lần. Kỳ vọng 1. **Đối chứng baseline bắt buộc:** chạy đúng script đó trên commit trước khi sửa, phải thấy 2. Baseline ra 1 nghĩa là phép đếm hỏng, không được kết luận "đạt".
+- **TC-6 — Sàn RSC hạ.** Đếm theo định nghĩa của 2B.1 (GET có `rsc`, không prefetch): baseline trên `main` ra **2**, mã mới ra **0**, vì `redirect()` mang luôn trang đích trong response của action. Tính cả POST action thì là 3 xuống 1. Hai cách đếm cùng cho một hướng. **Ghi rõ một hạn chế của phép đo:** baseline được chạy trên bản `main` sạch nhưng SAU khi viết mã, không phải trước như tiêu chí gốc đòi. Mẫu: 10 lượt `signIn` và 3 lượt `signUp` mỗi phía, +160 ms; đối chứng phân loại: số request prefetch cùng lượt đo > 0 ở mọi lượt.
 - **TC-7 — Sách biến mất khỏi catalog.** Thêm cuốn C vào giỏ, xóa cuốn C khỏi bảng `books`, tải `/gio-hang`: trang trả 200, dòng đó không hiện, không có lỗi trong console. 3 lần.
 - **TC-8 — Cookie rác.** Đặt `na_cart` thành `"{{{"`, rồi thành `'[{"b":"khong-phai-uuid","q":1}]'`, rồi thành `'[{"b":"<uuid hop le>","q":-3}]'`. Mỗi trường hợp: `/gio-hang` trả 200, hiện trạng thái trống, cookie bị ghi đè bằng giá trị hợp lệ. 1 lần mỗi trường hợp.
 - **TC-9 — Hết hàng.** Cuốn trong giỏ có `stock_quantity = 0`: dòng hiện kèm nhãn "Hết hàng", không cộng vào tổng tiền, nút đi tiếp sang thanh toán bị vô hiệu hóa. 3 lần.
@@ -80,3 +80,12 @@ Năm điểm sau được nêu khi đọc mã ngày 02/10/2026 và đã có quy�
 - **TC-4 và tính nguyên tử của cookie** → TC-4 đo thao tác nối tiếp (luồng thật của người dùng, nút bị vô hiệu hóa khi action chạy); truy cập đồng thời thật không chữa trong 3A và ghi ở mục 5.
 - **Phạm vi của TC-10** → chỉ quét file có `"use client"`, kèm đối chứng với `add_to_cart` (TC-10).
 - **Cùng Suspense boundary ở FR-3A.4** → badge có boundary riêng với `data-testid="header-cart-count"`; không đụng `header-auth` (FR-3A.15, TC-12).
+
+## 7. Khác với spec v2.1 khi triển khai
+
+- **`refresh()` (Next 16.3.5) làm mới badge cho người đã đăng nhập** — giỏ của họ nằm ở bảng `cart_items`, đổi dữ liệu không đổi cookie nào nên Next không tự làm mới giao diện; `refresh()` trong Server Action làm client làm mới ngay trong response của action.
+- **Cookie hỏng được dọn bằng một action gọi từ client** (`repairGuestCart`, gọi từ `RepairCartCookie`) — Server Component không ghi được cookie, nên trang `/gio-hang` chỉ phát hiện và yêu cầu dọn; action chỉ bớt dữ liệu, không bao giờ thêm.
+- **Giỏ khách hết dòng thì cookie bị xoá, không ghi `[]`** — cookie rỗng không mang thông tin nào; `[]` chỉ dùng để ghi đè cookie hỏng ở trạng thái "không có dòng hợp lệ nào" (TC-8).
+- **`mergeGuestCart` chặn số lượng theo tồn kho** — spec v2.1 không nói, nhưng để nguyên thì gộp giỏ vượt được giới hạn mà FR-3A.8 đặt ra (số lượng sau gộp bị chặn ở min(tồn kho, 99); sách hết hàng vẫn được giữ để dòng hiện nhãn "Hết hàng").
+- **`lib/nextRedirect.ts`** — `redirect()` trong Server Action làm lời gọi action ở client bị từ chối bằng lỗi redirect, nên form đăng nhập/đăng ký cần phân biệt redirect với lỗi thật; không phải mã thừa.
+- **Nút "Thanh toán" trỏ trang `/thanh-toan` tạm cho tới đợt 3B** — nếu không có trang này thì liên kết trỏ vào 404 và mỗi lần tải `/gio-hang`, prefetch sinh một request lỗi.
