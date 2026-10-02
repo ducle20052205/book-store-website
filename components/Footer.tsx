@@ -21,7 +21,7 @@ const linkClass =
   "block rounded-control py-3 text-cham-50 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
 
 /**
- * Footer thu gọn của luồng tập trung (/gio-hang, /thanh-toan) dưới 768px — đợt 3A,
+ * Footer thu gọn của luồng tập trung (/gio-hang, /thanh-toan) ở dưới breakpoint chung với thanh thao tác đáy — đợt 3A,
  * FR-3A.16, xem components/FooterSwitch.tsx. Đúng một câu, nền `paper`, chữ 12px
  * `ink-400`, canh giữa, đệm 16px trên dưới (dòng cao đúng 16px để chiều cao là số nguyên, không sinh lẻ px ở đáy tài liệu); không cột liên kết, không giới thiệu
  * thương hiệu, không liên kết GitHub.

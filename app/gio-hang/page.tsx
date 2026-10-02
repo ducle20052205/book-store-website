@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { BookCover } from "@/components/BookCover";
 import { CartLineControls } from "@/components/cart/CartLineControls";
 import { RepairCartCookie } from "@/components/cart/RepairCartCookie";
-import { MediaGate } from "@/components/MediaGate";
+import { BottomBarGate } from "@/components/BottomBarGate";
 import { formatVnd, Price } from "@/components/Price";
 import { StockLabel } from "@/components/StockLabel";
 import { MAX_LINE_QUANTITY } from "@/lib/cart/cookie";
@@ -82,7 +82,7 @@ async function CartContent() {
       {repair}
       <PageTitle count={view.totalQuantity} />
 
-      <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_332px] lg:gap-10">
+      <div className="mt-6 grid items-start gap-6 bottom-bar:grid-cols-[minmax(0,1fr)_332px] bottom-bar:gap-10">
         <ul className={`${cardClass} divide-y divide-menu-sep`}>
           {view.lines.map((line) => {
             const { book } = line;
@@ -146,7 +146,7 @@ async function CartContent() {
           })}
         </ul>
 
-        <aside aria-label="Tóm tắt đơn hàng" className="hidden lg:sticky lg:top-24 lg:block">
+        <aside aria-label="Tóm tắt đơn hàng" className="hidden bottom-bar:sticky bottom-bar:top-24 bottom-bar:block">
           <div className={`${cardClass} p-6`}>
             <h2 className="font-serif text-xl font-semibold text-ink-900">Tóm tắt đơn hàng</h2>
             <SummaryRows view={view} />
@@ -172,22 +172,22 @@ async function CartContent() {
       </p>
 
       {view.hasOutOfStock && (
-        <p role="status" className="mt-4 text-body-sm text-ink-600 lg:hidden">
+        <p role="status" className="mt-4 text-body-sm text-ink-600 bottom-bar:hidden">
           {OUT_OF_STOCK_NOTE}
         </p>
       )}
 
       {/*
-        Dưới 1024px (cột tóm tắt ở trên bị ẩn): thanh tổng + nút Thanh toán CỐ ĐỊNH ở đáy khung nhìn,
+        Dưới breakpoint chung (cột tóm tắt ở trên bị ẩn): thanh tổng + nút Thanh toán CỐ ĐỊNH ở đáy khung nhìn,
         trên mọi nội dung (mockup gio-hang-mobile.png). Không dùng sticky: sticky chỉ dính trong
         phạm vi khối chứa nó nên nội dung ngắn thì thanh nằm lửng giữa trang, nội dung dài thì
         trôi mất khi tới footer. Cao đúng --bottom-bar-h (app/globals.css), cũng là đệm đáy của
-        <body>, nên footer không bị che. Từ 1024px thanh bị gỡ khỏi DOM (MediaGate).
+        <body>, nên footer không bị che. Từ breakpoint chung (`--breakpoint-bottom-bar`, app/globals.css) trở lên thanh bị gỡ khỏi DOM (BottomBarGate).
       */}
-      <MediaGate query="(max-width: 1023px)">
+      <BottomBarGate>
         <div
           data-bottom-bar
-          className="fixed inset-x-0 bottom-0 z-30 box-border h-[var(--bottom-bar-h)] border-t border-line-warm bg-surface px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:px-6 lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-30 box-border h-[var(--bottom-bar-h)] border-t border-line-warm bg-surface px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:px-6 bottom-bar:hidden"
         >
           <div className="flex h-7 items-center justify-between gap-3">
             <p className="min-w-0 truncate text-body-sm text-ink-600">Tổng cộng · miễn phí giao hàng</p>
@@ -199,7 +199,7 @@ async function CartContent() {
             <CheckoutAction view={view} />
           </div>
         </div>
-      </MediaGate>
+      </BottomBarGate>
     </>
   );
 }
