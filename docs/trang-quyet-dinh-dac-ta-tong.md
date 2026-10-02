@@ -171,7 +171,9 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 | Bước 2D: Trang hồ sơ, tỉnh/phường, đổi mật khẩu | Chưa bắt đầu |
 | Đợt 1.6: Sửa lỗi giao diện tồn đọng | Chưa bắt đầu |
 | Đợt 3A: Giỏ hàng | Xong, đã merge (PR #12, `8f05b91`) |
-| Checkout (đợt 3B) · Lịch sử đơn · Admin · Make.com · Chatbot · Dashboard | Chưa bắt đầu |
+| Đợt 3B chặng 1: tầng dữ liệu (địa chỉ hai cấp, schema đơn hàng, `place_order`) | Xong, đã merge (PR #13, `54e6a54`); 8 migration đã áp lên hosted ngày 02/10/2026 |
+| Đợt 3B chặng 2: trang thanh toán, đặt hàng, email xác nhận, trang xác nhận đơn | Xong, đã merge (PR #14, `00d6cde`); đơn thật đầu tiên `NA-2026-0001` ngày 02/10/2026 |
+| Lịch sử đơn · Admin · Make.com · Chatbot · Dashboard | Chưa bắt đầu |
 | README cho nhà tuyển dụng · Logo | Chưa bắt đầu |
 
 **Quy trình làm việc đã định hình:** mockup (Claude Design) → spec trong `docs/specs/` kèm tiêu chí nghiệm thu đo được → Claude Code làm theo từng đợt, mỗi hạng mục một commit và một lần đo → báo cáo kèm số đo → kiểm tay trên preview Vercel (những gì Claude Code không làm được) → PR → merge. Mỗi đợt một nhánh riêng.
@@ -319,6 +321,49 @@ PR #12 đã merge (squash) vào `main` ngày 02/10/2026, commit `8f05b91`; CI 2/
 **Breakpoint:** thanh thao tác đáy và footer thu gọn dùng chung `--breakpoint-bottom-bar` (64rem = 1024px), đặt một chỗ ở `app/globals.css` (`@theme static`); bốn nơi cùng đọc: biến thể Tailwind `bottom-bar:`/`max-bottom-bar:`, media query đệm đáy của `<body>` (`theme(--breakpoint-bottom-bar)`), hook `useBelowBottomBar` (đọc biến CSS lúc chạy, dùng bởi `FooterSwitch`), và `BottomBarGate`.
 
 **Sáu chỗ mã khác spec v2.1** (chi tiết và lý do ở mục 7 của `docs/specs/buoc-3a-gio-hang.md`): (1) `refresh()` làm mới badge cho người đã đăng nhập; (2) cookie hỏng được dọn bằng một action gọi từ client; (3) giỏ khách hết dòng thì cookie bị xoá, không ghi `[]`; (4) `mergeGuestCart` chặn số lượng theo tồn kho; (5) `lib/nextRedirect.ts` cho lời gọi action bị từ chối bởi `redirect()`; (6) nút "Thanh toán" trỏ trang `/thanh-toan` tạm cho tới đợt 3B.
+
+### 7.5 Đợt 3B — kết quả (02/10/2026)
+
+PR #13 (chặng 1, tầng dữ liệu) merge (squash) vào `main` lúc 16:19 UTC ngày 02/10/2026, commit `54e6a54`. PR #14 (chặng 2, giao diện và email) merge (squash) lúc 16:43 UTC cùng ngày, commit `00d6cde`; CI 2/2 đạt (Vercel, Vercel Preview Comments) tại `d18a8d2`. Spec: `docs/specs/buoc-3b-checkout.md`; `docs/SRS.md` lên v1.6.
+
+**Phạm vi chặng 1 (8 migration):** bảng `provinces` (34 dòng) và `wards` (3.321 dòng) theo đơn vị hành chính hai cấp có hiệu lực từ 01/07/2025, nguồn API Cục Thống kê ngày 02/10/2026; `profiles` thêm `province_code`, `ward_code`, `address_line` với khoá ngoại ghép `MATCH FULL`, bỏ cột `address`; `orders` và `order_items` thêm cột và ràng buộc; `order_code_seq`; `place_order()` (một transaction, khoá advisory theo `idempotency_key`, trừ kho có điều kiện theo thứ tự `book_id`); `mark_confirmation_sent()`. Áp lên hosted ngày 02/10/2026 bằng MCP: version `20261002160851` (schema), `20261002160911` (provinces), sáu version từ `20261002161023` đến `20261002161620` (wards 1–6).
+
+**Phạm vi chặng 2:** trang `/thanh-toan` thật (form địa chỉ, chọn tỉnh và phường/xã qua `/api/dia-chi/phuong-xa`, khoá idempotency); Server Action `placeOrder`; email xác nhận do ứng dụng gửi qua HTTP API Brevo (đợi kết quả, timeout 4 s); thông báo cửa hàng qua webhook Make trong `after()` (timeout 3 s); trang `/thanh-toan/hoan-tat/[order_code]` (chỉ chủ đơn xem được); banner hết hàng ở `/gio-hang?hang=1`; `SITE_URL` tường minh cho link trong email; ghi `order_placed` phía server; `/tai-khoan/don-hang` tạm.
+
+**Điều kiện đo:** chặng 1 chạy trên stack Supabase cục bộ, gọi RPC/PostgREST bằng người dùng thật; hosted chỉ được đối chiếu md5, cấu trúc và truy vấn SELECT. Chặng 2 chạy trên bản production (`next build` rồi `next start`) trỏ stack cục bộ, Edge headless qua CDP; Brevo và Make là endpoint giả (`scripts/mock-external.mjs`). Các bộ kiểm không nằm trong repo. TC-38: máy dev gọi API Brevo thật bằng `scripts/send-test-confirmation.mjs`. Đơn đầu tiên: đặt tay trên production Vercel, kiểm lại bằng truy vấn SELECT qua MCP.
+
+| Phép đo | Số mẫu | Kết quả |
+|---|---|---|
+| Kiểm tầng dữ liệu (dữ liệu, schema, `place_order`, RLS) | 58 phép kiểm, 1 lượt | 58/58; gồm 34 tỉnh, 3.321 phường/xã, 3 mã tỉnh và 994 mã phường/xã giữ số 0 đầu, 2.599 xã / 709 phường / 13 đặc khu |
+| Replay migration | 1 lượt trên DB trống (16 migration, `auth` là stub); 1 lượt áp lên stack đã có dữ liệu cũ | Không lỗi; `provinces` 34, `wards` 3.321 |
+| TC-13 hai người tranh cuốn cuối | 12 lượt | 12/12 đúng 1 thành công + 1 `HET_HANG`; kho âm 0/12 |
+| Đối chứng TC-13: hàm đọc-rồi-ghi ngây thơ, cùng cách đo | 12 lượt (cửa sổ 50 ms); 60 lượt (không độ trễ) | Bán lố 12/12 và 57/60 |
+| TC-14d hai lời gọi đồng thời cùng `idempotency_key` | 1 lượt | 1 đơn, cả hai trả cùng mã, kho trừ 1 lần. Đối chứng không có khoá advisory: lỗi UNIQUE 12/12 lượt |
+| Quyền ghi của khách trên `orders` | 1 lượt mỗi kiểu | UPDATE `status`, `total_amount`, `note`, `confirmation_email_sent_at`: 0 dòng đổi; INSERT trực tiếp: `42501`; đối chứng: cùng câu UPDATE trên `cart_items` đổi 1 dòng |
+| Áp lên hosted | 8 migration; md5 tính 1 lần mỗi bảng | 8/8; md5 `wards` (3.321 dòng) `58741100602161a977a6d7bcbf9bc199` và `provinces` (34 dòng) `c30b4c8a9f682a3b8db12950da3285e4` trùng từng ký tự với md5 tính từ file seed trong repo |
+| Giao diện chặng 2 | 101 phép kiểm trong 4 bộ (47 + 17 + 23 + 14), 1 lượt mỗi bộ | 101/101; chạy trước khi đổi sang `SITE_URL` tường minh (xem dưới) |
+| Chuỗi `SITE_URL` | 8 trường hợp ở mức hàm | 8/8 |
+| TC-38: 1 email thật qua API Brevo, gọi từ máy dev | 1 thư, đường API | HTTP 201 có `messageId`; Brevo nhận cả `htmlContent` và `textContent`; `From` bị viết lại thành `@…brevosend.com`; vào Inbox Gmail, không vào Spam; HTML hiển thị đúng; link "Xem đơn hàng" trỏ thẳng tới `SITE_URL`, không bọc qua tên miền theo dõi, không tham số theo dõi; Gmail hiện nút "Huỷ đăng ký" |
+| Script `send-test-confirmation.mjs` thoát sau khi gửi | 8 lượt trước sửa, 8 lượt sau sửa, khoá giả (Brevo trả 401, không gửi thư) | Trước: 8/8 mã 127 kèm `Assertion failed … UV_HANDLE_CLOSING`. Sau khi thay `process.exit()` bằng `process.exitCode`: 8/8 mã 1, 0/8 assertion; đường thiếu biến vẫn mã 2 |
+
+**Đơn thật đầu tiên trên production, `NA-2026-0001` (02/10/2026 16:47:45 UTC, 1 đơn).** Kiểm bằng SELECT qua MCP trên hosted, 5/5 mục khớp:
+1. `status` `pending`, `total_amount` 243.000, `payment_method` `cod`; `shipping_address` kết thúc đúng bằng tên phường/xã và tỉnh/thành tra từ `wards` và `provinces` theo mã (so khớp trong SQL, không in giá trị), dòng số nhà dài 19 ký tự; `confirmation_email_sent_at` không null, đặt 0,95 s sau khi tạo đơn.
+2. `order_items` 3 dòng, mỗi dòng số lượng 1, `price_at_purchase` 109.000, 69.000, 65.000; tổng 243.000, chênh với `total_amount` 0; cả ba bằng giá hiệu lực tại thời điểm kiểm.
+3. Tồn kho so với `supabase/seed.sql`: Hồ Điệp và Kình Ngư 30 → 29, Nhà giả kim 24 → 23, Xứ tuyết 12 → 11. Tổng tồn kho 40 cuốn: 835 theo seed, 832 trên hosted, chênh 3.
+4. `cart_items` của tài khoản đặt đơn: 0 dòng.
+5. `events` của phiên: 9 sự kiện (1 `login`, 3 `page_view`, 3 `add_to_cart`, 1 `checkout_started`, 1 `order_placed`). Metadata `checkout_started`: `items_count` 3, `total_amount` 243000. Metadata `order_placed`: `items_count` 3, `order_code`, `payment_method` `cod`, `total_amount` 243000. So khớp metadata với email, phần trước `@`, tên, SĐT và dòng địa chỉ: 0/9 sự kiện; regex dạng email, SĐT Việt Nam và tên đơn vị hành chính: 0/9. Đối chứng: cùng hình dạng truy vấn tìm một chuỗi có sẵn trong metadata cho 1 kết quả ở cả ba kiểu join; ba regex bắt được chuỗi mẫu và không bắt nhầm UUID.
+
+**Chỗ phép đo yếu hơn tiêu chí gốc, hoặc dựa trên giả định:**
+- **TC-39.** Tiêu chí gốc: link trong email không đổi khi request đặt hàng mang `Host` hoặc `X-Forwarded-Host` giả. Phép đo thực tế: (đo) các nhánh của chuỗi cấu hình (`SITE_URL`; `http://localhost:3000` chỉ ở `NODE_ENV=development`; không có `SITE_URL` ở production thì email không link kèm log `site_origin_missing`), và Next từ chối request Server Action có `X-Forwarded-Host` lệch `Origin` (1 mẫu) nên request giả không tới được mã gửi email; (đọc mã) 4 file dựng URL, email và webhook không đọc header request, kèm 1 đối chứng cho biểu thức lọc. Không có phép đo nào cho thấy email giữ nguyên link khi một request giả tới được mã gửi email. Sau khi đổi sang `SITE_URL` tường minh, chuỗi cấu hình chỉ được chạy lại ở mức hàm (8 trường hợp), không chạy lại ở mức ứng dụng.
+- **101 phép kiểm giao diện** chạy trước commit `e627890` (`SITE_URL` tường minh); bộ 101 không được chạy lại sau commit đó.
+- **TC-38, tiêu chí (d)** (bản `.txt` và bản HTML cùng đến hay chỉ một bản): chưa trả lời được. Đã quan sát: HTML hiển thị đúng; bản `.txt` chưa mở riêng vì Gmail ưu tiên HTML. Số mẫu 1.
+- **TC-38 chạy từ máy dev**, không qua site production; link trong thư được dựng từ `SITE_URL=http://localhost:3000`. Việc link không bị bọc là quan sát trên 1 thư qua đường API; mục 5.1 ghi "không tắt được click tracking" cho đường SMTP, đường đó không được đo lại. Nguyên nhân của nút "Huỷ đăng ký" (Brevo gắn header huỷ đăng ký vào thư giao dịch) là nhận định của chủ dự án, không có bước đọc header trong TC-38. Hạn mức 300 email/ngày chưa kiểm ở trang giá chính thức.
+- **Lỗi thoát của script** đo ở phản hồi 401 chứ không phải 201 (lỗi gốc xảy ra ở 201): sửa xong không gửi thêm thư thật để đo lại ở 201.
+- **Tồn kho so với seed:** giả định hosted khớp `supabase/seed.sql` trước đơn đầu tiên; tồn kho ngay trước đơn không được đo. Ba cuốn trong đơn mỗi cuốn −1 và tổng chênh 3 cho thấy các cuốn còn lại cộng lại không đổi; hai thay đổi bù trừ nhau ở cuốn khác không bị loại trừ.
+- **Email của đơn `NA-2026-0001`:** DB đánh dấu đã gửi (`confirmation_email_sent_at` không null); việc thư tới hộp thư không được ghi nhận.
+- **Kiểm lọt dữ liệu cá nhân ở `events`** chỉ phủ 9 sự kiện của 1 phiên.
+- **Webhook Make** chỉ được kiểm với endpoint giả trong repo; không có phép đo nào với Make thật.
+- **Hạn chế đã biết, chủ dự án chấp nhận 02/10/2026** (chi tiết ở mục 7.1 của spec): `notFound()` và `redirect()` trong `<Suspense>` trả HTTP 200 (TC-19; chuyển hướng ở TC-3 và TC-4 là phía client); địa chỉ gửi bị viết lại thành `@…brevosend.com` ở cả đường API; Gmail hiện nút "Huỷ đăng ký" trên thư xác nhận.
 
 ## 8. Bài học đã rút ra (giữ lại để không lặp)
 
