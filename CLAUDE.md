@@ -93,7 +93,7 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 
 ## Ranh giới sửa file
 
-- `docs/trang-quyet-dinh-dac-ta-tong.md`: được sửa mục 7 và 7.x (tiến độ, số đo, commit/PR). Ngoài mục 7, còn được sửa dòng "Cập nhật lần cuối" ở khối đầu file mỗi khi sửa mục 7 — đặt ngày của lần sửa đó; mọi dòng khác trong khối đầu file vẫn chỉ chủ dự án ghi. Mọi mục khác chỉ chủ dự án ghi — thấy lệch thì báo cáo, không tự sửa. Chỉ ghi sự kiện và số đo kèm số mẫu, không viết câu tự thuật tiến độ hay đánh giá chất lượng. Sửa file này luôn là commit riêng.
+- `docs/trang-quyet-dinh-dac-ta-tong.md`: được sửa mục 7 và 7.x (tiến độ, số đo, commit/PR). Ngoài mục 7, còn được cập nhật dòng "Cập nhật lần cuối" ở khối đầu file mỗi khi sửa mục 7 — đặt ngày của lần sửa đó. Dòng đó CHỈ chứa ngày, không có chú thích mô tả lần sửa; lịch sử thay đổi nằm ở git log, không nằm trong dòng này. Mọi dòng khác trong khối đầu file vẫn chỉ chủ dự án ghi. Mọi mục khác chỉ chủ dự án ghi — thấy lệch thì báo cáo, không tự sửa. Chỉ ghi sự kiện và số đo kèm số mẫu, không viết câu tự thuật tiến độ hay đánh giá chất lượng. Sửa file này luôn là commit riêng.
 
 ## Tài liệu tham khảo
 
