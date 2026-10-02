@@ -2,7 +2,9 @@
 
 > **Vai trò của file này:** nơi lưu những gì đã **thực sự chốt**, không phải nơi đưa ra quyết định mới. Project này đóng vai trò "chỉ huy": mọi quyết định về kiến trúc, thiết kế, tính năng và spec cho Claude Code được thảo luận và chốt trong các chat của project, sau đó cập nhật vào đây. Đọc file này trước khi trả lời để không hỏi lại hoặc mâu thuẫn với quyết định cũ — nhưng đừng coi mục "còn mở" là đã có hướng đi.
 >
-> **Ai được sửa phần nào.** Bản gốc là bản trong Claude.ai Project này; file `docs/trang-quyet-dinh-dac-ta-tong.md` trong repo là bản đồng bộ. Claude Code **được sửa mục 7** (bảng tiến độ, số đo, số commit/PR) vì nó biết chính xác hơn. **Mọi mục khác chỉ chủ dự án ghi**, vì chúng chốt trong chat mà Claude Code không đọc được; thấy lệch thì báo cáo, không tự sửa. Mọi lần sửa file này là **commit riêng**, không gộp vào commit mã. Trong file chỉ ghi sự kiện và số đo kèm số mẫu — không có câu tự thuật tiến độ, không có đánh giá chất lượng công việc; file này sẽ nằm trong portfolio.
+> **Ai được sửa phần nào.** Bản gốc là bản trong Claude.ai Project; file `docs/trang-quyet-dinh-dac-ta-tong.md` trong repo là bản đồng bộ. Claude Code **được sửa mục 7** (bảng tiến độ, số đo, số commit/PR) vì nó biết chính xác hơn. **Mọi mục khác chỉ chủ dự án ghi**, vì chúng chốt trong chat mà Claude Code không đọc được; thấy lệch thì báo cáo, không tự sửa. Mọi lần sửa file này là **commit riêng**, không gộp vào commit mã. Trong file chỉ ghi sự kiện và số đo kèm số mẫu — không có câu tự thuật tiến độ, không có đánh giá chất lượng công việc; file này sẽ nằm trong portfolio.
+>
+> **Hướng đồng bộ.** Mục 1–6, 8, 9 chảy từ bản gốc sang repo. **Mục 7 chảy ngược:** Claude Code ghi trong repo, bản gốc lấy lại từ repo. Khi dán bản gốc đè lên repo, phải giữ mục 7 của repo chứ không ghi đè nó.
 >
 > **Cập nhật lần cuối:** 02/10/2026
 > **Nguồn chân lý:** repo `github.com/ducle20052205/book-store-website`. Các file `docs/SRS.md`, `docs/specs/*`, `CLAUDE.md` trong repo là bản gốc; file này là bản tóm tắt cấp quyết định.
@@ -34,9 +36,14 @@
 - **Quy tắc nghiêng/đứng theo người nói:** chữ nghiêng là lời của biên tập (`curator_note`, mô tả tủ sách); chữ đứng là thông tin hệ thống (tên sách, danh mục, giá).
 - **Chi tiết chữ ký:** ghi chú biên tập trình bày như lời ghi tay ở lề, nối tới bìa bằng nét kẻ cong mảnh (`EditorNoteConnector`, `aria-hidden`). Chỉ dùng ở 3 chỗ: trang chi tiết sách, khối editorial trang chủ, trang tủ sách. Dưới 768px bỏ nét kẻ, giữ độ xoay nhẹ.
 - **Giọng văn:** NA Books xưng "chúng mình", gọi người dùng là "bạn". Không teen-code, không lạm dụng dấu "!". Không dùng nhãn tiếng Anh kiểu "Coming soon" trong giao diện.
-- **Ảnh bìa: không dùng ảnh có bản quyền.** Toàn bộ bìa do component `BookCover` sinh tự động từ `title`, `author`, `slug` — 4 biến thể bố cục chọn theo hash, 12 màu trầm, có gáy sách và vân giấy. Cột `cover_image_url` giữ trong schema cho khả năng mở rộng nhưng không dùng. Đây là quyết định chính thức, không phải giải pháp tạm.
+- **Ảnh bìa: không dùng ảnh có bản quyền.** Toàn bộ bìa do component `BookCover` sinh tự động từ `title`, `author`, `slug` — 4 biến thể bố cục chọn theo hash, 12 màu trầm, có gáy sách và vân giấy. Cột `cover_image_url` giữ trong schema cho khả năng mở rộng nhưng không dùng. Đây là quyết định chính thức, không phải giải pháp tạm. Lớp hình ảnh thứ hai (ảnh giấy, kệ sách, bàn đọc) sẽ dùng nguồn giấy phép mở (Unsplash/Pexels), ghi nguồn trong README — chưa làm.
 - **Chuyển động:** chỉ animate `transform` và `opacity`; CLS = 0; không `will-change`; không hiệu ứng fade-in theo section khi cuộn; một khoảnh khắc mở trang duy nhất ở trang chủ (400–600ms, không lặp trong cùng phiên); mọi chuyển động tắt được bằng `prefers-reduced-motion`. View Transitions API: đã kiểm tra React 19.2.8 chưa có export `ViewTransition`, quyết định không dùng và không cài bản canary.
 - **Thông báo quan trọng không được tự biến mất** (WCAG 2.2.1 Timing Adjustable). Dải chào mừng sau đăng ký là banner trong trang có nút đóng, **không phải Toast tự tắt**. Dải chỉ hiện sau đăng ký, không hiện sau đăng nhập (kiểm 10/10).
+- **Hệ layout đóng băng (chốt 02/10, đợt 3A).** Mọi mockup và mọi trang từ đợt 3 trở đi chỉ được lắp từ một bộ: container tối đa 1200px canh giữa, lề trang 40px từ 1024px và 16px dưới 768px; thang khoảng cách chỉ gồm 4 · 8 · 16 · 24 · 40; một kiểu thẻ (nền trắng, viền 1px `#E3DACA`, bo góc 4px, không đổ bóng); một kiểu nút cao 48px; một kiểu ô nhập cao 44px; một tiêu đề trang (vạch chàm 3px + Newsreader 32 + số đếm 14px canh đáy); một trạng thái trống đủ bốn phần (hình vẽ nét 76px, tiêu đề, đoạn giải thích tối đa 460px, hai nút). Trang nào cần thành phần chưa có thì thêm vào hệ trước, rồi mới dùng. Bản tham chiếu: `docs/mockups/buoc-3/he-layout-dong-bang.png`.
+- **Danh sách nhiều dòng là MỘT mặt phẳng trắng** với các dòng ngăn bằng kẻ 1px `#EFE8DB`, không phải mỗi dòng một thẻ nổi. Đây là cách chặn dấu hiệu "mọi thứ đều là card" của giao diện do AI sinh.
+- **Luồng tập trung (chốt 02/10).** Trên `/gio-hang` và `/thanh-toan`, khi màn hình hẹp hơn breakpoint `--breakpoint-bottom-bar` (64rem = 1024px): trang có **thanh thao tác đáy cố định** (`position: fixed`, `bottom: 0`, `<body>` có đệm đáy bằng chiều cao thanh), và footer đầy đủ được thay bằng **một dòng duy nhất** trên nền `paper` — "Dữ liệu sách chỉ nhằm minh họa cho dự án portfolio.", chữ 12px `ink-400`, canh giữa, không cột liên kết. Từ breakpoint trở lên: cột tóm tắt bên phải xuất hiện, thanh đáy biến mất, footer đầy đủ trở lại.
+  - **Hai thứ gắn vào một breakpoint duy nhất, không phải hai con số.** Breakpoint đặt một chỗ ở `app/globals.css`; mọi nơi cùng đọc từ đó. Lý do chọn 1024px chứ không phải 768px: cột tóm tắt (chứa nút "Thanh toán") chỉ hiện từ 1024px, nên dưới đó thanh đáy là đường duy nhất tới thanh toán.
+  - Dòng ghi rõ dự án portfolio **không được biến mất cùng footer** — nó là nguyên tắc trung thực ở mục 6, không phải phần trang trí.
 - **Còn mở:** logo chính thức (hiện dùng wordmark chữ). Ý tưởng đã có: monogram NA dạng mặt ngọc.
 
 ## 4. Phạm vi tính năng
@@ -51,7 +58,24 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 - **Ghi log sự kiện** vào bảng `events`: `page_view`, `search`, `add_to_cart`, `checkout_started`, `order_placed`, và từ 2A thêm `sign_up`, `login` (7 loại). Quyết định ghi log **ngay từ đầu** thay vì đợi đến khi làm dashboard, để dashboard có dữ liệu thật.
 - **Mô tả danh mục:** 5 danh mục cha có `categories.description`, hiển thị ở trang catalog khi lọc theo danh mục cha; danh mục con để trống.
 - **Chip thông tin trên thẻ sách:** nhãn danh mục con và chip "Trong tủ sách", chỉ dùng dữ liệu có thật.
-- **Trang `/gio-hang` tạm** (từ 2B.1): trả 200, có header và footer như mọi trang, nói thẳng rằng giỏ hàng thuộc giai đoạn sau, kèm liên kết về `/sach`. Thay thế bằng trang thật ở đợt 3.
+- **Trang tạm cho giai đoạn sau.** Khuôn đã dùng hai lần: trả 200, có header và footer như mọi trang, nói thẳng rằng tính năng thuộc đợt sau, kèm liên kết quay lại. `/gio-hang` tạm (2B.1) đã được thay bằng trang thật ở 3A; `/thanh-toan` tạm (3A) sẽ được thay ở 3B.
+- **Bước 3 tách làm đôi:** 3A giỏ hàng, 3B checkout. Gộp lại là 15+ FR trong một đợt — đúng cách đã làm phần auth phình thành bốn lần.
+
+### Thứ tự còn lại và định nghĩa "xong" (chốt 02/10)
+
+**Thứ tự:** 3B checkout (gồm tỉnh/phường và Make.com) → lịch sử đơn → admin → 2C quên mật khẩu → 2D trang hồ sơ → seed dữ liệu demo → chữa N+1 trang chủ → dashboard thống kê → chatbot → đợt 1.6 → rà accessibility → README cho nhà tuyển dụng.
+
+**Định nghĩa "xong"** — bảy bước một người lạ phải làm được, viết trước để không bị dời:
+
+1. Vào trang chủ, duyệt catalog, lọc và tìm kiếm.
+2. Mở một cuốn sách, thêm vào giỏ **khi chưa đăng nhập**.
+3. Bấm thanh toán, đăng ký, giỏ hàng còn nguyên.
+4. Điền địa chỉ (tỉnh/phường thật), đặt hàng, nhận email xác nhận.
+5. Xem lịch sử đơn, hủy đơn, kho cộng lại.
+6. Đăng nhập bằng tài khoản admin demo, thấy đơn vừa đặt, đổi trạng thái, xem dashboard có số thật.
+7. Đọc README hiểu được **vì sao** từng quyết định được đưa ra.
+
+Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách này là tùy chọn, không phải điều kiện.
 
 ### Điểm nhấn (chưa làm)
 
@@ -67,15 +91,15 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 | Automation | Make.com (chưa làm) — email xác nhận đơn, báo admin đơn mới |
 | Deploy | Vercel, nhánh `main` là production |
 
-- **Database: 9 bảng**, tất cả bật RLS: `profiles`, `categories`, `books`, `cart_items`, `orders`, `order_items`, `events`, `collections`, `collection_books`. Đợt 2D sẽ thêm `provinces`, `wards` (thành 11).
+- **Database: 9 bảng**, tất cả bật RLS: `profiles`, `categories`, `books`, `cart_items`, `orders`, `order_items`, `events`, `collections`, `collection_books`. Đợt 3B sẽ thêm `provinces`, `wards` (thành 11).
 - **Khoá ngoại tới `auth.users`:** `profiles` và `cart_items` là **CASCADE**; `events` và `orders` là **NO ACTION**. Hệ quả: không xoá được một user từng có sự kiện hoặc đơn hàng nếu chưa xoá tay các dòng đó trước — xem mục 9.
 - **Quy tắc bắt buộc:** mọi thay đổi schema đi qua migration trong `supabase/migrations/`, apply bằng Supabase MCP, đặt tên file theo version Supabase ghi nhận. Không sửa trực tiếp qua Table Editor.
 - Tìm kiếm theo tên sách và tác giả, không phân biệt dấu qua `unaccent`; toàn bộ lọc/sắp xếp/phân trang gói trong hàm RPC `search_books` (`SECURITY DEFINER` để tính "bán chạy" vượt qua RLS của `orders`).
 - **Danh mục 2 tầng:** 5 danh mục cha (Văn học, Kinh tế, Tâm lý – Kỹ năng, Khoa học – Xã hội, Manga – Light novel), 17 danh mục con. Không có danh mục Thiếu nhi (ngoài nhóm tuổi mục tiêu).
-- Route tiếng Việt: `/sach`, `/sach/[slug]`, `/tu-sach`, `/tu-sach/[slug]`, `/gio-hang`.
+- Route tiếng Việt: `/sach`, `/sach/[slug]`, `/tu-sach`, `/tu-sach/[slug]`, `/gio-hang`, `/thanh-toan`.
 - Cloud/DevOps nâng cao (CI/CD): gác lại, chỉ làm nếu còn thời gian sau MVP.
 
-### 5.1 Auth và rendering (chốt ở đợt 2A/2B/2B.1)
+### 5.1 Auth và rendering (chốt ở đợt 2A/2B/2B.1/2B.2/3A)
 
 - **`middleware.ts` đổi tên thành `proxy.ts`** (Next 16), hàm export tên `proxy`, chỉ chạy Node.js runtime.
 - **Hai lớp bảo vệ:** `proxy.ts` chặn sớm cho trải nghiệm; **enforcement thật nằm ở Server Component + RLS**. Đây là hệ quả rút ra từ CVE-2025-29927 — không được coi proxy là hàng rào duy nhất.
@@ -84,13 +108,18 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 - **Cache Components (`cacheComponents: true`)** bật từ 2A để chữa hồi quy TTFB trang chủ 2,9ms → 647,7ms. Cấm dùng segment config `revalidate`; hàm `"use cache"` không gọi được `cookies()`; chỗ đọc cookie phải nằm trong `<Suspense>`. `/`, `/sach`, `/tu-sach`, `/tu-sach/[slug]` đều render kiểu Partial Prerendering.
 - **Next đặt `pathWasRevalidated` ngay khi cookie bị đổi** (`request-cookies.js:130`). Hệ quả: bỏ `revalidatePath` khỏi một Server Action **không** làm response của action hết render lại trang — nó chỉ tránh việc vô hiệu hoá cache.
 - **Next xoá `FLIGHT_HEADERS` khỏi `request` TRƯỚC khi gọi `proxy`** (`adapter.js:156–165`). Vì vậy **không đọc được** `next-router-prefetch` trong thân hàm proxy — nó luôn `null`. Cách đúng để tách prefetch là `config.matcher` với `missing: [{ type: "header", key: "next-router-prefetch" }]`, vì matcher khớp trước lúc header bị xoá. `/tai-khoan` và `/admin` có entry matcher riêng không điều kiện, nên prefetch tới đó vẫn chạy đủ logic chuyển hướng.
-- **Sàn 2 request RSC sau đăng nhập/đăng ký.** Khi một Server Action đã revalidate (do đổi cookie) bị `router.push` huỷ, Next tự phát thêm một `ACTION_REFRESH` (`app-router-instance.js:76–92`). Muốn còn 1 phải dùng `redirect()` trong action, nhưng khi đó cả `mergeGuestCart()` lẫn `track("sign_up"/"login")` ở client đều không chạy — xem mục 9.
+- **Sàn 2 request RSC sau đăng nhập/đăng ký — đã hạ ở đợt 3A.** Cơ chế cũ: khi một Server Action đã revalidate (do đổi cookie) bị `router.push` huỷ, Next tự phát thêm một `ACTION_REFRESH` (`app-router-instance.js:76–92`). Từ 3A, `signIn` và `signUp` dùng `redirect()` trong action; đếm theo định nghĩa của 2B.1 (GET có `rsc`, không prefetch) là **2 → 0**, tính cả POST action là **3 → 1**.
+- **`lib/nextRedirect.ts` không phải mã thừa.** `redirect()` trong Server Action làm lời gọi action ở client bị từ chối, nên form cần phân biệt redirect với lỗi thật. Không xoá file này, không bắt form xử lý lỗi theo cách cũ.
+- **Giỏ của khách chưa đăng nhập lưu ở cookie `na_cart`** (httpOnly, SameSite=Lax, Path=/, 30 ngày, tối đa 20 dòng, ~1,0 KB dạng JSON và ~1,5 KB sau khi mã hoá URL). Mọi thay đổi đi qua Server Action; client không đọc và không ghi cookie này. **Lý do chọn cookie thay `localStorage`:** badge giỏ hàng phải đúng ngay trong HTML đầu, nếu không sẽ tái tạo đúng lớp lỗi trạng thái trung gian sai đã chữa ở 2B.2.
+- **Cookie không có read-modify-write nguyên tử.** Hai request đổi giỏ gửi thật sự đồng thời đều đọc cùng một giá trị cũ, và `Set-Cookie` tới sau ghi đè cái tới trước, nên một dòng có thể mất. Giảm nhẹ bằng vô hiệu hoá nút khi action đang chạy, nên luồng của người dùng là tuần tự; không chữa triệt để. Nếu về sau thấy mất dòng trong thực tế thì chuyển sang bảng `guest_carts` với một id trong cookie, và khi đó phải có spec riêng.
+- **`session_id` ở cookie `na_sid`** (UUID v4, KHÔNG httpOnly, SameSite=Lax, 1 năm). **`proxy.ts` không đặt cookie này** — nó được tạo lúc cần, ở client trong `track()` hoặc trong Server Action ghi sự kiện, cả hai đều không nằm trên response được cache. Lý do: response GET mang `Set-Cookie` có thể không được CDN lưu, mà khách xem portfolio gần như toàn bộ là khách lần đầu.
+- **`mergeGuestCart()` và `track('sign_up'/'login')` chạy phía server** trong `signIn` và `signUp`, trước `redirect()`. Không chuyển ngược lên client. Merge cộng dồn số lượng theo `book_id` và chặn theo `stock_quantity`, rồi xoá cookie `na_cart` trong cùng response.
 - **Email nhất quán hai chiều:** trigger `protect_profile_role()` khoá `role` với người không phải admin và khoá `email` với **mọi người**, trừ khi cờ phiên `app.sync_auth_email = 'on'`; trigger `sync_profile_email()` (AFTER UPDATE OF email ON auth.users) bật cờ, cập nhật `profiles.email`, rồi tắt cờ trong cùng transaction.
 - **Mật khẩu:** tối thiểu 8 ký tự, **không ràng buộc thành phần** (NIST SP 800-63B rev 4). Không có ô "nhập lại mật khẩu" — thay bằng nút Ẩn/Hiện.
 - **Có ô "Nhập lại email"** vì đã tắt xác nhận email: gõ sai mật khẩu thì thấy được, gõ sai email thì không, và sẽ không lấy lại được mật khẩu. *Đang xem xét thay bằng gợi ý typo domain — xem mục 9.*
 - **Xác nhận email: TẮT.** Phát hiện 30/09 là thiết lập này vốn đang **BẬT** trên hosted, trái FR-5.1, và chưa ai từng kiểm. Đã tắt. Cũng đã nâng Minimum password length 6 → 8.
 - **SMTP: Brevo free** (300 email/ngày). Hai hạn chế đã chấp nhận và ghi trong runbook: địa chỉ gửi bị viết lại thành `@…brevosend.com` (domain mail miễn phí không ký DKIM được), và không tắt được click tracking cho email giao dịch.
-- **Địa chỉ Việt Nam 2 cấp** (từ 01/07/2025: 34 tỉnh, không còn quận/huyện): số nhà/đường → phường/xã → tỉnh/thành. `profiles` sẽ có `province_code`, `ward_code`, `address_line` với khoá ngoại ghép `(ward_code, province_code)` → `wards(code, province_code)` dùng **MATCH FULL** (MATCH SIMPLE sẽ bỏ qua kiểm tra khi một cột NULL).
+- **Địa chỉ Việt Nam 2 cấp** (từ 01/07/2025: 34 tỉnh, không còn quận/huyện): số nhà/đường → phường/xã → tỉnh/thành. `profiles` sẽ có `province_code`, `ward_code`, `address_line` với khoá ngoại ghép `(ward_code, province_code)` → `wards(code, province_code)` dùng **MATCH FULL** (MATCH SIMPLE sẽ bỏ qua kiểm tra khi một cột NULL). Làm ở đợt 3B, trong form checkout, không tách thành đợt riêng — nó là dependency của ô địa chỉ giao hàng.
 
 ### 5.2 Vùng hạ tầng (chốt 30/09, đo xác nhận 01/10/2026)
 
@@ -119,7 +148,8 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 - **Nguyên tắc trung thực:** tên sách và tác giả là thật; ISBN, số trang, NXB, người dịch để trống vì không xác minh được; mô tả tự viết, không chép của nhà xuất bản. Footer ghi rõ "Dữ liệu sách chỉ nhằm minh họa cho dự án portfolio."
 - 16/40 cuốn có giảm giá, 4 cuốn hết hàng để demo đủ trạng thái UI.
 - **Repo là PUBLIC.** Không bao giờ commit email cá nhân, API key hay mật khẩu — kể cả trong mockup, ảnh chụp, chú thích và tài liệu. Dữ liệu mẫu dùng `ban.doc@example.com` (domain dành riêng theo RFC 2606).
-- **Tài khoản thử trên hosted phải xoá sau mỗi đợt kiểm** (tiêu chí dọn dẹp). Quy trình: SELECT trước và in ra, xoá `events` của tài khoản đó trước (khoá ngoại NO ACTION), rồi xoá `auth.users` bằng id tường minh trong một transaction có chốt số dòng. Tính đến 01/10: `auth.users` 1, `profiles` 1, `events` 68.
+- **Tài khoản thử trên hosted phải xoá sau mỗi đợt kiểm** (tiêu chí dọn dẹp). Quy trình: SELECT trước và in ra, xoá `events` của tài khoản đó trước (khoá ngoại NO ACTION), rồi xoá `auth.users` bằng id tường minh trong một transaction có chốt số dòng.
+- **Ảnh mockup phải là bản xuất từ canvas ở 2×, không phải ảnh chụp màn hình** — ảnh chụp mang theo giao diện công cụ, không đạt chuẩn cho repo public. Lưu ở `docs/mockups/buoc-N/`, kèm README ghi quyết định thiết kế và phạm vi.
 
 ## 7. Tiến độ (02/10/2026)
 
@@ -291,31 +321,41 @@ PR #12 đã merge (squash) vào `main` ngày 02/10/2026, commit `8f05b91`; CI 2/
 
 - **Tiêu chí nghiệm thu phải đo được bằng số.** "Tăng mật độ", "tạo nhịp", "hiện đại hơn" là chữ mô tả cảm giác, mỗi bên hiểu một kiểu và kết quả luôn hụt.
 - **Tiêu chí dùng selector phải nêu selector chỉ khớp đúng trạng thái đang kiểm, và phải có đối chứng ở trạng thái ngược lại.** Đối chứng cũng "đạt" nghĩa là phép đo hỏng, không phải mã đạt. Bài học từ tiêu chí 8: selector `button[aria-haspopup]` khớp cả nút menu điều hướng, nên báo cáo "5/5 đạt" là vô giá trị.
-- **Với một lỗi phụ thuộc timing, phải chạy đúng script đo đó trên commit trước khi sửa.** Baseline không tái hiện được lỗi nghĩa là phép đo hỏng hoặc môi trường không đủ điều kiện — không được kết luận "đạt". Rút ra khi soạn TC-3 của đợt 2B.2.
-- **Khi đóng một tiêu chí bằng phép đo yếu hơn tiêu chí gốc, ghi rõ cả hai:** tiêu chí gốc đòi gì, phép đo thực tế làm gì, số mẫu bao nhiêu. Không ghi "đã xử lý" trống không. Rút ra từ tiêu chí 3 của Bước 2B, đóng bằng n = 1 trong khi tiêu chí đòi 15 lượt × 4 trang.
-- **Mọi ngưỡng phần trăm phải lớn hơn độ nhiễu đo được của chính phép đo đó.** Đo độ nhiễu trước khi đặt ngưỡng. Ngưỡng 20% trên một giá trị 4,2 ms với nhiễu ±1 ms là không phân biệt được đạt và trượt.
+- **Tiêu chí không được mô tả cách triển khai.** "`querySelector` trả `null`" là một ràng buộc kiến trúc đội lốt tiêu chí hành vi: nó buộc phải gỡ phần tử khỏi DOM bằng JS, loại mất phương án `display: none` vốn tương đương với người dùng mà không cần JS và không gây dịch chuyển. Viết tiêu chí theo thứ người dùng trải nghiệm (khả kiến, focusable, screen reader đọc được), không theo thứ nằm trong DOM.
+- **Với một lỗi phụ thuộc timing, phải chạy đúng script đo đó trên commit trước khi sửa.** Baseline không tái hiện được lỗi nghĩa là phép đo hỏng hoặc môi trường không đủ điều kiện — không được kết luận "đạt".
+- **Khi đóng một tiêu chí bằng phép đo yếu hơn tiêu chí gốc, ghi rõ cả hai:** tiêu chí gốc đòi gì, phép đo thực tế làm gì, số mẫu bao nhiêu. Không ghi "đã xử lý" trống không.
+- **Mọi ngưỡng phần trăm phải lớn hơn độ nhiễu đo được của chính phép đo đó.** Đo độ nhiễu trước khi đặt ngưỡng.
+- **Một chỉ số đã nằm sâu dưới ngưỡng thì không phân biệt được đạt và trượt.** CLS 0,0002 so với ngưỡng "tốt" 0,1 là nhiễu, không phải kết quả. Tiêu chí CLS = 0 của 2B.2 đạt một phần vì may.
+- **Khi so hai nhánh mã, selector và script phải giống hệt nhau ở cả hai phía.** Không thay được selector ở phía cũ thì phải nói rõ đã thay gì, và chỉ ra selector nào lệch về phía kết quả mong muốn.
 - **Tiêu chí phải đặt sau khi chốt kiến trúc, không phải trước.**
+- **Tiêu chí cho đợt tính năng là assertion chức năng, không phải đo timing.** Giỏ hàng và checkout hỏng vì logic (merge sai, trừ kho sai, tổng tiền sai), không vì timing.
 - Với mỗi tiêu chí, trả lời trước một câu: *"lệnh nào cho ra con số này?"* Không trả lời được thì đó chưa phải tiêu chí.
 
 **Về cách đọc số đo**
 
-- **Số request trong DevTools cộng dồn khi bật "Preserve log".** Mọi con số request phải ghi rõ là **một lượt tải** hay **tích luỹ**. Đây là nguồn của sai lầm "223 request mỗi lượt tải".
+- **Số request trong DevTools cộng dồn khi bật "Preserve log".** Mọi con số request phải ghi rõ là **một lượt tải** hay **tích luỹ**.
 - **So sánh phải cùng điều kiện.** `HIT` không so được với `STALE`; khác trạng thái đăng nhập không so được; khác vùng không so được. Không so công bằng được thì nói thẳng thay vì báo một con số đẹp.
 - **Luôn ghi số mẫu.** Một mẫu thì kết luận là "không hồi quy", không phải một con số phần trăm.
 - **Chênh lệch nhỏ hơn khoảng dao động giữa các lần đo mốc thì chỉ cho biết hướng**, không cho biết độ lớn.
+- **Cộng cho đủ trước khi gọi một hiện tượng là hiếm.** Con số "1/23 lượt" của đợt 3A thực ra là **4/35** khi cộng hết các lần đo; cái sai đến từ việc chỉ lấy lần đo cuối.
 - **Đừng viết "ở mọi phép đo" khi có một phép đo đi ngược.** Nêu ngoại lệ ra, kèm giải thích và ghi rõ giải thích đó đã kiểm hay chưa.
 - **Một phép thử bật–tắt chỉ chứng minh được "không phải điều kiện đủ", không chứng minh được "không liên quan".**
 - **Bằng chứng trái chiều mạnh hơn bằng chứng thuận chiều.** Nêu giả thuyết thì nêu kèm **phép đo để bác bỏ nó**.
 - **Đừng biến một quan sát đúng thành một khẳng định về cách dùng mà chưa đọc tài liệu.** "Request prefetch mang header X" là quan sát; "nên dùng header X để tách prefetch" là khẳng định về khả năng — và nó sai, vì Next xoá header đó trước khi gọi proxy.
+- **Đừng phát biểu cơ chế như sự thật rồi lấy nó làm cơ sở quyết định.** "Response GET mang `Set-Cookie` thì CDN không lưu" là một mệnh đề chưa đọc tài liệu. Quyết định chỉ an toàn vì phương án đã chọn không bao giờ tệ hơn phương án kia, dù mệnh đề đúng hay sai — và phép đo được giữ lại để kiểm, không để biện minh.
 
 **Về cách làm việc với Claude Code**
 
 - **Khi Claude Code bác lại chẩn đoán và đưa ra bằng chứng đo được, nó thường đúng.** Mẫu hình này đã lặp nhiều lần. Hệ quả: phía project chat suy luận từ kiến trúc, Claude Code đo từ hệ thống thật; khi hai bên lệch thì **số đo thắng**.
 - **Claude Code cũng tự sửa mình khi có số đo mới** — hành vi cần khuyến khích, không phải dấu hiệu thiếu tin cậy.
-- **Trước khi ghi đè một file trong `docs/specs/`, phải đọc bản hiện có và báo cáo những mục sẽ mất.** Không xoá mục nào mà không hỏi, kể cả khi prompt nói "chép nguyên văn". Rút ra ngày 01/10: một prompt viết theo kiểu "tạo file" đã ghi đè bản v1.0 của spec 2B.2 và suýt làm mất kết quả khảo sát mã trong đó.
+- **Trước khi ghi đè một file trong `docs/specs/`, phải đọc bản hiện có và báo cáo những mục sẽ mất.** Không xoá mục nào mà không hỏi, kể cả khi prompt nói "chép nguyên văn".
 - **Khi hai tiêu chí trong spec không thể cùng thỏa, sửa spec** — đừng ép nó chọn bừa rồi giấu phần không đạt.
+- **Khi mã buộc phải khác spec lúc triển khai, sửa spec cho khớp mã ngay trong đợt.** Để lệch thì lần sau không ai biết bản nào đúng.
+- **Trước khi đặt một tiêu chí thành việc kiểm tay, hỏi: "Claude Code thật sự không làm được, hay chỉ là tôi chưa nghĩ cách?"** Một phép đo thủ công kém hơn phép đo tự động sẵn có thì không được đưa vào tiêu chí.
+- **Một quy tắc nên gắn hai thứ vào nhau, đừng viết thành hai con số.** Thanh đáy ở 1024px và footer thu gọn ở 768px tạo ra một dải 256px mà trang hành xử nửa nọ nửa kia. Gắn cả hai vào một breakpoint đặt một chỗ thì chúng không trôi khỏi nhau được.
 - Mọi lệnh commit/push phải dùng **đường dẫn tường minh**, không `git add -A`, và kiểm `git status` trước khi stage. Luật này đã thực sự cứu một lần: một thay đổi chưa commit của file quyết định nằm trong working tree suốt 7 ngày, xuyên qua nhiều lần tạo nhánh, mà không lọt vào commit nào.
-- Việc gì Claude Code chạy được bằng lệnh thì đưa vào prompt, đừng bắt người dùng gõ tay. Chỉ những thứ nó thật sự không làm được (dashboard Vercel, đăng nhập hosted, Docker Desktop) mới thành bước thủ công.
+- **Không bao giờ giết mọi tiến trình Node** (`taskkill /IM node.exe`). Dừng theo PID đã ghi hoặc theo cổng đang nghe.
+- Việc gì Claude Code chạy được bằng lệnh thì đưa vào prompt, đừng bắt người dùng gõ tay. Chỉ những thứ nó thật sự không làm được (dashboard Vercel, Docker Desktop, đánh giá thị giác) mới thành bước thủ công.
 - **Prompt nên trỏ tới mục spec thay vì chép lại nội dung spec** — nó đọc được repo, chép lại chỉ tốn token hai lần.
 - Yêu cầu nó mở đầu phần báo cáo cuối bằng một dòng đánh dấu, để phần tự thuật tiến độ không bị mang sang chat khác.
 
@@ -331,24 +371,30 @@ PR #12 đã merge (squash) vào `main` ngày 02/10/2026, commit `8f05b91`; CI 2/
 **Về tài liệu**
 
 - **Tài liệu cũng lệch được mà không ai thấy.** Bản repo của chính file này lệch bản gốc 7 ngày (24/09 trong git, 29/09 trên đĩa, 01/10 ở bản gốc), ghi sai bảng màu và sai font, trong khi repo là public và đây là file nhà tuyển dụng đọc. `git status` có báo suốt thời gian đó. Hệ quả: đồng bộ file này là một bước có tên trong quy trình đóng đợt, không phải việc nhớ thì làm.
+- **Dòng "Cập nhật lần cuối" chỉ chứa ngày**, không có chú thích mô tả lần sửa. Chú thích mô tả sẽ lệch ở lần sửa kế tiếp; lịch sử nằm ở git log.
+- **Khi hợp nhất hai bản của một tài liệu, hãy ghép cơ học, đừng dựng lại từ báo cáo.** Bản hợp nhất sau đợt 3A được viết lại mục 7 từ báo cáo thay vì giữ nguyên bản trong git, và làm mất hơn hai chục số đo, cỡ mẫu và cảnh báo về selector. Phần nào đã có bản đúng thì cắt và dán phần đó, chỉ viết tay những phần thật sự mới.
 
 **Về thiết kế và giao diện**
 
 - Spec phải nói cả **mật độ và bố cục**, không chỉ giá trị token.
 - Không animate `height` trên phần tử `position: sticky` — gây reflow toàn trang, chữ rung khi cuộn.
+- **`position: sticky` chỉ dính trong khối chứa nó.** Khi nội dung ngắn hơn khung nhìn, thanh "dính đáy" bằng sticky nằm lửng giữa trang. Muốn dính đáy khung nhìn thì phải `fixed`, và khi đó `<body>` cần đệm đáy bằng đúng chiều cao thanh để không che nội dung cuối trang.
 - Ngưỡng bật/tắt trạng thái theo scroll phải lệch nhau hai chiều, nếu không sẽ nhấp nháy quanh ngưỡng.
 - Không tạo vùng cuộn riêng (`overflow-y: auto`) cho cột lọc; thà bỏ `sticky` còn hơn.
 - Giao diện do AI sinh có dấu hiệu nhận biết rõ: nhãn viết hoa trên mỗi khối, mũi tên gắn sau link, mọi thẻ chung một bo góc và một khoảng cách. Spec phải chặn từng dấu hiệu bằng tên gọi cụ thể.
+- **Thiếu hụt thị giác của site không nằm ở thẩm mỹ mà ở lớp hình ảnh.** Chính sách không dùng bìa bản quyền khiến toàn trang không có một pixel ảnh nào, nên 40 ô màu phẳng đọc ra là placeholder. Các đợt nâng cấp trước chữa bằng typography và layout nên luôn hụt. Cách chữa đúng là thêm một lớp ảnh atmosphere giấy phép mở, không phải gõ lại font.
+- **Một artboard cố định bằng đúng kích thước màn hình bị đọc là "toàn bộ trang".** Mockup mobile 390×844 không vẽ footer vì footer nằm dưới fold, và điều đó đã bị hiểu là "trang này không có footer". Khung một màn hình phải được ghi rõ trong README của thư mục mockup.
 
 ## 9. Việc cần bàn tiếp trong project
 
 - **Ô "Nhập lại email"** — giữ nguyên, hay thay bằng gợi ý typo domain ("Ý bạn là …@gmail.com?"), hay bật lại xác nhận email. Hiện giữ nguyên; nghiêng về gợi ý typo cho đợt sau.
 - **Khoá ngoại `events.user_id` và `orders.user_id` đang là ON DELETE NO ACTION**, nên chặn việc xoá user. Với bảng analytics, cách thường dùng là **SET NULL** (giữ sự kiện, bỏ danh tính). Quyết khi làm chức năng xoá tài khoản hoặc ở 2D.
-- **Lưu giỏ khách bằng cookie hay localStorage (đợt 3).** Nếu dùng cookie thì server đọc được, dùng `redirect()` trong action được, và sàn 2 request RSC sau đăng nhập xuống 1 — nhưng phải chuyển cả `mergeGuestCart()` lẫn `track("sign_up"/"login")` lên server.
-- **N+1 ở trang chủ** (~25–30 truy vấn, 4–5 bậc nối tiếp) — chưa lên lịch.
+- **Footer xuống layout theo route** — cách chữa đúng cho dịch chuyển bố cục ghi ở 7.4, gom vào đợt 1.6.
+- **N+1 ở trang chủ** (~25–30 truy vấn, 4–5 bậc nối tiếp) — nằm trong thứ tự ở mục 4, chưa có spec.
+- **Lớp ảnh atmosphere** — chọn nguồn, số lượng, đặt ở những trang nào. Gom vào đợt 1.6 mở rộng.
 - Persona chính trong 18–30.
 - Logo chính thức.
 - System prompt cho chatbot.
 - Nội dung README cho nhà tuyển dụng.
-- Mockup cho: giỏ hàng, checkout, admin.
+- Mockup cho: checkout (3B), admin.
 - Viết lại mô tả 3 tủ sách bằng giọng của chủ dự án (nội dung hiện tại do AI viết).
