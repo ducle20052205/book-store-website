@@ -121,7 +121,7 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 - **Repo là PUBLIC.** Không bao giờ commit email cá nhân, API key hay mật khẩu — kể cả trong mockup, ảnh chụp, chú thích và tài liệu. Dữ liệu mẫu dùng `ban.doc@example.com` (domain dành riêng theo RFC 2606).
 - **Tài khoản thử trên hosted phải xoá sau mỗi đợt kiểm** (tiêu chí dọn dẹp). Quy trình: SELECT trước và in ra, xoá `events` của tài khoản đó trước (khoá ngoại NO ACTION), rồi xoá `auth.users` bằng id tường minh trong một transaction có chốt số dòng. Tính đến 01/10: `auth.users` 1, `profiles` 1, `events` 68.
 
-## 7. Tiến độ (01/10/2026)
+## 7. Tiến độ (02/10/2026)
 
 | Hạng mục | Trạng thái |
 |---|---|
@@ -135,7 +135,8 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 | Bước 2C: Quên/đặt lại mật khẩu | Chưa bắt đầu |
 | Bước 2D: Trang hồ sơ, tỉnh/phường, đổi mật khẩu | Chưa bắt đầu |
 | Đợt 1.6: Sửa lỗi giao diện tồn đọng | Chưa bắt đầu |
-| Giỏ hàng · Checkout · Lịch sử đơn · Admin · Make.com · Chatbot · Dashboard | Chưa bắt đầu |
+| Đợt 3A: Giỏ hàng | Xong, đã merge (PR #12, `8f05b91`) |
+| Checkout (đợt 3B) · Lịch sử đơn · Admin · Make.com · Chatbot · Dashboard | Chưa bắt đầu |
 | README cho nhà tuyển dụng · Logo | Chưa bắt đầu |
 
 **Quy trình làm việc đã định hình:** mockup (Claude Design) → spec trong `docs/specs/` kèm tiêu chí nghiệm thu đo được → Claude Code làm theo từng đợt, mỗi hạng mục một commit và một lần đo → báo cáo kèm số đo → kiểm tay trên preview Vercel (những gì Claude Code không làm được) → PR → merge. Mỗi đợt một nhánh riêng.
@@ -240,6 +241,49 @@ Spec: `docs/specs/buoc-2b2-xoa-nhay-trang-thai-header.md` (bản v2, ghi đè b�
 **Phát hiện khi làm:** chuỗi "Đăng nhập" rộng 74,9 px, dài hơn "Tài khoản" 66,0 px (Be Vietnam Pro, 1280px, 1 mẫu mỗi chuỗi), ngược với ghi chú cũ ở `components/headerStyles.ts` và spec v1.0. Ô chữ vì vậy là 80 px và hộp là 149 px (trước đó `min-w` 135 px). Cả ba trạng thái căn từ trái, chừa chỗ cho mũi tên, để biểu tượng không dịch chỗ khi fallback được thay bằng nội dung thật.
 
 **Ghi chú bổ sung (02/10, đo ở đợt 3A):** tiêu chí CLS = 0 của 2B.2 không ổn định. Đo xen kẽ A/B giữa `main` và nhánh 3A: `main` cho 0/10, 8/10 và 9/10 lượt có CLS khác 0, giá trị tối đa 0,0002; nhánh 3A cũng dao động, có lượt 0/30. Nguồn dịch chuyển là độ rộng nav và chữ danh mục (font hoặc thanh cuộn), không phải slot auth hay badge giỏ hàng. Kết luận "CLS = 0 ở cả 20 lần" của 2B.2 vì vậy chỉ đúng với môi trường đo lúc đó, không phải một tính chất của mã.
+
+### 7.4 Đợt 3A — kết quả (02/10/2026)
+
+PR #12 đã merge (squash) vào `main` ngày 02/10/2026, commit `8f05b91`; CI 2/2 đạt (Vercel, Vercel Preview Comments). Spec: `docs/specs/buoc-3a-gio-hang.md` (bản v2.4).
+
+**Phạm vi:** giỏ khách bằng cookie `na_cart`; giỏ người đã đăng nhập ở bảng `cart_items`; gộp giỏ khi đăng nhập/đăng ký (phía server, trước `redirect()`); trang `/gio-hang` thật; badge số lượng ở header (Suspense riêng, `data-testid="header-cart-count"`); nối nút "Thêm vào giỏ" và "Mua ngay" ở `PurchasePanel`, ghi `add_to_cart`; `session_id` chuyển sang cookie `na_sid`; trang `/thanh-toan` tạm; thanh thao tác đáy cố định của `/gio-hang`; footer thu gọn ở luồng tập trung (`/gio-hang`, `/thanh-toan`).
+
+**Điều kiện đo:** stack Supabase cục bộ, bản production (`next build` rồi `next start`), Edge headless qua CDP; độ trễ Supabase +160 ms/vòng ở TC-5, TC-6, TC-12. TC-14 đo trên preview và production Vercel, TC-15 và TC-16 đo trên preview (bản cục bộ cho cùng kết quả). Một lượt tải là một mẫu.
+
+| TC | Số mẫu | Kết quả |
+|---|---|---|
+| TC-1 giỏ khách sống qua tải lại | 3 lần tải lại | Đạt, 5/5 kiểm; đối chứng: trước khi thêm cookie `na_cart` không tồn tại |
+| TC-2 gộp giỏ | 3 | Đạt 3/3 (A: 2 → 3, B = 1, cookie đã xoá) |
+| TC-3 chặn vượt tồn | 3 mỗi trạng thái (khách, đã đăng nhập) | Đạt 14/14; đối chứng q = 2 không có cảnh báo |
+| TC-4 thao tác nối tiếp không mất dòng | 10 | Đạt 10/10; đối chứng sau lần gửi đầu đúng 1 dòng 10/10 |
+| TC-5 badge không hiện số sai | 10 mỗi dòng | Số sai hoặc `0` sau FCP: 0/10 (khách, giỏ 3 cuốn), 0/10 (đã đăng nhập, giỏ 3 cuốn); giỏ rỗng có số: 0/10; số khi ổn định là `3` ở 10/10 mỗi dòng giỏ 3 cuốn. Ở khách, badge đã có số trước FCP (không có trạng thái trung gian); trạng thái trung gian rỗng rồi `3` chỉ quan sát ở dòng đã đăng nhập |
+| TC-6 sàn RSC | 10 `signIn`, 3 `signUp` mỗi phía | Xem dưới |
+| TC-7 sách biến mất khỏi catalog | 3 | Đạt 3/3 |
+| TC-8 cookie rác | 1 mỗi trường hợp (3 trường hợp) | Đạt 3/3 |
+| TC-9 hết hàng | 3 | Đạt 6/6 kiểm; đối chứng còn hàng đạt |
+| TC-10 không còn `track` ở client cho `sign_up`/`login` | 1 lần chạy | 0 dòng; đối chứng `add_to_cart`: 1 dòng (`PurchasePanel.tsx`) |
+| TC-11 kiểu | 1 | `tsc` 0 lỗi, `eslint` 0 lỗi, `next build` exit 0 |
+| TC-12 testid của 2B.2 | `rg`; 20 lần tải | `header-auth` 1 lần trong mã, 1 phần tử trong DOM; TC-1 của 2B.2: 0/10, đối chứng khách 10/10 |
+| TC-13 `session_id` hai phía | 3 | Đạt 3/3 (`page_view`, `add_to_cart`, `sign_up` cùng `session_id`, khớp cookie `na_sid`) |
+| TC-14 không có `Set-Cookie` ở response được cache | 5 lượt mỗi phía | Xem dưới |
+| TC-15a giỏ 1 cuốn, thanh ở đáy khung nhìn (390×844) | 5 | Đạt 5/5, chênh 0 px |
+| TC-15b giỏ 5 cuốn, `scrollY = 0` và cuối trang | 5 mỗi vị trí | Đạt 5/5 ở cả hai vị trí, chênh 0 px |
+| TC-15c dòng cuối footer không bị thanh che | 5 | Đạt 5/5 khi đo dòng chữ: cách thanh 16,69 px. Đo bằng hộp `<footer>`: −0,31 px (chạm 0,31 px do chiều cao tài liệu lẻ, không che chữ) |
+| TC-15d desktop 1280px, thanh `null` | 5 | Đạt 5/5 |
+| TC-15e CLS của `/gio-hang` ở 390px | 5 (bản cuối) | 0, 0, 0, 0, 0 (không đặt ngưỡng; xem mục CLS) |
+| TC-16a footer thu gọn dưới breakpoint (1023px và 390px) | 3 mỗi trang, mỗi mốc | Đạt: 1 `<footer>`, 0 liên kết, có câu minh hoạ |
+| TC-16b footer đầy đủ trên breakpoint (1024px và 1280px) | 3 mỗi trang, mỗi mốc | Đạt: 9 liên kết, đủ ba cột và GitHub; thanh `null`, cột tóm tắt có mặt |
+| TC-16c trang khác (`/`, `/sach`) ở 1023px và 390px | 3 mỗi trang, mỗi mốc | Đạt: footer đầy đủ, 9 liên kết |
+
+**TC-6:** đếm theo định nghĩa của 2B.1 (GET có `rsc`, không prefetch): baseline trên `main` ra **2** (10/10 lượt `signIn`), mã mới ra **0** (10/10 lượt `signIn`, 3/3 lượt `signUp`), vì `redirect()` mang luôn trang đích trong response của action. Tính cả POST action (response `text/x-component`): 3 xuống 1. Hạn chế của baseline: được chạy trên bản `main` sạch nhưng SAU khi viết mã, không phải trước như tiêu chí gốc đòi. Đối chứng phân loại: số request prefetch cùng lượt > 0 ở mọi lượt.
+
+**TC-14:** khách hoàn toàn mới (mỗi lượt một tiến trình `curl` riêng, không cookie), `GET /` xen kẽ preview và production (baseline `main` `8462236`), 5 lượt mỗi phía. `Set-Cookie` cho `na_sid`: không có ở 10/10 response, và không có header `Set-Cookie` nào ở cả hai phía. `x-vercel-cache`: preview PRERENDER ×1, HIT ×4; production STALE ×1, HIT ×4. Chưa thấy dấu hiệu mất cache edge. Lượt đầu của hai phía không cùng điều kiện (preview vừa dựng, production STALE với `age` 2.404 s), nên chỉ so được 4/5 lượt, trong đó hai phía cùng `HIT` ở 4/4 lượt. Phép đo chỉ thấy header HTTP, không thấy cookie do JavaScript ghi bằng `document.cookie`.
+
+**CLS:** TC-15e đo được CLS khác 0 ở 4/35 lượt (0,0325 ×2, 0,0091, và một lượt gỡ lỗi ≈ 0,0317), tối đa 0,0325; 0 ở 10/10 lượt đo đầy đủ trên preview và 0 dịch chuyển ở 12 lượt gỡ lỗi. Cơ chế quan sát được một lần (lượt gỡ lỗi): footer thu gọn dịch 113 px rồi bị gỡ khỏi DOM khoảng 3,6 s sau khi tải; chưa rõ vì sao việc gỡ xảy ra muộn, chưa tái hiện được. Không chữa ở 3A. Cách chữa hoãn sang đợt 1.6: chuyển footer khỏi layout gốc xuống layout theo route (`/gio-hang` và `/thanh-toan` dùng layout riêng với footer thu gọn), phần phụ thuộc bề rộng để CSS lo; khi đó tiêu chí đo khả kiến, không đo sự có mặt trong DOM. Chi tiết ở mục 5 của spec.
+
+**Breakpoint:** thanh thao tác đáy và footer thu gọn dùng chung `--breakpoint-bottom-bar` (64rem = 1024px), đặt một chỗ ở `app/globals.css` (`@theme static`); bốn nơi cùng đọc: biến thể Tailwind `bottom-bar:`/`max-bottom-bar:`, media query đệm đáy của `<body>` (`theme(--breakpoint-bottom-bar)`), hook `useBelowBottomBar` (đọc biến CSS lúc chạy, dùng bởi `FooterSwitch`), và `BottomBarGate`.
+
+**Sáu chỗ mã khác spec v2.1** (chi tiết và lý do ở mục 7 của `docs/specs/buoc-3a-gio-hang.md`): (1) `refresh()` làm mới badge cho người đã đăng nhập; (2) cookie hỏng được dọn bằng một action gọi từ client; (3) giỏ khách hết dòng thì cookie bị xoá, không ghi `[]`; (4) `mergeGuestCart` chặn số lượng theo tồn kho; (5) `lib/nextRedirect.ts` cho lời gọi action bị từ chối bởi `redirect()`; (6) nút "Thanh toán" trỏ trang `/thanh-toan` tạm cho tới đợt 3B.
 
 ## 8. Bài học đã rút ra (giữ lại để không lặp)
 
