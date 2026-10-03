@@ -146,7 +146,7 @@ Ghi lại để người đọc sau không phải đoán; **không phải việc
 
 **Không có việc tay bắt buộc ở đợt này.** Chặng 1 có một cổng quyết định, không phải việc tay: áp migration `cancel_order` lên hosted cần chủ dự án đồng ý trước.
 
-Điều Claude Code không làm được: đăng nhập vào hosted. Nếu muốn có bằng chứng "xem lịch sử đơn, hủy đơn, kho cộng lại" (định nghĩa "xong", bước 5) trên production, chủ dự án đặt một đơn rồi hủy nó; Claude Code kiểm lại bằng SELECT như đã làm với `NA-2026-0001`. **Không phải điều kiện nghiệm thu.**
+Điều Claude Code không làm được: đăng nhập vào hosted. Nếu muốn có bằng chứng "xem lịch sử đơn, hủy đơn, kho cộng lại" (định nghĩa "xong", bước 5) trên production, chủ dự án đặt một đơn rồi hủy nó; Claude Code kiểm lại bằng SELECT như đã làm với `NA-2026-0001`. **Không phải điều kiện nghiệm thu.** Chủ dự án giữ việc tuỳ chọn này (03/10/2026); nó vẫn là tuỳ chọn.
 
 ## 6. Claude Code tạo sẵn
 
@@ -178,11 +178,11 @@ Tên file là gợi ý, người triển khai được đổi miễn giữ ranh 
 - `next.config.ts` chỉ có `cacheComponents: true`, không có `redirects`.
 - Repo không có hàm định dạng ngày nào.
 
-**SRS 1.6:** FR-6.3 ("Khách hàng chỉ hủy được đơn … khi đơn đang `'pending'`"), FR-6.4 (khuyến nghị "Edge Function/database trigger"), FR-6.5 (policy hủy là "trạng thái đích, chưa cài"; yêu cầu đợt này chọn trigger khoá cột hoặc hàm `SECURITY DEFINER`) và dòng `orders` ở mục 5.10 mô tả cơ chế khác với đợt này; được sửa ở commit riêng (SRS 1.7). Mục 5.10 ghi `order_items` của Admin chỉ `SELECT toàn bộ`, trong khi hosted có `order_items_admin_update` và FR-7.5 ghi `SELECT`/`UPDATE`: lệch có từ trước, ghi ở báo cáo.
+**SRS 1.6:** FR-6.3 ("Khách hàng chỉ hủy được đơn … khi đơn đang `'pending'`"), FR-6.4 (khuyến nghị "Edge Function/database trigger"), FR-6.5 (policy hủy là "trạng thái đích, chưa cài"; yêu cầu đợt này chọn trigger khoá cột hoặc hàm `SECURITY DEFINER`) và dòng `orders` ở mục 5.10 mô tả cơ chế khác với đợt này; được sửa ở commit riêng (SRS 1.7, `08ed83b`). NFR-3.3 ghi "confirm dialog" trong khi FR-B4.4 xác nhận ngay trong trang; mục 5.10 ghi `order_items` của Admin chỉ `SELECT toàn bộ` trong khi hosted có `order_items_admin_update` và FR-7.5 ghi `SELECT`/`UPDATE` (lệch có từ trước, không do đợt này): cả hai được sửa ở một commit riêng (SRS 1.7, `b83a54a`).
 
 ## 8. Điều cần làm rõ trước khi code
 
-**Không còn câu hỏi mở cho chủ dự án.** Các quyết định dưới đây do Claude Code tự chốt khi viết spec (theo quyền tự quyết: có tiền lệ trong repo, miễn phí hoặc đảo lại được, hoặc trả lời được bằng một phép đo); ghi lại để người đọc sau biết chỗ nào từng là lựa chọn:
+**Không còn câu hỏi mở cho chủ dự án.** Các quyết định dưới đây do Claude Code tự chốt khi viết spec (theo quyền tự quyết: có tiền lệ trong repo, miễn phí hoặc đảo lại được, hoặc trả lời được bằng một phép đo); **chủ dự án duyệt toàn bộ ngày 03/10/2026**, kèm hai chỗ được nêu riêng: hai chặng hai PR, và bộ TC-11 → TC-17 thêm vào mười tiêu chí gốc. Ghi lại để người đọc sau biết chỗ nào từng là lựa chọn:
 - **Chia hai chặng** → theo tiền lệ đợt 3B.
 - **Chuyển hướng `/tai-khoan` bằng `redirects` của `next.config.ts`** → đảo lại được bằng xoá một mục; chạy trước `proxy` theo tài liệu Next đi kèm; mã HTTP đo ở TC-2.
 - **`count: "exact"` kèm `.limit(50)`** thay cho lấy 51 dòng → đảo lại được; cho số đếm đúng ở tiêu đề.
