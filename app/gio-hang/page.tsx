@@ -6,6 +6,8 @@ import { CartLineControls } from "@/components/cart/CartLineControls";
 import { RepairCartCookie } from "@/components/cart/RepairCartCookie";
 import { StockNotice } from "@/components/cart/StockNotice";
 import { BottomBarGate } from "@/components/BottomBarGate";
+import { EmptyState } from "@/components/EmptyState";
+import { PageTitle } from "@/components/PageTitle";
 import { formatVnd, Price } from "@/components/Price";
 import { StockLabel } from "@/components/StockLabel";
 import { MAX_LINE_QUANTITY } from "@/lib/cart/cookie";
@@ -32,19 +34,6 @@ const containerClass = "mx-auto w-full max-w-[1200px] px-4 py-8 md:px-6 md:py-10
 const cardClass = "rounded-menu border border-line-warm bg-surface";
 const primaryButtonClass =
   "pressable inline-flex h-12 w-full items-center justify-center whitespace-nowrap rounded-field bg-cham-700 px-6 text-button font-medium text-white hover:bg-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-field disabled:text-ink-400 disabled:hover:bg-field";
-const secondaryButtonClass =
-  "pressable inline-flex h-12 items-center justify-center whitespace-nowrap rounded-field border border-cham-700 bg-surface px-6 text-button font-medium text-cham-700 hover:bg-cham-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2";
-
-function PageTitle({ count }: { count?: number }) {
-  return (
-    <div className="section-title">
-      <div className="flex flex-wrap items-baseline gap-x-3">
-        <h1 className="font-serif text-h1 text-ink-900">Giỏ hàng</h1>
-        {count !== undefined && <p className="text-body-sm text-ink-600">{count} cuốn</p>}
-      </div>
-    </div>
-  );
-}
 
 export default function GioHangPage({ searchParams }: PageProps<"/gio-hang">) {
   return (
@@ -52,7 +41,7 @@ export default function GioHangPage({ searchParams }: PageProps<"/gio-hang">) {
       <Suspense
         fallback={
           <>
-            <PageTitle />
+            <PageTitle title="Giỏ hàng" />
             <div aria-busy="true" className={`${cardClass} mt-6 min-h-48`} />
           </>
         }
@@ -79,7 +68,7 @@ async function CartContent({ searchParams }: { searchParams: PageProps<"/gio-han
     return (
       <>
         {repair}
-        <PageTitle />
+        <PageTitle title="Giỏ hàng" />
         <EmptyCart />
       </>
     );
@@ -90,7 +79,7 @@ async function CartContent({ searchParams }: { searchParams: PageProps<"/gio-han
   return (
     <>
       {repair}
-      <PageTitle count={view.totalQuantity} />
+      <PageTitle title="Giỏ hàng" count={view.totalQuantity} unit="cuốn" />
       <StockNotice items={stockItems} />
 
       <div className="mt-6 grid items-start gap-6 bottom-bar:grid-cols-[minmax(0,1fr)_332px] bottom-bar:gap-10">
@@ -259,34 +248,15 @@ async function EmptyCart() {
   const bookTotal = counts.reduce((sum, category) => sum + category.bookCount, 0);
 
   return (
-    <div className={`${cardClass} mt-6 px-6 py-14 text-center md:py-20`}>
-      <svg
-        viewBox="0 0 76 56"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-        className="mx-auto h-14 w-[76px] text-cham-700"
-      >
-        <path d="M4 6h30a4 4 0 0 1 4 4v42a6 6 0 0 0-6-6H4V6z" />
-        <path d="M72 6H42a4 4 0 0 0-4 4v42a6 6 0 0 1 6-6h28V6z" />
-        <path d="M12 16h16M12 24h16M48 16h16M48 24h16" strokeWidth="1.2" />
-      </svg>
-      <h2 className="mt-6 font-serif text-2xl font-semibold text-ink-900">Giỏ hàng của bạn đang trống</h2>
-      <p className="mx-auto mt-3 max-w-[460px] text-body text-ink-600">
-        Chúng mình có {bookTotal} cuốn đang chờ bạn ghé qua. Nếu chưa biết bắt đầu từ đâu, {collections.length} tủ sách
-        tuyển chọn là chỗ dễ vào nhất — mỗi cuốn trong đó đều kèm lý do chúng mình chọn nó.
-      </p>
-      <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <Link href="/sach" className={`${primaryButtonClass} !w-auto`}>
-          Xem tất cả sách
-        </Link>
-        <Link href="/tu-sach" className={secondaryButtonClass}>
-          Khám phá tủ sách
-        </Link>
-      </div>
-    </div>
+    <EmptyState
+      title="Giỏ hàng của bạn đang trống"
+      actions={[
+        { href: "/sach", label: "Xem tất cả sách", variant: "primary" },
+        { href: "/tu-sach", label: "Khám phá tủ sách", variant: "secondary" },
+      ]}
+    >
+      Chúng mình có {bookTotal} cuốn đang chờ bạn ghé qua. Nếu chưa biết bắt đầu từ đâu, {collections.length} tủ sách
+      tuyển chọn là chỗ dễ vào nhất — mỗi cuốn trong đó đều kèm lý do chúng mình chọn nó.
+    </EmptyState>
   );
 }
