@@ -1,6 +1,7 @@
 "use client";
 
 import { type InputHTMLAttributes, type ReactNode, type Ref, useId, useState } from "react";
+import { inputClass } from "@/lib/ui/classes";
 
 /**
  * Ô nhập dùng chung cho /dang-nhap và /dang-ky (đợt 2B, spec mục 5–6, README
@@ -9,9 +10,6 @@ import { type InputHTMLAttributes, type ReactNode, type Ref, useId, useState } f
  * phóng to), 46px từ md; bo `radius-field`, viền `line-field` (≥ 3:1 trên nền
  * trắng — WCAG 1.4.11), viền `danger` khi có lỗi.
  */
-
-export const inputClass =
-  "h-12 w-full rounded-field border bg-surface px-3.5 text-base text-ink-900 md:h-[46px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 disabled:opacity-60";
 
 export interface FieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "className"> {
   label: string;

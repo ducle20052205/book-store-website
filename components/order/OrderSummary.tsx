@@ -2,7 +2,7 @@ import { BookCover } from "@/components/BookCover";
 import { OrderStatusChip } from "@/components/order/OrderStatusChip";
 import { formatVnd } from "@/components/Price";
 import { PAYMENT_METHOD_LABELS } from "@/lib/checkoutRules";
-import type { OwnOrder } from "@/lib/orders/getOwnOrder";
+import type { OrderDetail } from "@/lib/orders/orderDetail";
 
 /**
  * Khối tóm tắt đơn (đợt 4, spec FR-B4.2): mã đơn, trạng thái, sách trong đơn (số lượng × giá lúc mua),
@@ -14,7 +14,7 @@ import type { OwnOrder } from "@/lib/orders/getOwnOrder";
  * chỉ thêm hai thuộc tính `data-testid` (TC-12). `mt-8` nằm ngay trên `<section>` như bản gốc: đặt nó ở thẻ
  * bao ngoài thì HTML của khối khác bản chụp trước khi tách, và hai route sẽ không giống hệt nhau.
  */
-export function OrderSummary({ order }: { order: OwnOrder }) {
+export function OrderSummary({ order }: { order: OrderDetail }) {
   const items = [...order.order_items].sort((a, b) => (a.books?.title ?? "").localeCompare(b.books?.title ?? "", "vi"));
 
   return (
