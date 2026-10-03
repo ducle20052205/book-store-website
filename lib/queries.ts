@@ -80,6 +80,36 @@ export interface CategoryNode {
   children: CategoryNode[];
 }
 
+interface CategoryRow {
+  id: string;
+  name: string;
+  slug: string;
+  parent_id: string | null;
+  sort_order: number;
+}
+
+/**
+ * Dựng cây 2 cấp từ các dòng `categories` ĐÃ sắp theo sort_order. Hàm thuần: getCategoryTree và
+ * getCategoryCounts dùng chung để chỉ có MỘT bản logic dựng cây (đợt N+1 trang chủ, FR-N1.3).
+ */
+function buildCategoryTree(rows: CategoryRow[]): CategoryNode[] {
+  const byId = new Map<string, CategoryNode>();
+  for (const row of rows) {
+    byId.set(row.id, { id: row.id, name: row.name, slug: row.slug, sortOrder: row.sort_order, children: [] });
+  }
+
+  const roots: CategoryNode[] = [];
+  for (const row of rows) {
+    const node = byId.get(row.id)!;
+    if (row.parent_id) {
+      byId.get(row.parent_id)?.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  }
+  return roots;
+}
+
 /** Cây danh mục 2 cấp, sắp xếp theo sort_order — dùng cho mega-menu. */
 export async function getCategoryTree(): Promise<CategoryNode[]> {
   "use cache";
@@ -91,22 +121,7 @@ export async function getCategoryTree(): Promise<CategoryNode[]> {
     .order("sort_order", { ascending: true });
 
   if (!data) return [];
-
-  const byId = new Map<string, CategoryNode>();
-  for (const row of data) {
-    byId.set(row.id, { id: row.id, name: row.name, slug: row.slug, sortOrder: row.sort_order, children: [] });
-  }
-
-  const roots: CategoryNode[] = [];
-  for (const row of data) {
-    const node = byId.get(row.id)!;
-    if (row.parent_id) {
-      byId.get(row.parent_id)?.children.push(node);
-    } else {
-      roots.push(node);
-    }
-  }
-  return roots;
+  return buildCategoryTree(data);
 }
 
 /**
@@ -251,30 +266,51 @@ export interface FeaturedBookExtra {
  * migration. Lấy riêng qua bảng `books` theo đúng slug cần, chỉ 1-2 slug
  * mỗi lần gọi (chỉ dùng cho mục đầu tiên của mỗi tab).
  *
- * Đợt F [F2.1]: thẻ nổi bật giờ cần thêm nhãn danh mục — lấy kèm luôn
- * category_id rồi đi lên tới danh mục CHA (`getCategoryChainById`, cùng
- * hàm /sach dùng để tô màu dải danh mục) để nhãn dùng đúng 1 trong 5 màu
- * danh mục đã có, không phải danh mục con (không có màu riêng).
+ * Đợt F [F2.1]: thẻ nổi bật giờ cần thêm nhãn danh mục — nhãn dùng danh mục
+ * CHA (đúng 1 trong 5 màu danh mục đã có, không phải danh mục con vì nó
+ * không có màu riêng); nếu không có cha thì chính danh mục đó.
+ *
+ * Đợt N+1 trang chủ [FR-N1.4]: lấy MỘT truy vấn duy nhất, nhúng danh mục và
+ * danh mục cha qua khoá ngoại (`categories(... parent:parent_id(...))`), thay
+ * cho chuỗi sách → danh mục con → danh mục cha (3 bậc, 1 + 2 truy vấn mỗi
+ * sách). Gợi ý `parent:parent_id(...)` (tên CỘT khoá ngoại) trả về ĐỐI TƯỢNG
+ * cha; `parent:categories!parent_id(...)` thì trả mảng con (rỗng) — đã đo
+ * trên PostgREST cục bộ và hosted. Khoá của kết quả theo thứ tự `slugs`
+ * (bản cũ theo thứ tự các lời gọi song song hoàn thành nên không tất định).
  */
 export async function getFeaturedBookExtrasBySlug(slugs: string[]): Promise<Record<string, FeaturedBookExtra>> {
   "use cache";
   cacheLife("minutes");
   if (slugs.length === 0) return {};
   const supabase = createPublicClient();
-  const { data } = await supabase.from("books").select("slug, description, category_id").in("slug", slugs);
-  const rows = data ?? [];
+  const { data } = await supabase
+    .from("books")
+    .select("slug, description, categories(name, slug, parent_id, parent:parent_id(name, slug))")
+    .in("slug", slugs);
+
+  interface CategoryLabel {
+    name: string;
+    slug: string;
+  }
+  const rows = (data ?? []) as unknown as {
+    slug: string;
+    description: string | null;
+    categories: (CategoryLabel & { parent_id: string | null; parent: CategoryLabel | null }) | null;
+  }[];
+  const bySlug = new Map(rows.map((row) => [row.slug, row]));
+
   const map: Record<string, FeaturedBookExtra> = {};
-  await Promise.all(
-    rows.map(async (row) => {
-      const chain = await getCategoryChainById(row.category_id);
-      const parent = chain[0];
-      map[row.slug] = {
-        description: row.description,
-        categoryName: parent?.name ?? null,
-        categorySlug: parent?.slug ?? null,
-      };
-    }),
-  );
+  for (const slug of slugs) {
+    const row = bySlug.get(slug);
+    if (!row) continue;
+    const category = row.categories;
+    const label = category?.parent_id && category.parent ? category.parent : category;
+    map[slug] = {
+      description: row.description,
+      categoryName: label?.name ?? null,
+      categorySlug: label?.slug ?? null,
+    };
+  }
   return map;
 }
 
@@ -342,42 +378,56 @@ export interface CollectionPreview extends CollectionSummary {
   previewBooks: { slug: string; title: string; author: string; coverImageUrl: string | null }[];
 }
 
-/** C.2 mục 5: mỗi tủ sách kèm tối đa 3 bìa đầu (theo position) để xếp chồng trên trang chủ. */
+/**
+ * C.2 mục 5: mỗi tủ sách kèm tối đa 3 bìa đầu (theo position) để xếp chồng trên trang chủ.
+ *
+ * Đợt N+1 trang chủ [FR-N1.2]: MỘT truy vấn nhúng (`collection_books(...)` có `order`/`limit` đặt trên bảng
+ * nhúng) thay cho `getCollections()` rồi một truy vấn cho MỖI tủ (1 + N, hai bậc nối tiếp).
+ */
 export async function getCollectionsWithPreview(): Promise<CollectionPreview[]> {
   "use cache";
   cacheLife("minutes");
   const supabase = createPublicClient();
-  const collections = await getCollections();
+  // E1: tủ nổi bật hiện 4 bìa (thẻ lớn hơn), tủ thường chỉ dùng 3 — lấy
+  // dư 1 cho mọi tủ rồi cắt bớt lúc hiển thị, đơn giản hơn 2 nhánh truy vấn.
+  const { data } = await supabase
+    .from("collections")
+    .select(
+      "id, slug, title, description, is_featured, sort_order, collection_books(position, books(slug, title, author, cover_image_url))",
+    )
+    .order("sort_order", { ascending: true })
+    .order("position", { referencedTable: "collection_books", ascending: true })
+    .limit(4, { referencedTable: "collection_books" });
 
-  return Promise.all(
-    collections.map(async (collection) => {
-      // E1: tủ nổi bật hiện 4 bìa (thẻ lớn hơn), tủ thường chỉ dùng 3 — lấy
-      // dư 1 cho mọi tủ rồi cắt bớt lúc hiển thị, đơn giản hơn 2 nhánh truy vấn.
-      const { data: rows } = await supabase
-        .from("collection_books")
-        .select("position, books(slug, title, author, cover_image_url)")
-        .eq("collection_id", collection.id)
-        .order("position", { ascending: true })
-        .limit(4);
+  const collections = (data ?? []) as unknown as {
+    id: string;
+    slug: string;
+    title: string;
+    description: string;
+    is_featured: boolean;
+    sort_order: number;
+    collection_books: {
+      position: number;
+      books: { slug: string; title: string; author: string; cover_image_url: string | null } | null;
+    }[];
+  }[];
 
-      const bookRows = (rows ?? []) as unknown as {
-        position: number;
-        books: { slug: string; title: string; author: string; cover_image_url: string | null } | null;
-      }[];
-
-      return {
-        ...collection,
-        previewBooks: bookRows
-          .filter((r) => r.books !== null)
-          .map((r) => ({
-            slug: r.books!.slug,
-            title: r.books!.title,
-            author: r.books!.author,
-            coverImageUrl: r.books!.cover_image_url,
-          })),
-      };
-    }),
-  );
+  return collections.map((c) => ({
+    id: c.id,
+    slug: c.slug,
+    title: c.title,
+    description: c.description,
+    isFeatured: c.is_featured,
+    sortOrder: c.sort_order,
+    previewBooks: c.collection_books
+      .filter((r) => r.books !== null)
+      .map((r) => ({
+        slug: r.books!.slug,
+        title: r.books!.title,
+        author: r.books!.author,
+        coverImageUrl: r.books!.cover_image_url,
+      })),
+  }));
 }
 
 export interface CategoryWithCount {
@@ -387,24 +437,32 @@ export interface CategoryWithCount {
   bookCount: number;
 }
 
-/** C.2 mục 2: mỗi danh mục cha kèm tổng số sách thuộc nó hoặc các danh mục con của nó. */
+/**
+ * C.2 mục 2: mỗi danh mục cha kèm tổng số sách thuộc nó hoặc các danh mục con của nó.
+ *
+ * Đợt N+1 trang chủ [FR-N1.3]: MỘT truy vấn đọc `categories` kèm số sách của từng danh mục (nhúng đếm
+ * `books(count)`), rồi cộng cha với con trong mã — thay cho cây (1 truy vấn) rồi 5 lệnh `HEAD` đếm, hai bậc
+ * nối tiếp. Dựng cây bằng `buildCategoryTree`, cùng hàm với `getCategoryTree`.
+ */
 export async function getCategoryCounts(): Promise<CategoryWithCount[]> {
   "use cache";
   cacheLife("minutes");
   const supabase = createPublicClient();
-  const tree = await getCategoryTree();
+  const { data } = await supabase
+    .from("categories")
+    .select("id, name, slug, parent_id, sort_order, books(count)")
+    .order("sort_order", { ascending: true });
 
-  return Promise.all(
-    tree.map(async (parent) => {
-      const categoryIds = [parent.id, ...parent.children.map((c) => c.id)];
-      const { count } = await supabase
-        .from("books")
-        .select("*", { count: "exact", head: true })
-        .in("category_id", categoryIds);
+  if (!data) return [];
+  const rows = data as unknown as (CategoryRow & { books: { count: number }[] | null })[];
+  const countById = new Map(rows.map((row) => [row.id, row.books?.[0]?.count ?? 0]));
 
-      return { id: parent.id, name: parent.name, slug: parent.slug, bookCount: count ?? 0 };
-    }),
-  );
+  return buildCategoryTree(rows).map((parent) => ({
+    id: parent.id,
+    name: parent.name,
+    slug: parent.slug,
+    bookCount: [parent.id, ...parent.children.map((c) => c.id)].reduce((sum, id) => sum + (countById.get(id) ?? 0), 0),
+  }));
 }
 
 export interface EditorialPick {
@@ -418,6 +476,9 @@ export interface EditorialPick {
  * C.2 mục 4: một curator_note thật để làm khối editorial trên trang chủ —
  * lấy cuốn đầu tiên (position 1) của tủ sách không phải hero, theo
  * sort_order, để không lặp lại đúng những cuốn đã hiện ở Hero.
+ *
+ * Đợt N+1 trang chủ [FR-N1.1]: MỘT truy vấn nhúng (tủ đầu tiên không phải hero kèm đúng 1 dòng
+ * `collection_books` đầu theo position) thay cho chuỗi hai bậc tủ → dòng.
  */
 export async function getEditorialPick(): Promise<EditorialPick | null> {
   "use cache";
@@ -425,21 +486,23 @@ export async function getEditorialPick(): Promise<EditorialPick | null> {
   const supabase = createPublicClient();
   const { data: candidateCollections } = await supabase
     .from("collections")
-    .select("id, slug, title")
+    .select("slug, title, collection_books(curator_note, books(slug, title, author, cover_image_url))")
     .eq("is_featured", false)
     .order("sort_order", { ascending: true })
-    .limit(1);
+    .order("position", { referencedTable: "collection_books", ascending: true })
+    .limit(1)
+    .limit(1, { referencedTable: "collection_books" });
 
-  const collection = candidateCollections?.[0];
+  const collection = candidateCollections?.[0] as unknown as
+    | {
+        slug: string;
+        title: string;
+        collection_books: { curator_note: string; books: unknown }[];
+      }
+    | undefined;
   if (!collection) return null;
 
-  const { data: row } = await supabase
-    .from("collection_books")
-    .select("curator_note, books(slug, title, author, cover_image_url)")
-    .eq("collection_id", collection.id)
-    .order("position", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+  const row = collection.collection_books[0];
 
   const book = row?.books as unknown as
     | { slug: string; title: string; author: string; cover_image_url: string | null }
@@ -472,27 +535,29 @@ interface CollectionBookWithBookRow {
   books: BookRow | null;
 }
 
-/** Mục 5.2: hero lấy tủ sách is_featured = true, tối đa 5 ảnh bìa đầu theo position. */
+/**
+ * Mục 5.2: hero lấy tủ sách is_featured = true, tối đa 5 ảnh bìa đầu theo position.
+ *
+ * Đợt N+1 trang chủ [FR-N1.1]: MỘT truy vấn nhúng (tủ kèm 5 dòng `collection_books` đầu theo position)
+ * thay cho chuỗi hai bậc tủ → dòng. `maybeSingle` giữ nguyên: nhiều hơn một tủ nổi bật thì lỗi → `null`.
+ */
 export async function getFeaturedCollection(): Promise<FeaturedCollection | null> {
   "use cache";
   cacheLife("minutes");
   const supabase = createPublicClient();
   const { data: collection } = await supabase
     .from("collections")
-    .select("id, slug, title, description")
+    .select(
+      "id, slug, title, description, collection_books(position, books(slug, title, author, cover_image_url, price, discount_price, stock_quantity))",
+    )
     .eq("is_featured", true)
+    .order("position", { referencedTable: "collection_books", ascending: true })
+    .limit(5, { referencedTable: "collection_books" })
     .maybeSingle();
 
   if (!collection) return null;
 
-  const { data: rows } = await supabase
-    .from("collection_books")
-    .select("position, books(slug, title, author, cover_image_url, price, discount_price, stock_quantity)")
-    .eq("collection_id", collection.id)
-    .order("position", { ascending: true })
-    .limit(5);
-
-  const bookRows = (rows ?? []) as unknown as CollectionBookWithBookRow[];
+  const bookRows = (collection.collection_books ?? []) as unknown as CollectionBookWithBookRow[];
 
   return {
     slug: collection.slug,
