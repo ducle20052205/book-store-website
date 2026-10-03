@@ -6,7 +6,7 @@
 >
 > **Hướng đồng bộ.** Bản gốc này giữ mục 1–6, 8, 9. **Mục 7 chỉ nằm ở repo**, do Claude Code ghi — bản gốc không giữ bản sao của nó. Khi dán bản gốc đè lên repo, phải nối lại mục 7 của repo bằng cách cắt–dán theo dòng, không viết lại. **`docs/SRS.md` chỉ nằm ở repo** — Project knowledge không giữ bản sao nào. Bản sao ở đó không có chủ sở hữu và đã lệch thật (v1.3 trong Project knowledge so với v1.5 trong repo, phát hiện 02/10). Cần đọc SRS thì gắn repo vào chat và đọc `docs/SRS.md`.
 >
-> **Cập nhật lần cuối:** 02/10/2026
+> **Cập nhật lần cuối:** 03/10/2026
 > **Nguồn chân lý:** repo `github.com/ducle20052205/book-store-website`. Các file `docs/SRS.md`, `docs/specs/*`, `CLAUDE.md` trong repo là bản gốc; file này là bản tóm tắt cấp quyết định.
 
 ## 1. Bối cảnh & mục tiêu (đã chốt)
@@ -156,7 +156,7 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 - **Tài khoản thử trên hosted phải xoá sau mỗi đợt kiểm** (tiêu chí dọn dẹp). Quy trình: SELECT trước và in ra, xoá `events` của tài khoản đó trước (khoá ngoại NO ACTION), rồi xoá `auth.users` bằng id tường minh trong một transaction có chốt số dòng.
 - **Ảnh mockup phải là bản xuất từ canvas ở 2×, không phải ảnh chụp màn hình** — ảnh chụp mang theo giao diện công cụ, không đạt chuẩn cho repo public. Lưu ở `docs/mockups/buoc-N/`, kèm README ghi quyết định thiết kế và phạm vi.
 
-## 7. Tiến độ (02/10/2026)
+## 7. Tiến độ (03/10/2026)
 
 | Hạng mục | Trạng thái |
 |---|---|
@@ -173,7 +173,9 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 | Đợt 3A: Giỏ hàng | Xong, đã merge (PR #12, `8f05b91`) |
 | Đợt 3B chặng 1: tầng dữ liệu (địa chỉ hai cấp, schema đơn hàng, `place_order`) | Xong, đã merge (PR #13, `54e6a54`); 8 migration đã áp lên hosted ngày 02/10/2026 |
 | Đợt 3B chặng 2: trang thanh toán, đặt hàng, email xác nhận, trang xác nhận đơn | Xong, đã merge (PR #14, `00d6cde`); đơn thật đầu tiên `NA-2026-0001` ngày 02/10/2026 |
-| Lịch sử đơn · Admin · Make.com · Chatbot · Dashboard | Chưa bắt đầu |
+| Đợt 4 chặng 1: hàm hủy đơn `cancel_order` | Xong, đã merge (PR #15, `d299d2e`); migration `20261003043221` đã áp lên hosted ngày 03/10/2026 |
+| Đợt 4 chặng 2: danh sách đơn, chi tiết đơn, hủy đơn trong trang | Xong, đã merge (PR #16, `09c41ad`); 1 lần hủy thật trên hosted ngày 03/10/2026 |
+| Admin · Make.com · Chatbot · Dashboard | Chưa bắt đầu |
 | README cho nhà tuyển dụng · Logo | Chưa bắt đầu |
 
 **Quy trình làm việc đã định hình:** mockup (Claude Design) → spec trong `docs/specs/` kèm tiêu chí nghiệm thu đo được → Claude Code làm theo từng đợt, mỗi hạng mục một commit và một lần đo → báo cáo kèm số đo → kiểm tay trên preview Vercel (những gì Claude Code không làm được) → PR → merge. Mỗi đợt một nhánh riêng.
@@ -364,6 +366,56 @@ PR #13 (chặng 1, tầng dữ liệu) merge (squash) vào `main` lúc 16:19 UTC
 - **Kiểm lọt dữ liệu cá nhân ở `events`** chỉ phủ 9 sự kiện của 1 phiên.
 - **Webhook Make** chỉ được kiểm với endpoint giả trong repo; không có phép đo nào với Make thật.
 - **Hạn chế đã biết, chủ dự án chấp nhận 02/10/2026** (chi tiết ở mục 7.1 của spec): `notFound()` và `redirect()` trong `<Suspense>` trả HTTP 200 (TC-19; chuyển hướng ở TC-3 và TC-4 là phía client); địa chỉ gửi bị viết lại thành `@…brevosend.com` ở cả đường API; Gmail hiện nút "Huỷ đăng ký" trên thư xác nhận.
+
+### 7.6 Đợt 4 — kết quả (03/10/2026)
+
+PR #15 (chặng 1, hàm hủy đơn) merge (squash) vào `main` lúc 04:36 UTC ngày 03/10/2026, commit `d299d2e`; CI 2/2 đạt (Vercel, Vercel Preview Comments) tại `6624b33`. PR #16 (chặng 2, giao diện) merge (squash) lúc 05:32 UTC cùng ngày, commit `09c41ad`; CI 2/2 đạt tại `bba7669`. Spec: `docs/specs/buoc-4-lich-su-don.md`; `docs/SRS.md` lên v1.7 (commit `08ed83b` và `b83a54a`).
+
+**Phạm vi chặng 1 (1 migration):** hàm `public.cancel_order(p_order_code text) returns void`, `SECURITY DEFINER`, `search_path` rỗng, `EXECUTE` thu hồi từ `public` và `anon`; một giao dịch: đọc đơn của `auth.uid()` bằng `SELECT … FOR UPDATE`, từ chối nếu không phải `pending`, đặt `status = 'cancelled'`, cộng trả `stock_quantity` theo thứ tự `book_id`. Không thêm cột, bảng, policy, trigger; không đổi CHECK. Áp lên hosted ngày 03/10/2026, version `20261003043221`.
+
+**Phạm vi chặng 2:** `/tai-khoan/don-hang` thật (một mặt phẳng trắng, tối đa 50 đơn, giờ Việt Nam); `/tai-khoan/don-hang/[order_code]` dùng chung khối tóm tắt đơn với trang xác nhận; nút hủy với vùng xác nhận trong trang và dải kết quả không tự tắt; `/tai-khoan` chuyển hướng 307 sang danh sách bằng `redirects` của `next.config.ts`. Tách thành phần dùng chung: `OrderSummary`, `OrderStatusChip`, `PageTitle`, `EmptyState`, hàm đọc đơn của chủ đơn.
+
+**Điều kiện đo:** chặng 1 và chặng 2 chạy trên stack Supabase cục bộ; chặng 2 trên bản production (`next build` rồi `next start`), Edge headless qua CDP. Các bộ kiểm không nằm trong repo. Hosted chỉ được đọc bằng SELECT và log API.
+
+| Phép đo | Số mẫu | Kết quả |
+|---|---|---|
+| Kiểm chặng 1 (RPC/PostgREST bằng người dùng thật) | 28 phép kiểm, 1 lượt | 28/28 |
+| TC-6 hủy đơn `pending` | 3 đơn (hai qua `place_order`, một dựng trực tiếp có hai dòng cùng `book_id`) | 3/3: chỉ cột `status` của `orders` đổi (so cả dòng), `order_items` giống hệt, kho mỗi cuốn tăng đúng tổng `quantity`, 40 cuốn còn lại không đổi. Đối chứng độ nhạy: sửa cố ý `note` bị bắt đúng cột |
+| TC-7 trạng thái khác `pending` | 4 mẫu (`processing`, `shipped`, `completed`, `cancelled`) | 4/4 bị từ chối `DON_KHONG_HUY_DUOC` kèm `details` đúng trạng thái; băm `orders`/`order_items`/`books` không đổi |
+| TC-8 đơn người khác | 3 mẫu (khách khác, mã không tồn tại, admin) | 3/3 `DON_KHONG_TON_TAI`; trả lời cho khách khác và cho mã không tồn tại giống hệt (code, message, details, hint, HTTP 400). Đối chứng: chủ đơn gọi thành công |
+| **TC-9 hai lời gọi hủy đồng thời cùng một đơn** | **30 lượt** | **30/30**: đúng 1 thành công + 1 `DON_KHONG_HUY_DUOC`, kho cộng đúng một lần |
+| Đối chứng TC-9: hàm "đọc rồi ghi" ngây thơ, cùng cách đo | 12 lượt (cửa sổ 50 ms); 60 lượt (không độ trễ) | Cộng kho gấp đôi ở **12/12** và **57/60** lượt |
+| Deadlock | 30 lượt mỗi nhánh | `cancel_order` × `cancel_order` trên hai đơn cùng chứa hai cuốn: 0/30; `cancel_order` × `place_order` cùng hai cuốn: 0/30 |
+| Deadlock, cửa sổ nới 50 ms mỗi cuốn | 30 lượt mỗi nhánh | Cùng thứ tự `book_id` tăng dần: **0/30**; thứ tự ngược nhau: **30/30** |
+| TC-10 quyền ghi của khách trên `orders` | 15 cột + 1 lượt `PATCH status → cancelled` | 0 dòng đổi ở 15/15 và ở lượt `PATCH status`; đối chứng: cùng `PATCH` bằng phiên admin đổi 1 dòng ở 15/15 |
+| TC-10 `anon` gọi `cancel_order` | 1 lượt | HTTP 401 mã `42501`; đối chứng: hàm không tồn tại trả 404 `PGRST202`. Catalog: `anon` = false, `authenticated` = true |
+| Áp lên hosted | 1 migration, md5 tính 1 lần mỗi bên | Số migration đã ghi 17 → 18. md5 thân hàm `01f49ded602b5457bdc9edce7b2b822b` trùng từng ký tự với file trong repo (1.266 byte). md5 `orders`, `order_items`, `books` trước và sau khi áp bằng nhau. Policy, trigger, CHECK không đổi. `get_advisors`: thêm 1 dòng ở nhóm "người đã đăng nhập thực thi hàm SECURITY DEFINER" (4 → 5), `anon` không có `cancel_order` |
+| Kiểm chặng 2 | 44 phép kiểm (31 giao diện + 13 hồi quy), 1 lượt cuối trên bản build được commit | 44/44 |
+| TC-1, TC-2 | 3 request + 3 lượt đăng nhập qua trình duyệt; 3 request + 3 lượt trình duyệt + 1 chuỗi chưa đăng nhập | 307 tới `/dang-nhap?next=%2Ftai-khoan%2Fdon-hang` 3/3, đăng nhập xong về đúng trang 3/3; `/tai-khoan` 307 → `/tai-khoan/don-hang` 3/3; chưa đăng nhập đo được `307 → 307 → 200 /dang-nhap?next=%2Ftai-khoan%2Fdon-hang`. Đối chứng: `/tai-khoan/khong-co-trang` 404 |
+| TC-3 danh sách đúng và không lẫn | tài khoản A 6 đơn đủ 5 trạng thái × 3 lượt tải; B 3 đơn; 1 admin | Đúng thứ tự (mới nhất trước, hai đơn cùng giây xếp mã giảm dần), mã, ngày giờ, tổng, chip 3/3; `2026-12-31T17:30:00Z` hiện `01/01/2027 00:30`; 0/3 mã của B ở trang A; admin chỉ thấy đơn của chính mình |
+| TC-4, TC-15 | 3 lượt; 5 trạng thái × 2 vị trí | Trạng thái trống đủ bốn phần 3/3; năm nhãn đúng ở danh sách và chi tiết, cả năm chip cùng một `class`. Đối chứng: tài khoản có đơn không có phần tử nào của trạng thái trống; tài khoản không có đơn có 0 chip |
+| TC-5 đơn của người khác | 3 trường hợp (đơn người khác, mã không tồn tại, mã sai định dạng) | Giao diện 404, `noindex`, 0 lần lộ mã đơn/tên sách/tên người nhận/địa chỉ; văn bản, `robots` và `title` giống hệt nhau ở cả ba. Mã HTTP đo được: 200 |
+| TC-6, TC-7 qua giao diện | 1 lượt mỗi cái | Hủy qua nút: chip "Đã hủy", chỉ cột `status` đổi, kho 3 cuốn tăng 2, 1, 3, 0 hộp thoại `confirm()`. Đơn đổi sang `processing` sau khi trang đã mở: dải báo "Đang xử lý", kho không đổi |
+| TC-11 | 51 đơn × 3 lượt; 50 đơn × 1 | 51 đơn: đúng 50 dòng + 1 ghi chú nêu "50" và "51" 3/3; 50 đơn: 50 dòng, 0 ghi chú; 0 phần tử có `box-shadow`, 0 dòng bo góc, n−1 đường kẻ 1px màu `--color-menu-sep` |
+| TC-12 khối tóm tắt dùng chung | 3 đơn × 3 lượt | `outerHTML` ở hai route giống hệt từng ký tự 9/9; so với baseline trên `main`: giống hệt 9/9 sau khi bỏ hai `data-testid` (nguyên văn chênh +60 byte) |
+| TC-13 xác nhận trong trang | 5 lượt (3 chuột, 2 chỉ bàn phím); chờ 10 giây ở lượt 1 | 5/5: 0 hộp thoại, focus vào vùng, Escape và "Không" trả focus về nút, vùng còn nguyên sau 10 giây. Đối chứng: một trang gọi `confirm()` làm sự kiện hộp thoại bắn 1 lần |
+| TC-14 dải kết quả | 3 lượt, mỗi lượt chờ 10 giây | 3/3: dải còn nguyên sau 10 giây, focus trong dải, kho +đúng |
+| TC-16 ở 390×844 | 3 lượt (6, 7, 8 dòng + 3 nút) | Mọi liên kết và nút ≥ 44×44 (nhỏ nhất 48 px cao, 324 px rộng); không cuộn ngang ở danh sách, chi tiết, khi vùng xác nhận mở |
+| TC-17 hồi quy `/gio-hang` | baseline 5 mẫu × 3 lượt; so lại 3 lượt mỗi trạng thái | Độ nhiễu baseline 0 (5/5 mẫu cùng mã băm ở 3/3 lượt). `/gio-hang` có hàng (8.454 byte) và rỗng (1.911 byte) giống baseline trên `main` từng byte, 3/3 mỗi trạng thái |
+
+**Lần hủy thật trên hosted (1 đơn, 03/10/2026).** Đơn `NA-2026-0001` (đặt lúc 02/10/2026 16:47:45 UTC). Log API: 1 lời gọi `POST /rest/v1/rpc/cancel_order`, HTTP 204, lúc 2026-10-03T05:32:04Z — 53 giây trước thời điểm merge #16 (05:32:57Z); trong cửa sổ log từ 03/10/2026 00:00 UTC không có lời gọi `cancel_order` nào khác và không có `PATCH`, `DELETE`, `POST` nào lên `/rest/v1/orders`. Kiểm bằng SELECT sau lần hủy:
+1. `status` `cancelled`; `total_amount` 243.000; `payment_method` `cod`; `confirmation_email_sent_at` vẫn không null. `orders` theo trạng thái: `cancelled` 1, `pending` 1.
+2. md5 của `orders` sau khi thay ngược `status` của `NA-2026-0001` về `pending` là `39fd557e36c00892be21e872fab07420`, bằng md5 chụp trước khi áp migration: mọi cột khác của cả hai đơn (kể cả `total_amount`, `confirmation_email_sent_at`, `shipping_address`) không đổi. Đơn còn lại `NA-2026-0002` vẫn `pending`, 273.000.
+3. md5 của `order_items` là `4dde652c28761e8b27204ae368418ee9`, bằng md5 trước khi áp.
+4. md5 của `books` sau khi trừ ngược `quantity` của đơn đã hủy khỏi `stock_quantity` là `d7669087daec9fb0f18fbba83ea3469b`, bằng md5 trước khi áp: mỗi cuốn trong đơn tăng đúng bằng `quantity` (3 dòng, mỗi dòng 1): Hồ Điệp và Kình Ngư 28 → 29, Nhà giả kim 23 → 24, Xứ tuyết 10 → 11; 37 cuốn còn lại không đổi. Tổng tồn kho 829 → 832.
+
+**Chỗ phép đo yếu hơn tiêu chí gốc, hoặc dựa trên giả định:**
+- **TC-5.** Tiêu chí gốc: đơn của người khác → 404. Mã HTTP đo được là 200 (`notFound()` trong `<Suspense>`, hạn chế đã biết ở spec đợt 3B mục 7.1), nên phép đo ở mức văn bản nhìn thấy, `robots` và `title`; HTML thô không được so vì nó chứa đường dẫn được yêu cầu trong state của router.
+- **TC-12(c).** So với baseline sau khi bỏ hai `data-testid` mới thêm (`order-summary`, `order-status-chip`), vì chính hai hook mà tiêu chí dùng là thuộc tính mới; so nguyên văn thì chắc chắn khác (+60 byte). Số mẫu 9.
+- **Giao diện chưa đo trên hosted.** 44 phép kiểm giao diện chạy ở stack cục bộ. Trên hosted chỉ có 1 lần hủy (1 mẫu); nguồn của lời gọi (bản preview, máy dev trỏ hosted hay gọi trực tiếp) không phân biệt được vì không đọc IP và user agent trong log. `orders` không có cột `cancelled_at`, nên thời điểm hủy lấy từ log API. Các giá trị tồn kho "trước khi hủy" là suy ra (hiện tại trừ `quantity`), được bảo chứng bằng việc md5 khớp bản chụp trước khi áp migration, không đọc trực tiếp.
+- **Deadlock ở cửa sổ tự nhiên** (0/30 và 0/30) có sức phát hiện yếu: ở lượt smoke đầu, đối chứng deadlock ở cửa sổ tự nhiên bắt được 0/3 lượt vì hàm chạy vài mili giây. Kết luận về thứ tự khoá dựa trên so sánh ở cửa sổ nới 50 ms (cùng thứ tự 0/30, ngược thứ tự 30/30); các nhánh chỉ dùng hai cuốn; hàm đối chứng khác `cancel_order` thật ở độ trễ nhân tạo và thứ tự sắp xếp tuỳ chọn.
+- **TC-6 và TC-7 qua giao diện** mỗi cái 1 lượt. **TC-16** đo viền focus của nút hủy bằng bàn phím, không đo mọi phần tử focus được.
+- **Hạn chế đã biết, ngoài phạm vi** (chi tiết ở mục 4.1 của spec đợt 4): đường hủy của Admin không cộng trả kho (policy `orders_admin_update` cho `UPDATE` trực tiếp, không trigger nào trên `orders`; hosted có 3 profile, cả 3 là `customer`); URL có dãy `%XX` hỏng hoặc `%25` ở route động trả HTTP 500 ở route mới và ở `/sach/[slug]`, `/tu-sach/[slug]`, `/thanh-toan/hoan-tat/[order_code]` (có từ trước), đường dẫn không động trả 404; menu "Hồ sơ của bạn" mở ra danh sách đơn cho tới đợt 2D.
 
 ## 8. Bài học đã rút ra (giữ lại để không lặp)
 
