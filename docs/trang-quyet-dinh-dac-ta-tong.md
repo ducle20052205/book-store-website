@@ -63,7 +63,7 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 
 ### Thứ tự còn lại và định nghĩa "xong" (chốt 02/10)
 
-**Thứ tự:** admin (gồm các scenario Make.com) → 2C quên mật khẩu → 2D trang hồ sơ → seed dữ liệu demo → chữa N+1 trang chủ → dashboard thống kê → chatbot → đợt 1.6 → rà accessibility → README cho nhà tuyển dụng.
+**Thứ tự:** 5B CRUD sách → 5C scenario Make.com → 2C quên mật khẩu → 2D trang hồ sơ → seed dữ liệu demo → dashboard thống kê → chatbot → đợt 1.6 → sửa accessibility → README cho nhà tuyển dụng.
 
 **Định nghĩa "xong"** — bảy bước một người lạ phải làm được, viết trước để không bị dời:
 
@@ -101,8 +101,8 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
   - **Quy tắc phân định: khách đang chờ thì app lo, cửa hàng dùng thì Make lo.** Không email nào gửi cho khách đi qua Make.
   - Make.com giữ lại với việc thật ở đợt admin: sổ đơn hàng Google Sheet, báo đơn mới qua Discord/Telegram (không Slack — cần workspace, phơi tài khoản cá nhân), digest sách `stock_quantity <= 3`, nhắc giỏ bỏ quên. Google Sheet sẽ chứa tên/SĐT/địa chỉ của người đặt thử, nên chỉ dùng dữ liệu demo.
   - **Chưa xác minh** gói Make miễn phí có cho webhook chạy tức thì hay ép chu kỳ tối thiểu. Ngưỡng chốt trước: email chậm hơn 2 phút ở 3 lần thử thì bỏ Make khỏi đường đó.
-- **Hủy đơn làm bằng hàm `cancel_order` SECURITY DEFINER, KHÔNG bằng policy UPDATE cho khách (chốt 03/10, đợt lịch sử đơn).** Lý do: RLS không giới hạn được theo cột, nên một policy "chỉ được đặt `cancelled`" vẫn cho khách sửa kèm `total_amount` trong cùng câu `UPDATE`. Một hàm gom cả đổi trạng thái, cộng trả kho và chặn cột vào một chỗ. Hàm khoá dòng bằng `SELECT … FOR UPDATE`; thiếu khoá thì hai lời gọi đồng thời cộng trả kho hai lần (đo được: hàm ngây thơ sai 12/12 ở cửa sổ 50 ms). Khách vẫn **không có policy `INSERT` hay `UPDATE` nào** trên `orders`: đơn chỉ sinh qua `place_order`, chỉ hủy qua `cancel_order`.
-  - **Chưa thoả hết FR-6.4:** `orders_admin_update` cho Admin `UPDATE` thẳng và không có trigger nào cộng trả kho, nên đường hủy của Admin chưa cộng kho. Chọn cơ chế (trigger hay hàm riêng) ở đợt admin.
+- **Hủy đơn làm bằng hàm `cancel_order` SECURITY DEFINER, KHÔNG bằng policy UPDATE cho khách (chốt 03/10, đợt lịch sử đơn).** Lý do: RLS không giới hạn được theo cột, nên một policy "chỉ được đặt `cancelled`" vẫn cho khách sửa kèm `total_amount` trong cùng câu `UPDATE`. Một hàm gom cả đổi trạng thái và chặn cột vào một chỗ. Hàm khoá dòng bằng `SELECT … FOR UPDATE`; thiếu khoá thì hai lời gọi đồng thời cộng trả kho hai lần (đo được: hàm ngây thơ sai 12/12 ở cửa sổ 50 ms). Khách vẫn **không có policy `INSERT` hay `UPDATE` nào** trên `orders`: đơn chỉ sinh qua `place_order`, chỉ hủy qua `cancel_order`.
+- **Luồng trạng thái đơn và việc cộng trả kho do MỘT trigger `BEFORE UPDATE` trên `orders` đảm nhiệm (chốt 03/10, đợt 5A).** Trigger vừa chặn chuyển trạng thái sai (chỉ 6 chuyển hợp lệ trong `pending → processing → shipped → completed`, và `→ cancelled` từ mọi trạng thái trước `completed`), vừa cộng trả kho khi sang `cancelled` — cho **mọi đường đi**: khách hủy, admin đổi, và cả sửa tay trong Supabase Dashboard. Vì vậy `cancel_order` đã **bỏ vòng cộng kho** của chính nó; để cả hai thì kho cộng hai lần. Mệnh đề `WHEN (OLD.status IS DISTINCT FROM NEW.status)` làm trigger tự idempotent — hai lệnh hủy đồng thời chỉ cộng trả một lần (đo 30/30); bỏ mệnh đề đó thì cộng thừa 12/12. Điều này khép lại việc mở của FR-6.4.
 - Cloud/DevOps nâng cao (CI/CD): gác lại, chỉ làm nếu còn thời gian sau MVP.
 
 ### 5.1 Auth và rendering (chốt ở đợt 2A/2B/2B.1/2B.2/3A)
@@ -619,13 +619,11 @@ Một lần đo trên mã đã merge; không có thay đổi mã nào. Tài li�
 - **Ô "Nhập lại email"** — giữ nguyên, hay thay bằng gợi ý typo domain ("Ý bạn là …@gmail.com?"), hay bật lại xác nhận email. Hiện giữ nguyên; nghiêng về gợi ý typo cho đợt sau.
 - **Khoá ngoại `events.user_id` và `orders.user_id` đang là ON DELETE NO ACTION**, nên chặn việc xoá user. Với bảng analytics, cách thường dùng là **SET NULL** (giữ sự kiện, bỏ danh tính). Quyết khi làm chức năng xoá tài khoản hoặc ở 2D.
 - **Footer xuống layout theo route** — cách chữa đúng cho dịch chuyển bố cục ghi ở 7.4, gom vào đợt 1.6.
-- **N+1 ở trang chủ** (~25–30 truy vấn, 4–5 bậc nối tiếp) — nằm trong thứ tự ở mục 4, chưa có spec.
-- **URL route động có dãy `%XX` hỏng hoặc `%25` trả HTTP 500** ở mọi route động (`/sach/[slug]`, `/tu-sach/[slug]`, các route của đợt 4). Lỗi xảy ra trước khi tới mã trang nên có từ trước, không do đợt nào gây ra; đường dẫn không động vẫn trả 404 đúng. Không lộ dữ liệu. Gom vào đợt 1.6.
-- **Đường hủy đơn của Admin chưa cộng trả kho** — xem mục 5. Quyết cơ chế ở đợt admin.
+- **URL route động có dãy `%XX` hỏng hoặc `%25` trả HTTP 500** ở mọi route động (đo ở bốn route động: `/sach/[slug]`, `/tu-sach/[slug]`, `/thanh-toan/hoan-tat/[order_code]`, `/tai-khoan/don-hang/[order_code]` — đều 500; route động thứ năm `/admin/don-hang/[order_code]`, thêm ở đợt 5A, **chưa đo**). Lỗi xảy ra trước khi tới mã trang nên có từ trước, không do đợt nào gây ra; đường dẫn không động vẫn trả 404 đúng. Không lộ dữ liệu. Gom vào đợt 1.6.
 - **Lớp ảnh atmosphere** — chọn nguồn, số lượng, đặt ở những trang nào. Gom vào đợt 1.6 mở rộng.
 - Persona chính trong 18–30.
 - Logo chính thức.
 - System prompt cho chatbot.
 - Nội dung README cho nhà tuyển dụng.
-- Mockup cho: admin. (Mockup checkout đã xong, 8 artboard, xuất 2× vào `docs/mockups/buoc-3/`.)
+- **11 việc accessibility còn mở** (3 Trung bình, 8 Thấp, 0 Cao) — danh sách và số đo ở `docs/specs/dot-accessibility-ra-soat.md`, sửa ở đợt accessibility. Không còn nợ mockup cho admin: khu quản trị lắp từ hệ layout đóng băng, đó chính là lý do hệ đó tồn tại.
 - Viết lại mô tả 3 tủ sách bằng giọng của chủ dự án (nội dung hiện tại do AI viết).
