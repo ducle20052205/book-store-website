@@ -11,3 +11,7 @@ export const primaryButtonClass =
 
 export const secondaryButtonClass =
   "pressable inline-flex h-12 items-center justify-center whitespace-nowrap rounded-field border border-cham-700 bg-surface px-6 text-button font-medium text-cham-700 hover:bg-cham-active focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2";
+
+/** Ô nhập một dòng của hệ layout đóng băng (chuyển từ `components/AuthFields.tsx` ở đợt 5A để Server Component dùng được: export từ module "use client" không phải chuỗi). Viền do nơi dùng đặt. */
+export const inputClass =
+  "h-12 w-full rounded-field border bg-surface px-3.5 text-base text-ink-900 md:h-[46px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 disabled:opacity-60";

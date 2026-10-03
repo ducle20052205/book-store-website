@@ -4,14 +4,15 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { cancelOrder, type CancelOrderResult } from "@/app/actions/orders";
 import { AlertCircleIcon, CheckIcon } from "@/components/AuthIcons";
+import { InlineConfirm } from "@/components/InlineConfirm";
 import { orderStatusLabel } from "@/lib/orderStatus";
-import { primaryButtonClass, secondaryButtonClass } from "@/lib/ui/classes";
+import { secondaryButtonClass } from "@/lib/ui/classes";
 
 /**
  * Hủy đơn ngay trong trang chi tiết (đợt 4, spec FR-B4.4).
  *
- * - Xác nhận NGAY TRONG TRANG, không dùng `confirm()` của trình duyệt (NFR-3.3). Vùng xác nhận nói rõ hậu
- *   quả; focus chuyển vào đó khi mở; Escape hoặc nút "Không" thì thoát và trả focus về nút "Hủy đơn hàng".
+ * - Xác nhận NGAY TRONG TRANG, không dùng `confirm()` của trình duyệt (NFR-3.3). Vùng xác nhận (`InlineConfirm`,
+ *   dùng chung với trang quản trị từ đợt 5A) nói rõ hậu quả; focus chuyển vào đó khi mở; Escape hoặc nút "Không" thì thoát và trả focus về nút "Hủy đơn hàng".
  *   Không phải hộp thoại modal: nền phía sau không bị khoá. Vùng không tự biến mất.
  * - Kết quả là DẢI TRONG TRANG không tự tắt (WCAG 2.2.1), không phải Toast: có thông tin người dùng cần đọc
  *   kỹ. Dải phải còn nguyên sau khi trang làm mới (`refresh()` trong action đổi `status` sang `cancelled`),
@@ -49,12 +50,7 @@ export function CancelOrder({ orderCode, status }: { orderCode: string; status: 
   const [result, setResult] = useState<CancelOrderResult | null>(null);
   const [pending, startTransition] = useTransition();
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const confirmRef = useRef<HTMLDivElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (phase === "confirming") confirmRef.current?.focus();
-  }, [phase]);
 
   useEffect(() => {
     if (result) resultRef.current?.focus();
@@ -130,37 +126,17 @@ export function CancelOrder({ orderCode, status }: { orderCode: string; status: 
           </div>
 
           {phase === "confirming" && (
-            <div
-              ref={confirmRef}
+            <InlineConfirm
               id="order-cancel-confirm"
-              tabIndex={-1}
-              role="group"
-              aria-labelledby="order-cancel-confirm-title"
-              aria-busy={pending}
-              data-testid="order-cancel-confirm"
-              onKeyDown={(event) => {
-                if (event.key === "Escape" && !pending) {
-                  event.stopPropagation();
-                  closeConfirm();
-                }
-              }}
-              className="mt-4 rounded-menu border border-line-warm bg-surface p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 md:p-6"
+              testId="order-cancel-confirm"
+              title="Hủy đơn này?"
+              confirmLabel="Xác nhận hủy"
+              pending={pending}
+              onConfirm={confirmCancel}
+              onClose={closeConfirm}
             >
-              <h2 id="order-cancel-confirm-title" className="font-serif text-xl font-semibold text-ink-900">
-                Hủy đơn này?
-              </h2>
-              <p className="mt-2 max-w-[68ch] text-body text-ink-600">
-                Đơn sẽ bị hủy và sách trong đơn được trả lại kho. Bạn không mở lại được đơn đã hủy; nếu vẫn muốn mua, bạn đặt đơn mới nhé.
-              </p>
-              <div className="mt-5 flex flex-col gap-3 md:flex-row">
-                <button type="button" disabled={pending} onClick={confirmCancel} className={`${primaryButtonClass} md:!w-auto`}>
-                  Xác nhận hủy
-                </button>
-                <button type="button" disabled={pending} onClick={closeConfirm} className={`${secondaryButtonClass} w-full md:w-auto`}>
-                  Không
-                </button>
-              </div>
-            </div>
+              Đơn sẽ bị hủy và sách trong đơn được trả lại kho. Bạn không mở lại được đơn đã hủy; nếu vẫn muốn mua, bạn đặt đơn mới nhé.
+            </InlineConfirm>
           )}
         </>
       )}

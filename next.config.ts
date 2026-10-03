@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
       // /tai-khoan → /tai-khoan/don-hang → proxy → /dang-nhap?next=…; và đây là 307 thật, không phải
       // `redirect()` trong <Suspense> (mã HTTP 200). Chỉ đúng đường dẫn này, không `:path*`.
       { source: "/tai-khoan", destination: "/tai-khoan/don-hang", permanent: false },
+      // Đợt 5A (spec FR-5A.2): /admin chưa có trang riêng; chuyển sang danh sách đơn. Cùng cơ chế với
+      // /tai-khoan: chạy trước proxy (người chưa đăng nhập đi /admin → /admin/don-hang → proxy →
+      // /dang-nhap?next=…), là 307 thật, và chỉ đúng đường dẫn này — `/admin/khong-co-trang` vẫn là 404.
+      { source: "/admin", destination: "/admin/don-hang", permanent: false },
     ];
   },
 };
