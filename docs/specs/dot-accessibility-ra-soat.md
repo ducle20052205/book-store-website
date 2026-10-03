@@ -1,6 +1,14 @@
 # Rà soát accessibility toàn site — danh sách phát hiện
 
-Phiên bản 1.0 · 03/10/2026 · **Chỉ đo, không sửa.** Đợt sửa là đợt riêng, chờ chủ dự án chọn việc ở mục 6. Tài liệu này không thay đổi mã nào.
+Phiên bản 1.1 · 03/10/2026 · **Chỉ đo, không sửa.** Đợt sửa là đợt riêng. Tài liệu này không thay đổi mã nào.
+
+**Quyết định của chủ dự án, 03/10/2026 (bản 1.1):**
+1. A11Y-11 (chữ dưới 14px) **đã giải quyết bằng sửa chuẩn**: SRS lên bản 1.9, NFR-6.6 viết lại (ghi chú ở A11Y-11).
+2. A11Y-02 (nút vô hiệu hoá) **chấp nhận**: đó là miễn trừ có trong chính WCAG 1.4.3 cho thành phần không hoạt động, không phải ngoại lệ do dự án tự đặt ra.
+3. Ba phát hiện Trung bình còn lại, **A11Y-01, A11Y-05 và A11Y-10, giữ nguyên là việc cần sửa**, thuộc đợt sửa accessibility.
+4. Thêm A11Y-14: phần chữ dưới 12px mà điều khoản NFR-6.6 mới không bao phủ; chờ quyết định.
+
+Tình trạng: 14 phát hiện — 2 đã đóng (A11Y-02, A11Y-11), 12 còn mở (3 Trung bình, 9 Thấp, 0 Cao).
 
 Tham chiếu: `docs/SRS.md` NFR-6.1 → NFR-6.7 (tương phản AA, vùng chạm 44×44px trên mobile, focus nhìn thấy và điều hướng bàn phím, `alt` ảnh bìa và `aria-hidden` icon trang trí, không truyền đạt thông tin chỉ bằng màu, chữ nội dung tối thiểu 14px, kiểm lại cặp màu sau mỗi lần đổi token). Mã được đo: `main` tại `bbdf305` cộng nhánh `perf/n1-trang-chu` (không đổi giao diện).
 
@@ -26,34 +34,35 @@ Tham chiếu: `docs/SRS.md` NFR-6.1 → NFR-6.7 (tương phản AA, vùng chạm
 
 | NFR | Kết quả | Số phát hiện |
 |---|---|---|
-| 6.1 tương phản | Mọi chữ hoạt động đạt: 0 vi phạm ở 702 nhóm. Dưới ngưỡng chỉ có thành phần vô hiệu hoá, một ký tự trang trí `aria-hidden`, và **1 placeholder** (3,3:1) | 1 Trung bình, 2 Thấp |
+| 6.1 tương phản | Mọi chữ hoạt động đạt: 0 vi phạm ở 702 nhóm. Dưới ngưỡng chỉ có thành phần vô hiệu hoá, một ký tự trang trí `aria-hidden`, và **1 placeholder** (3,3:1) | 1 Trung bình (A11Y-01), 1 Thấp (A11Y-03), 1 đã chấp nhận (A11Y-02) |
 | 6.2 vùng chạm (390px) | 9/302 phần tử dưới 44px (3,0%); 0 ở 8 trong 12 trang | 1 Trung bình |
 | 6.3 focus và bàn phím | **0/311** phần tử thiếu chỉ báo focus; 0 chỉ báo dưới 3:1; 310 tới được bằng `Tab` (1 radio theo quy ước phím mũi tên); mọi công tắc mở/đóng được bằng bàn phím | 2 Thấp |
 | 6.4 `alt` và icon | **108/108** `<svg>` có `aria-hidden`; 134/134 `[role=img]` có nhãn; 0 phần tử tương tác không tên (381 có tên) | 1 Thấp |
 | 6.5 không chỉ bằng màu | Lỗi form không chỉ bằng màu; 3 liên kết trong dòng chỉ khác màu và độ đậm | 1 Trung bình |
-| 6.6 chữ ≥ 14px | **347/1.009 (34,4%)** nút văn bản dưới 14px | 1 Trung bình |
+| 6.6 cỡ chữ | 347/1.009 (34,4%) nút văn bản dưới 14px; theo NFR-6.6 bản 1.9, chữ phụ 12–13px không còn là vi phạm (0/347 dưới 4,5:1, thấp nhất 4,77:1); còn 20 nút dưới 12px | A11Y-11 đã giải quyết bằng sửa chuẩn; 1 Thấp mới (A11Y-14) |
 | 6.7 kiểm lại cặp màu | 59 cặp đã đo, bảng ở mục 4; 300 nút văn bản nằm trong 0,5 trên ngưỡng | 1 Thấp |
 | Ngoài NFR-6.x | không có liên kết bỏ qua; viền ô nhập; `title` admin | 3 Thấp |
 
-Không có phát hiện mức *Cao*.
+Không có phát hiện mức *Cao*. Còn mở: A11Y-01, A11Y-05, A11Y-10 (Trung bình); A11Y-03, 04, 06, 07, 08, 09, 12, 13, 14 (Thấp).
 
 ## 3. Danh sách phát hiện
 
 | # | NFR | Mức | Trang · phần tử | Số đo | Ghi chú |
 |---|---|---|---|---|---|
-| A11Y-01 | 6.1 | Trung bình | `/thanh-toan` · `textarea[name=note]` (placeholder "Ví dụ: gọi trước khi gia…", 16px) | placeholder **3,3:1** trên nền ô, ngưỡng 4,5:1 | Các placeholder khác đạt: 5,3:1 (ô tìm ở mọi trang) và 5,9:1 (ô giá `/sach`). Bộ đo chữ không thấy placeholder (không phải nút văn bản): phải đo riêng |
-| A11Y-02 | 6.1 | Thấp | `/sach/[slug]` hết hàng · nút "−", "+", "Thêm vào giỏ hàng", "Mua ngay" (vô hiệu, `opacity: 0,4`); "−" khi số lượng = 1; thanh dưới mobile | 2,13:1 · 2,39:1 · 2,48:1 · 3,29:1 (ngưỡng 3 hoặc 4,5) | WCAG 1.4.3 miễn trừ thành phần vô hiệu; SRS NFR-6.1 không nêu miễn trừ. Trên trang hết hàng toàn bộ hành động chính gần như không đọc được — chủ dự án quyết có chấp nhận miễn trừ không |
+| A11Y-01 | 6.1 | Trung bình | `/thanh-toan` · `textarea[name=note]` (placeholder "Ví dụ: gọi trước khi gia…", 16px) | placeholder **3,3:1** trên nền ô, ngưỡng 4,5:1 | **Còn mở, thuộc đợt sửa accessibility.** Các placeholder khác đạt: 5,3:1 (ô tìm ở mọi trang) và 5,9:1 (ô giá `/sach`). Bộ đo chữ không thấy placeholder (không phải nút văn bản): phải đo riêng |
+| A11Y-02 | 6.1 | **Đã chấp nhận** | `/sach/[slug]` hết hàng · nút "−", "+", "Thêm vào giỏ hàng", "Mua ngay" (vô hiệu, `opacity: 0,4`); "−" khi số lượng = 1; thanh dưới mobile | 2,13:1 · 2,39:1 · 2,48:1 · 3,29:1 (ngưỡng 3 hoặc 4,5) | **Chủ dự án chấp nhận (03/10/2026): không sửa.** Thành phần vô hiệu hoá được miễn trừ **bởi chính WCAG 1.4.3** (thành phần giao diện không hoạt động), không phải ngoại lệ do dự án tự đặt ra. Ghi nhận thêm: trên trang hết hàng toàn bộ hành động chính vì thế gần như không đọc được (2,13–3,29:1) |
 | A11Y-03 | 6.1 | Thấp | Trang chủ · khối editorial · dấu `“` 48px (`aria-hidden`) | 2,13:1 | Ký tự trang trí, không mang thông tin; ghi để đối chiếu với A11Y-02 |
 | A11Y-04 | 6.7 | Thấp | Toàn site · `ink-400` trên `paper` (12–14px: tác giả, giá gốc, chân trang; 261 nút), `sale` trên `paper` (17px; 37 nút), `success` trên `paper` (2 nút) | **4,77:1**, **4,66:1**, 4,97:1 (ngưỡng 4,5) | Đạt, nhưng dư 0,16–0,47: đổi `paper` hay các token này sẽ tụt dưới ngưỡng (đã từng xảy ra ở đợt F, `globals.css`). NFR-6.7 yêu cầu kiểm lại sau mỗi lần đổi token |
-| A11Y-05 | 6.2 | Trung bình | 390px · "Xem tất cả" ở trang chủ (76×20); 4 liên kết breadcrumb ở `/sach/[slug]` ("Trang chủ" 67×20, "Văn học" 56×20, "Manga – Light novel" 138×20, "Trang chủ" 67×20); liên kết tác giả trong dòng (91×18 và 105×18); liên kết tên sách trong dòng ở `/gio-hang` (114×19); "Tiếp tục xem sách" (124×18) | 9/302 dưới 44px; cao 18–20px | 293 phần tử còn lại đạt ngưỡng. Liên kết nằm giữa câu được WCAG 2.5.8 miễn trừ nhưng SRS thì không; đã có chỗ giải bằng `py-3 -my-3` (editorial) — chưa áp cho các chỗ này |
+| A11Y-05 | 6.2 | Trung bình | 390px · "Xem tất cả" ở trang chủ (76×20); 4 liên kết breadcrumb ở `/sach/[slug]` ("Trang chủ" 67×20, "Văn học" 56×20, "Manga – Light novel" 138×20, "Trang chủ" 67×20); liên kết tác giả trong dòng (91×18 và 105×18); liên kết tên sách trong dòng ở `/gio-hang` (114×19); "Tiếp tục xem sách" (124×18) | 9/302 dưới 44px; cao 18–20px | **Còn mở, thuộc đợt sửa accessibility (cả 9 phần tử).** 293 phần tử còn lại đạt ngưỡng. Liên kết nằm giữa câu được WCAG 2.5.8 miễn trừ nhưng SRS thì không và chủ dự án không áp miễn trừ này; đã có chỗ giải bằng `py-3 -my-3` (editorial) — chưa áp cho các chỗ này |
 | A11Y-06 | 6.3 | Thấp | `/sach` ở 390px · nút "Bộ lọc" và hộp thoại bộ lọc | nút không `aria-expanded`/`aria-controls`; `role="dialog"` không `aria-modal`; 1/14 lần `Tab` đưa focus ra ngoài hộp thoại | `Escape` đóng và trả focus về nút đúng; focus vào "Đóng bộ lọc" khi mở |
 | A11Y-07 | 6.3 | Thấp | Header · nút "Tài khoản" | `aria-haspopup="true"` (nghĩa là menu) nhưng nội dung là liên kết, không `role=menu`/`menuitem`; `ArrowDown` không di chuyển focus | `Enter` mở, `Tab` vào liên kết, `Escape` đóng và trả focus: đúng. Hộp thoại mobile của cùng nút đúng: focus vào "Đóng", 0/14 lần `Tab` thoát ra |
 | A11Y-08 | ngoài NFR (WCAG 2.4.1) | Thấp | 12/12 trang · không có liên kết "bỏ qua tới nội dung" | 8 điểm dừng `Tab` đứng trước `<main>` ở mọi trang | Header: logo, ô tìm, tài khoản, giỏ, bốn mục điều hướng |
 | A11Y-09 | 6.4 | Thấp | `/`, `/sach`, `/sach/[slug]`, `/tu-sach` · liên kết thẻ sách và thẻ tủ sách | tên truy cập lặp tên sách (bìa `role=img` rồi chữ tên) và dính liền "Kinh dịTrong tủ sách"; 23 liên kết tên > 90 ký tự (trang chủ 10, `/sach` 8, `/tu-sach` 3, sách hết hàng 2) | Ví dụ: "Frieren – Pháp sư tiễn táng – Tập 1 Manga Frieren – Pháp sư tiễn táng – Tập 1 Yamada Kanehito, Abe Tsukasa 39.000 ₫". Không phần tử tương tác nào thiếu tên |
-| A11Y-10 | 6.5 | Trung bình | Liên kết tác giả ở `/sach/[slug]` (2 trang): màu `cham-700`, `font-medium`, không gạch chân; 2 liên kết trong khối editorial trang chủ (nền tối) | tỉ lệ với chữ quanh **1,50:1** và **1,68:1** (cần 3:1), độ đậm 500 so với 400, không gạch chân | Chưa đo trạng thái hover/focus (có thể có gạch chân khi hover). Lỗi form ở `/thanh-toan` đạt: 3/3 trường `aria-invalid` + `aria-describedby`, có chữ báo lỗi và dải tóm tắt `role=alert` |
-| A11Y-11 | 6.6 | Trung bình | Toàn site (desktop) | **347/1.009** nút văn bản < 14px: 13px 113, 12px 194, 12,9px 20, 11,3px 4, **10px 16**. Theo vai trò: metadata `text-meta` 85, nhãn/chip `text-micro` 80, bìa typographic (`aria-hidden`, nhân đôi tên/tác giả) 78, tiêu đề `text-xs` ở mega-menu 38, còn lại 66 (badge "-X%", "Hết hàng", nhãn "Từ", số đếm giỏ…) | Xung đột giữa SRS ("chữ nội dung tối thiểu 14px") và token thiết kế đã chốt (`--text-micro` 12px "nhãn, chip"; `--text-meta` 13px). Trang nặng nhất: `/sach` 123/219, trang chủ 108/220. Chữ in trên bìa nhỏ xuống 10px khi bìa hẹp (`clamp`, 6cqw) |
+| A11Y-10 | 6.5 | Trung bình | Liên kết tác giả ở `/sach/[slug]` (2 trang): màu `cham-700`, `font-medium`, không gạch chân; 2 liên kết trong khối editorial trang chủ (nền tối) | tỉ lệ với chữ quanh **1,50:1** và **1,68:1** (cần 3:1), độ đậm 500 so với 400, không gạch chân | **Còn mở, thuộc đợt sửa accessibility.** WCAG 1.4.1 (kỹ thuật G183) đòi liên kết trong khối văn bản phải phân biệt được bằng thứ khác màu nếu tương phản của liên kết với chữ xung quanh dưới 3:1; 1,50–1,68:1 là dưới ngưỡng, nên **cách sửa là thêm gạch chân**. Chưa đo trạng thái hover/focus. Lỗi form ở `/thanh-toan` đạt: 3/3 trường `aria-invalid` + `aria-describedby`, có chữ báo lỗi và dải tóm tắt `role=alert` |
+| A11Y-11 | 6.6 | **Đã giải quyết bằng sửa chuẩn** | Toàn site (desktop) | **347/1.009** nút văn bản < 14px: 13px 113, 12px 194, 12,9px 20, 11,3px 4, **10px 16**. Theo vai trò: metadata `text-meta` 85, nhãn/chip `text-micro` 80, bìa typographic (`aria-hidden`, nhân đôi tên/tác giả) 78, tiêu đề `text-xs` ở mega-menu 38, còn lại 66 (badge "-X%", "Hết hàng", nhãn "Từ", số đếm giỏ…) | **SRS lên bản 1.9: NFR-6.6 viết lại** — chữ nội dung đọc tối thiểu 14px; chữ phụ trợ (ngày, số đếm, nhãn, chú thích) được dùng 12–13px theo token `--text-micro` và `--text-meta` đã chốt, với điều kiện tương phản đạt WCAG AA cho cỡ chữ đó. **Lý do:** NFR-6.6 là quy tắc tự đặt của dự án, không phải tiêu chí WCAG (WCAG không quy định cỡ chữ tối thiểu); 12–13px cho chữ phụ là quy ước của các website sách Việt Nam đã khảo sát; nâng token lên 14px sẽ phá hệ layout đóng băng ở mục 3 file quyết định. 347/1.009 nút văn bản dưới 14px vì thế **không còn là vi phạm**. Điều kiện của điều khoản mới đã kiểm bằng chính số đo này: 0/347 nút dưới 4,5:1, thấp nhất 4,77:1 (`ink-400` trên `paper`, xem A11Y-04). Phần điều khoản mới không bao phủ: 20 nút dưới 12px (A11Y-14). Trang nặng nhất khi đo: `/sach` 123/219, trang chủ 108/220 |
 | A11Y-12 | ngoài NFR (WCAG 1.4.11) | Thấp | `/sach` · ô sắp xếp, ô giá "Từ"/"Đến"; ô tìm ở header | viền so với nền xung quanh **1,04:1** và 1,36:1 (cần 3:1) | Ô ở `/thanh-toan` đạt 3,2:1. Chỉ đo viền, chưa đo nền ô: có thể ranh giới thấy được nhờ nền ô khác nền cha |
 | A11Y-13 | ngoài NFR (WCAG 2.4.2) | Thấp | `/admin/*` · `<title>` | 3/3 trang admin cùng "NA Books" | Cố ý (spec 5A FR-5A.1: vỏ tĩnh không được lộ giao diện quản trị); ghi để biết |
+| A11Y-14 | 6.6 (bản 1.9) | Thấp | Dòng tác giả in trên bìa typographic hẹp (`BookCover`, `clamp(0,625rem, 6cqw, 0,8125rem)`): trang chủ 14 nút, `/gio-hang` 2, `/thanh-toan` 2, chi tiết đơn admin 2 | **20 nút** dưới 12px: 16 ở 10px, 4 ở 11,3px | Dưới sàn 12px của NFR-6.6 bản 1.9. Là chữ in trên bìa (`aria-hidden`; tên và tác giả vẫn có trong tên truy cập của bìa). **Chờ quyết định:** coi chữ in trên bìa là chữ trang trí của bìa (như logo), hay nâng sàn của `clamp` lên 12px |
 
 ## 4. Đã đạt (đối chứng: phép đo không rỗng)
 
@@ -80,8 +89,11 @@ Không có phát hiện mức *Cao*.
 - Trình đọc màn hình thật (chỉ đọc cây accessibility của trình duyệt), thu phóng 200–400% và reflow, giãn chữ, thứ tự khoảng cách giữa các vùng chạm, chế độ tối (site không có).
 - Đo ở một máy, Edge headless; `min-height`/`vùng chạm` đo bằng hộp bao, không đo vùng bấm thực của liên kết nhiều dòng.
 
-## 6. Việc cần chủ dự án quyết trước đợt sửa
+## 6. Quyết định đã có và việc còn lại
 
-1. **NFR-6.6 hay token?** 34,4% chữ dưới 14px là hệ quả của `--text-micro` 12px và `--text-meta` 13px đã chốt. Sửa SRS cho khớp (ví dụ chữ nội dung chính ≥ 14px, metadata ≥ 12px) hoặc nâng token — hai đường có chi phí giao diện rất khác nhau.
-2. **Miễn trừ cho thành phần vô hiệu hoá (A11Y-02)** và cho liên kết nằm giữa câu ở vùng chạm (A11Y-05): chấp nhận theo WCAG hay giữ chữ của SRS.
-3. **Thứ tự sửa gợi ý theo tác động:** A11Y-01 (một class), A11Y-10 và A11Y-05 (liên kết: gạch chân và vùng bấm), A11Y-06 và A11Y-07 (ARIA), A11Y-09 (tên truy cập thẻ sách), A11Y-08 (liên kết bỏ qua); A11Y-11 là quyết định thiết kế.
+**Đã quyết (03/10/2026):**
+1. **NFR-6.6: sửa chuẩn** (SRS bản 1.9), không nâng token. A11Y-11 đã đóng.
+2. **Thành phần vô hiệu hoá: chấp nhận** miễn trừ có trong chính WCAG 1.4.3. A11Y-02 đã đóng. (Miễn trừ này không mở rộng sang liên kết nằm giữa câu ở vùng chạm: A11Y-05 giữ nguyên.)
+3. **Giữ nguyên là việc cần sửa:** A11Y-01 (placeholder 3,3:1, một class), A11Y-05 (9/302 vùng chạm dưới 44px ở 390px), A11Y-10 (liên kết trong dòng: thêm gạch chân).
+
+**Còn lại cho đợt sửa accessibility:** thứ tự gợi ý theo tác động: A11Y-01, A11Y-10 và A11Y-05 (đã chốt là việc cần sửa); rồi A11Y-06 và A11Y-07 (ARIA), A11Y-09 (tên truy cập thẻ sách), A11Y-08 (liên kết bỏ qua). **Chờ quyết định:** A11Y-14 (chữ in trên bìa dưới 12px).
