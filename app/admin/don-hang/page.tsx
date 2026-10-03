@@ -76,7 +76,7 @@ async function AdminOrders({ searchParams }: { searchParams: PageProps<"/admin/d
       ) : (
         <>
           {/* Mỗi dòng là một lưới riêng, nên cột chip CỐ ĐỊNH chiều rộng ở md (7rem) — bài học lệch cột ở đợt 4.
-              Từ 390px dòng xếp hai hàng: mã đơn + chip, rồi người nhận · ngày giờ + tổng tiền. */}
+              Từ 390px dòng xếp hai hàng: mã đơn + chip, rồi người nhận · ngày giờ + tổng tiền; dòng phụ "Tài khoản" chỉ hiện từ md và tên người nhận cắt bằng "…" dưới md (ngày giờ không xuống dòng) để giữ đúng hai hàng (spec FR-5A.3); tên đầy đủ có ở trang chi tiết. */}
           <ul data-testid="admin-order-list" className={`${cardClass} mt-6 divide-y divide-menu-sep`}>
             {rows.map((order) => {
               const account = accountNames[order.user_id];
@@ -92,12 +92,12 @@ async function AdminOrders({ searchParams }: { searchParams: PageProps<"/admin/d
                     <span className="justify-self-end md:order-5">
                       <OrderStatusChip status={order.status} />
                     </span>
-                    <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-body-sm text-ink-600 md:contents">
-                      <span className="min-w-0 md:order-3">
+                    <span className="flex min-w-0 items-baseline gap-x-2 text-body-sm text-ink-600 md:contents">
+                      <span className="min-w-0 max-md:truncate md:order-3">
                         <span className="text-ink-900">{order.recipient_name}</span>
-                        {showAccount && <span className="block text-meta text-ink-600">Tài khoản: {account}</span>}
+                        {showAccount && <span className="hidden text-meta text-ink-600 md:block">Tài khoản: {account}</span>}
                       </span>
-                      <span className="md:order-2">{formatOrderDateTime(order.created_at)}</span>
+                      <span className="shrink-0 md:order-2">{formatOrderDateTime(order.created_at)}</span>
                     </span>
                     <span className="justify-self-end text-body-sm font-medium text-ink-900 md:order-4">{formatVnd(order.total_amount)}</span>
                   </Link>
