@@ -179,7 +179,9 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 | Đợt 4 chặng 2: danh sách đơn, chi tiết đơn, hủy đơn trong trang | Xong, đã merge (PR #16, `09c41ad`); 1 lần hủy thật trên hosted ngày 03/10/2026 |
 | Đợt 5A chặng 1: trigger trạng thái đơn và cộng trả kho trong database | Xong, đã merge (PR #17, `35a7f32`); migration `20261003063859` đã áp lên hosted ngày 03/10/2026 |
 | Đợt 5A chặng 2: danh sách đơn, chi tiết đơn, đổi trạng thái (khu quản trị) | Xong, đã merge (PR #18, `3fc5c52`); 1 lần đổi trạng thái thật trên production ngày 03/10/2026 |
-| Admin · Make.com · Chatbot · Dashboard | Chưa bắt đầu |
+| Đợt N+1: chữa chuỗi truy vấn tuần tự ở trang chủ | Xong, đã merge (PR #19, `424e96f`); không áp gì lên hosted |
+| Rà soát accessibility (một lần đo, không phải đợt sửa) | Xong: 20 phát hiện, 9 đóng, 11 mở (3 Trung bình, 8 Thấp, 0 Cao); `docs/specs/dot-accessibility-ra-soat.md` bản 1.3 (`7cfe9ff`); SRS lên 1.9 (`2580589`) |
+| 5B CRUD sách · 5C scenario Make.com · Chatbot · Dashboard thống kê | Chưa bắt đầu (phần admin đơn hàng đã xong ở 5A) |
 | README cho nhà tuyển dụng · Logo | Chưa bắt đầu |
 
 **Quy trình làm việc đã định hình:** mockup (Claude Design) → spec trong `docs/specs/` kèm tiêu chí nghiệm thu đo được → Claude Code làm theo từng đợt, mỗi hạng mục một commit và một lần đo → báo cáo kèm số đo → kiểm tay trên preview Vercel (những gì Claude Code không làm được) → PR → merge. Mỗi đợt một nhánh riêng.
@@ -472,6 +474,75 @@ PR #17 (chặng 1, tầng dữ liệu) merge (squash) vào `main` lúc 06:41 UTC
 - **TC-2a** dùng POST với header `next-action` giả để đo `proxy` chuyển hướng; lời gọi Server Action thật đo ở TC-17 (ID lấy từ `server-reference-manifest`).
 - **Phép đo hỏng của chính bộ kiểm, đã sửa và chạy lại:** điều kiện "sẵn sàng" khớp `h2` của Footer; dấu hiệu rò rỉ trùng mã đơn nằm trên URL (bị phản chiếu trong HTML); chỉ số "số dòng chữ" đếm thừa nên dùng chiều cao `<li>`; selector `span.block` không còn khớp sau khi đổi class (chỉ số "dòng phụ hiện" sau sửa dùng `span.text-meta`).
 - **Hạn chế đã biết, ngoài phạm vi** (spec mục 6.1): `redirect()`/`notFound()` trong `<Suspense>` trả HTTP 200; policy `orders_admin_update`/`order_items_admin_update` cho `UPDATE` mọi cột, kể cả cột đóng băng (sửa `order_items.quantity` rồi hủy làm kho lệch); sửa trạng thái sai bằng tay phải tắt trigger; form bộ lọc để lại `?q=&status=` trên URL; không có liên kết nào tới `/admin` (vào bằng URL); README đang trống nên chưa ghi URL.
+
+### 7.8 Đợt N+1 trang chủ — kết quả (03/10/2026)
+
+PR #19 merge (squash) vào `main` lúc 11:15:54 UTC ngày 03/10/2026, commit `424e96f`; CI 2/2 đạt (Vercel; Vercel Preview Comments). PR đổi 3 file (+382/−94): `lib/queries.ts` (sửa), `docs/specs/dot-n1-trang-chu.md` (mới, 136 dòng), `docs/specs/dot-accessibility-ra-soat.md` (mới; xem 7.9). `app/page.tsx`, `package.json`, `package-lock.json` và mọi migration: không đổi. Spec: `docs/specs/dot-n1-trang-chu.md`.
+
+**Phạm vi:** năm hàm `use cache` trong `lib/queries.ts` (`getFeaturedCollection`, `getEditorialPick`, `getCollectionsWithPreview`, `getCategoryCounts`, `getFeaturedBookExtrasBySlug`) chuyển sang truy vấn nhúng của PostgREST (`collection_books(position, books(…))`, `books(count)`, `parent:parent_id(…)`); hàm thuần `buildCategoryTree` tách ra để `getCategoryCounts` và `getCategoryTree` dùng chung. Không RPC, không migration, không thư viện mới, không đổi giao diện hay nội dung, không áp gì lên hosted.
+
+**Điều kiện đo:** stack Supabase cục bộ; bản production (`next build` rồi `next start`) qua một proxy chỉ-ghi-nhật-ký đặt giữa app và PostgREST; cùng máy, cùng dữ liệu, cùng bộ đo ở hai phía; bộ đo không nằm trong repo. Baseline chụp ở commit `bbdf305`, trước khi sửa. Truy vấn chỉ chạy ở hai trường hợp: tải nguội thật (không còn bản prerender của `/`; người dùng chờ chuỗi truy vấn) và tái tạo nền (sau `revalidate` 60 giây; người dùng nhận bản cũ). Một request tới `/` phục vụ từ shell tĩnh đã prerender không tạo truy vấn nào (25 mẫu, 0 truy vấn).
+
+**Baseline thật khác ước lượng cũ.** Mục 9 ghi N+1 ở trang chủ là "~25–30 truy vấn, 4–5 bậc nối tiếp", một ước lượng chưa đo. Baseline đo: **21 truy vấn và 5 bậc** cho một lần dựng trang chủ — 21 truy vấn ở 11/12 mẫu tải nguội thật và 23 ở 1/12 (hai lệnh gọi trùng một hàm `use cache` cùng trượt); 5 bậc ở 5/5 mẫu với trễ nhân tạo 80 ms mỗi truy vấn (không trễ: 5 ở 10/12 mẫu, 6 ở 2/12). 28 là số truy vấn của cả một lần `next build` (mọi route cộng lại, 1 mẫu). Cấu thành 21 truy vấn: `categories` 4, `collections` 3, `books` 2, `collection_books` 6, `POST rpc/search_books` 1, `HEAD books` 5.
+
+| Phép đo | Số mẫu | Trước | Sau |
+|---|---|---|---|
+| Số truy vấn, tải nguội thật, không trễ | 12 | 21 ở 11/12; 23 ở 1/12 | **11 ở 11/12; 13 ở 1/12** (hai lệnh gọi trùng cùng trượt, như 23 ở baseline) |
+| Số truy vấn, tải nguội thật, trễ 80 ms | 5 | 21 ở 5/5 | **11 ở 5/5** |
+| Số truy vấn, tái tạo nền | 5 | 21 ở 5/5 | **11 ở 5/5** |
+| **Độ sâu chuỗi**, trễ 80 ms | 5 | 5 ở 5/5 (các bậc 8 / 10 / 1 / 1 / 1 truy vấn) | **2 ở 5/5** (bậc 1: 10 truy vấn; bậc 2: 1 truy vấn `books` của thẻ nổi bật) |
+| Độ sâu quan sát, không trễ | 12 | 5 ở 10/12; 6 ở 2/12 | 2 ở 8/12; 3 ở 3/12; 4 ở 1/12 |
+| Trải từ truy vấn đầu tới cuối, tái tạo nền | 5 | trung vị 113,9 ms (113,3–122,7) | trung vị 67,2 ms (65,5–85,4) |
+| Số truy vấn của một lần `next build` (mọi route) | 1 | 28 | 18 |
+| **TTFB CỤC BỘ**, tải nguội thật, không trễ | 12 | trung vị 305,4 ms; p90 318,7; 281,7–319,4 | trung vị 253,5 ms; p90 272,1; 222,2–275,2 |
+| TTFB cục bộ, tải nguội thật, trễ 80 ms | 5 | trung vị 745,0 ms; p90 756,7 | trung vị 431,4 ms; p90 467,0 |
+| TTFB cục bộ, tái tạo nền (người dùng nhận bản cũ) | 5 | trung vị 20,6 ms | trung vị 20,9 ms |
+| TTFB cục bộ, ấm (từ prerender) | 25 | trung vị 3,7 ms; p90 5,0; 0 truy vấn | trung vị 3,8 ms; p90 5,1; 0 truy vấn |
+| **HTML giống baseline từng byte** (sau chuẩn hoá id build và email thử) | 56 bản chụp: `/` khách 20 (ấm 12, nguội 4 + 4), `/` đã đăng nhập 3, `/sach` và `/sach/[slug]` 4 URL × 3, `/tu-sach` 4 URL × 3, `/gio-hang` + `/dang-nhap` + `/dang-ky` × 3 | baseline ổn định (12 bản ấm của `/`: 1 băm, 127.566 B) | giống hệt ở mọi nhóm; 0 khác biệt còn lại. Đối chứng độ đủ của chuẩn hoá: hai bản build của cùng mã baseline giống hệt nhau ở cả 12 nhóm sau chuẩn hoá |
+| Mọi khối trang chủ đúng dữ liệu (DOM bản production so với truy vấn độc lập vào DB) | 8 phép (hero, 5 thẻ danh mục, editorial, 17 + 17 thẻ sách, 3 thẻ tủ sách) | — | 8/8. Đối chứng độ nhạy: sửa cố ý một giá và một số đếm bị bắt |
+| Hàm cũ và hàm mới của năm hàm cho cùng kết quả sâu (`isDeepStrictEqual`, kể cả thứ tự khoá) | 9 phép trên DB cục bộ; 9 phép trên hosted (GET công khai, chỉ đọc); 31 phép với dữ liệu cục bộ bị biến dạng | — | 9/9; 9/9; 31/31 |
+| PPR và kiểm tĩnh | 1 lần `next build`; 15 directive `"use cache"` | — | `◐` cho `/`; `index.meta` còn khoá `postponed`; không file nào trong `lib/` gọi `cookies()` hay `headers()`; `package.json` và `package-lock.json` không đổi; `next build`, `tsc --noEmit`, `eslint` sạch |
+
+**TTFB là số cục bộ, không phải mức cải thiện trên production.** PostgREST chạy cục bộ nên mỗi truy vấn mất vài ms; ở trễ nhân tạo 80 ms mỗi truy vấn, TTFB nguội đo được 745,0 → 431,4 ms (5 mẫu). Chênh lệch trung vị TTFB nguội không trễ là 51,9 ms (12 mẫu mỗi phía); dao động mốc ở baseline (nhỏ nhất–lớn nhất) là 37,7 ms và hai khoảng nhỏ nhất–lớn nhất không chồng nhau (sau tối đa 275,2 ms; trước tối thiểu 281,7 ms). Truy vấn chỉ chạy ở lần render nguội và lần tái tạo nền, và đó là nơi thay đổi này có tác dụng (số truy vấn 21 → 11; trải từ truy vấn đầu tới cuối khi tái tạo nền 113,9 → 67,2 ms, 5 mẫu). Lượt CDN `HIT`, nơi đa số khách gặp, không chạy truy vấn nào: baseline production, 14 mẫu GET thuần của khách, `x-vercel-cache` HIT 13 và PRERENDER 1; TTFB trung vị 137,2 ms, p90 910,4 ms (98,3–1542,6); vùng `hkg1`. Không có số đo sau trên production.
+
+**Chỗ phép đo yếu hơn tiêu chí gốc, hoặc dựa trên giả định:**
+- **Không có số đo "sau" trên hosted hay production.** Không làm được trước khi merge; chưa đếm truy vấn của một lần tái tạo thật bằng nhật ký truy vấn của Supabase. Hosted chỉ được dùng cho 9/9 phép so hàm cũ/mới bằng GET công khai chỉ đọc (xác nhận PostgREST của hosted hiểu cú pháp nhúng).
+- **Độ sâu chính thức đo với trễ nhân tạo 80 ms (5 mẫu)**; không trễ thì dao động theo lịch trình (sau: 2 ở 8/12, 3 ở 3/12, 4 ở 1/12; trước: 5 ở 10/12, 6 ở 2/12; cùng một mã baseline đo được 5–7).
+- **Kịch bản "hai tủ nổi bật" không dựng được** (chỉ mục duy nhất một phần `collections_one_featured`): nhánh lỗi `maybeSingle` của hero không đạt tới được bằng dữ liệu thật; hàm vẫn dùng `maybeSingle`.
+- **Nhánh "Hết hàng" của TC-5 phủ bằng cách tạm đặt tồn kho 0 cho hai cuốn trên DB cục bộ rồi khôi phục.**
+- **Quyết định: bỏ phần "khởi chạy thẻ nổi bật sớm" ở `app/page.tsx`.** Phiên bản đầu cho cùng 11 truy vấn và cùng độ sâu 2 (5/5, trễ 80 ms) nhưng làm hai dòng RSC liền kề (thân trang `b` và metadata `11`) hoán đổi ở mọi điều kiện của trang chủ, tất định giữa các bản build, trong khi hai bản build của mã baseline giống hệt nhau. Số đo của phương án đã bỏ: tải nguội thật 11 truy vấn ở 12/12, TTFB nguội không trễ trung vị 247,6 ms (231,3–277,7).
+- **Thứ tự khoá của `featuredExtras` đổi thành theo thứ tự `slugs`.** Bản cũ phụ thuộc thứ tự hoàn thành của các lời gọi song song (khác nhau giữa bản cũ và bản mới khi hai slug khác nhau, đo ở cả DB cục bộ và hosted); với dữ liệu hiện tại hai tab cùng cuốn đầu nên chỉ có một khoá và HTML không đổi.
+- **Không làm:** gộp xuống khoảng 5 truy vấn bằng "kho" dùng chung (kéo `Header`, `Footer`, `/sach`, `/tu-sach`, `/gio-hang` vào phạm vi); kéo thêm dữ liệu vào bậc 1 để độ sâu thành 1.
+- **Phép đo hỏng đã bắt được:** so sánh HTML báo khác ở mọi nhóm vì id build (`"b":"<21 ký tự>"`) khác ở mọi bản build, kể cả hai bản build của cùng mã (chuẩn hoá id build và email thử của tài khoản thử); cú pháp nhúng `parent:categories!parent_id(…)` trả mảng rỗng trên PostgREST, mã dùng `parent:parent_id(…)`.
+
+### 7.9 Rà soát accessibility — một lần đo, không phải đợt sửa (03/10/2026)
+
+Một lần đo trên mã đã merge; không có thay đổi mã nào. Tài liệu: `docs/specs/dot-accessibility-ra-soat.md` (bản 1.0 trong PR #19, `424e96f`; 1.1 và SRS 1.9 ở `2580589`; 1.2 ở `1d34df8`; 1.3 ở `7cfe9ff`). **Phạm vi:** 8 route, 12 trạng thái, 2 khung (1280×900 và 390×844) = 24 lượt, cộng một lượt đo riêng cho bìa sách (16 trang × 2 khung = 32 lượt, 219 bìa). **Điều kiện:** stack Supabase cục bộ, bản production, Edge headless qua CDP; dữ liệu thử: 1 khách có giỏ (2 cuốn), 5 đơn đủ 5 trạng thái, 1 admin. Hosted không đo (Claude Code không đăng nhập hosted Auth). Bộ đo không nằm trong repo.
+
+**Kết quả: 20 phát hiện (A11Y-01 → A11Y-20) — 9 đóng, 11 mở (3 Trung bình, 8 Thấp, 0 Cao).** Mở, Trung bình: A11Y-01 (placeholder 3,3:1, `/thanh-toan`), A11Y-05 (9/302 phần tử dưới 44px ở 390px), A11Y-10 (3 liên kết trong dòng 1,50–1,68:1 với chữ quanh, không gạch chân). Mở, Thấp: A11Y-03, 04, 06, 07, 08, 09, 12, 13. Đóng: A11Y-02 (nút vô hiệu hoá: chủ dự án chấp nhận theo miễn trừ có trong WCAG 1.4.3), A11Y-11 (chữ dưới 14px: giải quyết bằng sửa NFR-6.6 ở SRS 1.9), A11Y-14 (chữ in trên bìa dưới 12px: miễn trừ), A11Y-15 → A11Y-20 (xem dưới).
+
+| NFR | Số mẫu | Kết quả |
+|---|---|---|
+| 6.1 tương phản | 1.009 nút văn bản nhìn thấy ở desktop, 938 ở mobile; 702 nhóm; 59 cặp token; 26 `::placeholder` | 0 vi phạm ở chữ hoạt động; dưới 4,5:1: thành phần vô hiệu hoá, 1 ký tự trang trí `aria-hidden` (2,13:1), 1 placeholder (3,3:1) |
+| 6.2 vùng chạm (390px) | 302 phần tử tương tác | 9 dưới 44px (3,0%); 0 ở 8 trong 12 trang |
+| 6.3 focus và bàn phím | 311 phần tử tương tác ở 11 trang desktop; menu "Danh mục" 3/3 (mở bằng `Enter`, đóng bằng `Escape`, focus trả về nút); hộp thoại tài khoản mobile 14 lần `Tab` | 0 thiếu chỉ báo focus; 0 chỉ báo dưới 3:1; 310 tới được bằng `Tab` (1 radio theo quy ước phím mũi tên); 0/14 lần focus thoát khỏi hộp thoại tài khoản |
+| 6.4 `alt` và icon | 108 `<svg>`; 134 `[role=img]`; 381 phần tử tương tác | 108/108 `aria-hidden`; 134/134 có nhãn; 0 phần tử tương tác không tên |
+| 6.5 không chỉ bằng màu | liên kết trong dòng; lỗi form ở `/thanh-toan` | 3 liên kết chỉ khác màu và độ đậm; lỗi form không chỉ bằng màu (3/3 trường `aria-invalid` + `aria-describedby`) |
+| 6.6 cỡ chữ | 1.009 nút văn bản ở 1280px | 347 (34,4%) dưới 14px; theo NFR-6.6 bản 1.9, 0/347 dưới 4,5:1, thấp nhất 4,77:1; 20 nút dưới 12px (16 ở 10px, 4 ở 11,3px; chữ in trên bìa) |
+| 6.7 kiểm lại cặp màu | 59 cặp | cặp thấp nhất của chữ hoạt động `sale` → `paper` 4,66:1; 300 nút văn bản nằm trong 0,5 trên ngưỡng |
+| Ngoài NFR-6.x | 12 trang; ô nhập ở `/sach`; 3 trang admin | không có liên kết bỏ qua (8 điểm dừng `Tab` trước `<main>` ở 12/12 trang); viền ô nhập 1,04:1 và 1,36:1 (cần 3:1); `<title>` của 3/3 trang admin cùng "NA Books" (cố ý, spec 5A) |
+
+**SRS lên 1.9 (`2580589`):** NFR-6.6 viết lại — chữ nội dung đọc tối thiểu 14px; chữ phụ trợ (ngày, số đếm, nhãn, chú thích) được dùng 12–13px theo token `--text-micro` và `--text-meta`, với điều kiện tương phản đạt WCAG AA cho cỡ chữ đó. Lý do ghi ở lịch sử thay đổi của SRS: NFR-6.6 là quy tắc tự đặt của dự án, không phải tiêu chí WCAG.
+
+**Điều kiện của miễn trừ A11Y-14 bị thay giữa chừng.** Chủ dự án miễn trừ chữ in trên bìa dưới 12px khỏi NFR-6.6 (chữ in trên bìa là chất liệu của ảnh bìa do `BookCover` sinh ra), kèm điều kiện thứ nhất (tài liệu 1.2): ở mọi nơi dùng `BookCover`, tên sách và tên tác giả là chữ thật bên cạnh bìa. Đo theo điều kiện đó: **173/219 bìa đạt**, 8/14 nơi, 5/13 trang có dùng `BookCover`; sáu nơi thiếu thành sáu phát hiện Trung bình (A11Y-15 → A11Y-20). Điều kiện thứ nhất bỏ sót `alt` và tên khả truy cập của bìa; chủ dự án thay bằng điều kiện hai phần (tài liệu 1.3): (a) mọi bìa mang tên sách tới công nghệ hỗ trợ (qua `alt`, chữ nhìn thấy hoặc tên khả truy cập của liên kết bọc; bìa trang trí thì `aria-hidden` và không là nơi duy nhất mang thông tin); (b) tên tác giả là chữ ở thẻ sách của lưới catalog và các dải trang chủ và ở dòng giỏ hàng, các chỗ khác chỉ cần tên sách. Đo lại theo điều kiện mới, bằng cây accessibility của trình duyệt: **219/219 bìa đạt** — (a) 219/219 (215 qua nhãn của bìa, tên khả truy cập = tên sách; 4 trang trí `aria-hidden` ở giỏ hàng, tên sách là chữ thật cạnh bìa; 0 bìa thiếu cả `alt`, tên và `aria-hidden`), (b) 158/158 ở nơi bắt buộc; đối chứng 6/6 bìa tổng hợp; thêm 26 bìa ảnh (SVG tạm gán cho 3 cuốn trên DB cục bộ, đã khôi phục): 26/26. **A11Y-14 và A11Y-15 → A11Y-20 đóng vì điều kiện miễn trừ đổi, không vì mã đổi** (mã không đổi).
+
+**Chỗ phép đo yếu hơn tiêu chí gốc, hoặc dựa trên giả định:**
+- **Tên khả truy cập đọc từ cây accessibility của Edge, không phải trình đọc màn hình thật.** Chưa đo: thu phóng 200–400% và reflow, giãn chữ, trạng thái hover và active, chế độ tối (site không có), hosted.
+- **Ảnh bìa thật (JPEG/PNG qua trình tối ưu ảnh của Next) chưa đo**; nhánh `<Image alt={title}>` đo bằng ảnh SVG tạm ở 6 nơi (26 bìa), và trang chủ không có bìa ảnh nào trong lượt đo đó.
+- **Cách xếp từng nơi vào nhóm (b) hay nhóm "chỉ cần tên sách" là cách đọc của Claude Code** (chủ dự án liệt kê theo tên, không theo mã). 39/219 bìa không nằm trong liên kết nào (hero 8, bìa lớn 4, "Có trong tủ" 4, dòng đơn ở thanh toán 4, tóm tắt đơn 18, đăng nhập 1), nên lý do nêu cho (b), "tác giả nằm ở trang chi tiết mà bìa dẫn tới", không đúng nguyên văn ở các bìa đó; (b) vẫn đạt vì ở đó không đòi tác giả. 182/215 bìa có nhãn lặp với chữ tên sách thật cạnh bìa (thuộc A11Y-09, còn mở).
+- **"Bên cạnh" được thao tác hoá** là tổ tiên gần nhất có từ 20 ký tự chữ thật, ngoài bìa và ngoài cây `aria-hidden`; ngưỡng 20 chưa được thử đổi.
+- **Tương phản của chữ trên bìa đo theo màu nền bìa**; lớp vân giấy và gáy sách phủ lên bìa không được tính. Chữ trắng trên các màu bìa có mặt ở dữ liệu đo đạt ≥ 5,0:1 (thấp nhất `cover-4` 5,02:1); dữ liệu cục bộ không dùng hết 12 màu bìa.
+- **Phép đo hỏng đã bắt được và sửa, rồi đo lại:** vòng focus báo "yếu" ở thẻ `hover-lift` là dương tính giả do đọc `box-shadow` giữa lúc chuyển dần (tắt transition khi đo); 3 "vùng chạm 20×20" ở `/thanh-toan` là ô chọn trong `<label>` (đo theo nhãn: 0 dưới 44px); truy vấn `[role=dialog]` khớp hộp thoại mobile đang ẩn bằng CSS; nhãn "nơi" của bìa ở `/dang-nhap` và `/gio-hang` gán sai và `<details>` tóm tắt đơn gập ở 390px không có bìa nhìn thấy; bộ đo điều kiện mới lần chạy đầu chỉ 4/6 đối chứng khớp (bỏ qua `<img alt>` con của nút gốc bị đánh "bỏ qua"; coi mọi nhãn không rỗng là tên sách), sửa rồi chạy lại 32 lượt: 219/219 không đổi, 6/6 đối chứng. Một câu sai của chính tài liệu ở bản 1.2 ("tên và tác giả vẫn có trong tên truy cập của bìa") đã sửa ở 1.3: tên khả truy cập của bìa chỉ có tên sách.
 
 ## 8. Bài học đã rút ra (giữ lại để không lặp)
 
