@@ -1,4 +1,5 @@
 # Đợt 5B — Admin: quản lý sách
+> Bố cục form: xem docs/mockups/buoc-5b/README.md
 
 Phiên bản 1.0 · 04/10/2026 · Khu `/admin/sach`: danh sách toàn bộ sách, thêm, sửa, xoá có chặn ở tầng database; lần đầu dự án GHI dữ liệu rồi phải làm mới cache đọc (FR-5B.7).
 Nhánh: chưa tạo. Hai chặng, mỗi chặng một PR (mục 0.1). Đợt này chỉ có tài liệu: spec này và SRS 1.10; chưa có mã, chưa có migration, chưa áp gì lên hosted.
