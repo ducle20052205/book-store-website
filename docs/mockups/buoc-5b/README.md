@@ -55,3 +55,13 @@ Chiều cao artboard lấy theo trạng thái cao nhất (trạng thái "xoa-duo
 
 - Cột phải chỉ có một thẻ nên ngắn hơn form nhiều; không nhồi thêm thẻ cho đầy.
 - Chế độ thêm mới vẫn điền sẵn dữ liệu mẫu để so sánh bố cục; trang thật sẽ trống.
+
+## Chú thích trong ảnh KHÔNG phải câu chữ giao diện
+
+Một số chuỗi trong mockup là ghi chú cho người xem, không được chép vào giao diện thật:
+
+- `(updateTag("books"))` ở thanh hành động;
+- "UPDATE không chứa `cover_image_url`" ở thẻ bìa;
+- `NFR-3.3` và `order_items_book_id_fkey` ở vùng xoá.
+
+Câu chữ giao diện lấy từ `docs/specs/buoc-5b-admin-sach.md`, không lấy từ ảnh.
