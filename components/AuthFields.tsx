@@ -27,6 +27,9 @@ export function FieldFrame({
   hint,
   error,
   below,
+  required,
+  after,
+  afterId,
   renderInput,
 }: {
   id: string;
@@ -35,16 +38,26 @@ export function FieldFrame({
   error?: ReactNode;
   /** Chèn giữa ô và gợi ý (thanh đo độ mạnh của mật khẩu). */
   below?: ReactNode;
+  /** Đợt 5B: dấu * đỏ sau nhãn của ô bắt buộc (không có thì HTML không đổi). */
+  required?: boolean;
+  /** Đợt 5B: nội dung đặt SAU gợi ý (vd. dòng cảnh báo `role="note"` của ô slug); nối vào `aria-describedby` qua `afterId`. */
+  after?: ReactNode;
+  afterId?: string;
   renderInput: (props: { id: string; "aria-invalid"?: true; "aria-describedby"?: string; className: string }) => ReactNode;
 }) {
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
-  const describedBy = [error ? errorId : null, hint ? hintId : null].filter(Boolean).join(" ") || undefined;
+  const describedBy = [error ? errorId : null, hint ? hintId : null, after && afterId ? afterId : null].filter(Boolean).join(" ") || undefined;
 
   return (
     <div>
       <label htmlFor={id} className="mb-1.5 block text-body-sm font-medium text-ink-900">
         {label}
+        {required && (
+          <span aria-hidden="true" className="text-danger">
+            {" *"}
+          </span>
+        )}
       </label>
       {renderInput({
         id,
@@ -63,6 +76,7 @@ export function FieldFrame({
           {hint}
         </p>
       )}
+      {after}
     </div>
   );
 }

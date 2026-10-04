@@ -17,6 +17,7 @@ export function InlineConfirm({
   testId,
   title,
   confirmLabel,
+  confirmClassName,
   pending,
   onConfirm,
   onClose,
@@ -26,6 +27,8 @@ export function InlineConfirm({
   testId: string;
   title: string;
   confirmLabel: string;
+  /** Kiểu của nút xác nhận; bỏ trống thì dùng `primaryButtonClass` (HTML của nơi gọi cũ không đổi). Đợt 5B: nút xoá sách dùng kiểu đỏ. */
+  confirmClassName?: string;
   pending: boolean;
   onConfirm: () => void;
   onClose: () => void;
@@ -59,7 +62,7 @@ export function InlineConfirm({
       </h2>
       <p className="mt-2 max-w-[68ch] text-body text-ink-600">{children}</p>
       <div className="mt-5 flex flex-col gap-3 md:flex-row">
-        <button type="button" disabled={pending} onClick={onConfirm} className={`${primaryButtonClass} md:!w-auto`}>
+        <button type="button" disabled={pending} onClick={onConfirm} className={`${confirmClassName ?? primaryButtonClass} md:!w-auto`}>
           {confirmLabel}
         </button>
         <button type="button" disabled={pending} onClick={onClose} className={`${secondaryButtonClass} w-full md:w-auto`}>

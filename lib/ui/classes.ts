@@ -15,3 +15,10 @@ export const secondaryButtonClass =
 /** Ô nhập một dòng của hệ layout đóng băng (chuyển từ `components/AuthFields.tsx` ở đợt 5A để Server Component dùng được: export từ module "use client" không phải chuỗi). Viền do nơi dùng đặt. */
 export const inputClass =
   "h-12 w-full rounded-field border bg-surface px-3.5 text-base text-ink-900 md:h-[46px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 disabled:opacity-60";
+
+/** Vùng chạm ≥ 44×44px cho liên kết và nút chữ của khu quản lý sách (đợt 5B, NFR-6.2): dải kết quả, tóm tắt lỗi, breadcrumb. */
+export const touchTargetClass = "inline-flex min-h-11 min-w-11 items-center";
+
+/** Nút hành động không đảo lại được (xoá sách, đợt 5B): cùng kích thước với `primaryButtonClass`, nền `danger`. */
+export const dangerButtonClass =
+  "pressable inline-flex h-12 w-full items-center justify-center whitespace-nowrap rounded-field bg-danger px-6 text-button font-medium text-white hover:bg-danger/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60";

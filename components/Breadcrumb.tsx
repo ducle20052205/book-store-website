@@ -20,9 +20,10 @@ export function categoryChainToBreadcrumbItems(chain: { name: string; slug: stri
 
 /**
  * 1c (bổ sung): breadcrumb dùng chung cho /sach và /sach/[slug]. Mỗi cấp là
- * link, riêng cấp cuối (trang hiện tại) không phải link.
+ * link, riêng cấp cuối (trang hiện tại) không phải link. `linkClassName` (đợt 5B) chỉ thêm lớp vào các
+ * liên kết — khu quản lý sách cần vùng chạm 44px; bỏ trống thì HTML không đổi.
  */
-export function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
+export function Breadcrumb({ items, linkClassName }: { items: BreadcrumbItem[]; linkClassName?: string }) {
   if (items.length === 0) return null;
 
   return (
@@ -38,7 +39,7 @@ export function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
             {item.href ? (
               <Link
                 href={item.href}
-                className="rounded-control hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+                className={`rounded-control hover:text-cham-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600${linkClassName ? ` ${linkClassName}` : ""}`}
               >
                 {item.label}
               </Link>
