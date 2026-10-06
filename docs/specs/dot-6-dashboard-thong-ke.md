@@ -1,9 +1,11 @@
 # Đợt 6 — Dashboard thống kê cho admin
 
-Phiên bản 1.0 · 06/10/2026 · Trang `/admin` thành bảng số liệu: KPI, doanh thu theo tháng, sách bán chạy, phễu chuyển đổi. Một migration (một hàm RPC), không thêm bảng, không thêm cột, không thêm dependency.
+Phiên bản 1.1 · 06/10/2026 · Trang `/admin` thành bảng số liệu: KPI, doanh thu theo tháng, sách bán chạy, phễu chuyển đổi. Một migration (một hàm RPC), không thêm bảng, không thêm cột, không thêm dependency.
 Nhánh: chưa tạo. Hai chặng, hai PR (mục 0.1).
 
-**Giới hạn sửa spec: MỘT lần.** Sau khi commit, chỉ sửa khi Claude Code chứng minh mã không thỏa được. Mọi thứ khác vào mục 7 "ghi nhận, đợt sau".
+**Giới hạn sửa spec: MỘT lần — đã dùng ở v1.1; spec đóng băng từ v1.1.** Sau đó chỉ sửa khi Claude Code chứng minh mã không thỏa được. Mọi thứ khác vào mục 7 "ghi nhận, đợt sau".
+
+**Đổi so với 1.0** (06/10): thêm `next.config.ts` (nơi khai báo chuyển hướng `/admin`) vào đường dẫn được phép đổi, sửa "bốn khoá" thành "năm khoá" ở FR-D.6 và "20 → 20 + 1" thành "19 → 20 file `.sql`" ở TC-D.9; thêm FR-D.8 (mục "Khu quản trị" trong menu Tài khoản) kèm TC-D.10 và các đường dẫn nó chạm; thêm mục 4A "Số đo ba thành phần biểu đồ" (đánh số 4A để mục 7 vẫn là mục 7); đổi 7 FR thành 8 và 9 tiêu chí thành 10.
 
 Tài liệu tham chiếu, KHÔNG chép nội dung vào đây:
 - `docs/SRS.md` mục 5.7 (FR-7.1 → FR-7.6; đợt này thêm **FR-7.7**), 5.8 (FR-8.1 → FR-8.6, bảng `events`), 5.10 (RLS).
@@ -17,16 +19,16 @@ Tài liệu tham chiếu, KHÔNG chép nội dung vào đây:
 
 ## 0. Ranh giới đợt
 
-**Trong phạm vi:** FR-D.1 → FR-D.7. Đúng **một migration** (một hàm RPC). Thay đổi mã chỉ trong `app/admin/`, `components/admin/`, `lib/admin/`, cộng một dòng ở `docs/SRS.md`.
+**Trong phạm vi:** FR-D.1 → FR-D.8. Đúng **một migration** (một hàm RPC). Thay đổi mã chỉ trong `app/admin/`, `components/admin/`, `lib/admin/`, cộng `next.config.ts` (bỏ chuyển hướng `/admin`, FR-D.1) và ba file của menu Tài khoản `components/Header.tsx`, `components/AccountMenu.tsx`, `components/HeaderIcons.tsx` (FR-D.8), cộng một dòng ở `docs/SRS.md`.
 
-**Ngoài phạm vi, không làm:** lọc theo khoảng thời gian · xuất CSV · so sánh với kỳ trước · tooltip, zoom, biểu đồ tương tác · cập nhật realtime · cảnh báo tồn kho thấp · bản đồ đơn theo tỉnh · tỉ lệ hủy đơn theo thời gian · **thư viện biểu đồ** · bảng mới, cột mới, trigger mới, policy mới · mọi thay đổi ngoài bốn thư mục nêu trên.
+**Ngoài phạm vi, không làm:** lọc theo khoảng thời gian · xuất CSV · so sánh với kỳ trước · tooltip, zoom, biểu đồ tương tác · cập nhật realtime · cảnh báo tồn kho thấp · bản đồ đơn theo tỉnh · tỉ lệ hủy đơn theo thời gian · **thư viện biểu đồ** · bảng mới, cột mới, trigger mới, policy mới · mọi thay đổi ngoài các đường dẫn nêu ở "Trong phạm vi".
 
 **Ghi nhận, cũng không làm:** chạy seed lên hosted (việc tay của chủ dự án, sau đợt này) · dashboard cho khách · phân trang cho bảng sách bán chạy.
 
 ### 0.1 Chia chặng
 
 - **Chặng 1 — dữ liệu.** Migration (mục 4). Kiểm TC-D.2, TC-D.4 → TC-D.7 bằng SQL và PostgREST trên stack cục bộ. Báo cáo, mở PR. Áp lên hosted chỉ khi chủ dự án đồng ý.
-- **Chặng 2 — giao diện.** FR-D.1, D.3, D.5, D.6, D.7 phần giao diện. Kiểm các tiêu chí còn lại. PR xếp chồng lên chặng 1 nếu chặng 1 chưa merge.
+- **Chặng 2 — giao diện.** FR-D.1, D.3, D.5, D.6, D.7 phần giao diện, và FR-D.8. Kiểm các tiêu chí còn lại. PR xếp chồng lên chặng 1 nếu chặng 1 chưa merge.
 
 ---
 
@@ -85,7 +87,7 @@ Tài liệu tham chiếu, KHÔNG chép nội dung vào đây:
 
 ### FR-D.1 — `/admin` trở thành dashboard
 
-- Tạo `app/admin/page.tsx`. **Bỏ chuyển hướng `/admin` → `/admin/don-hang`** của đợt 5B; `/admin` nay là trang thống kê.
+- Tạo `app/admin/page.tsx`. **Bỏ chuyển hướng `/admin` → `/admin/don-hang`** của đợt 5A, khai báo trong `next.config.ts` (xoá mục `/admin` của `redirects`, giữ mục `/tai-khoan`); `/admin` nay là trang thống kê.
 - `AdminNav` có **ba** liên kết theo thứ tự: **Thống kê** (`/admin`), **Đơn hàng** (`/admin/don-hang`), **Sách** (`/admin/sach`). Prop `current` mở rộng thành `"stats" | "orders" | "books"`, mặc định `"stats"`. HTML của hai trang cũ đổi đúng ở dải này — TC-D.9 kiểm.
 - **Khung giống hệt 5A/5B**, không phát minh thêm: container 1200px; `PageTitle` ("Thống kê", không số đếm); `AdminNav`; mọi thứ nằm SAU `requireAdmin()` bên trong `<Suspense>`, fallback là khối trống `aria-busy` không chữ; `metadata` `title` "NA Books", `robots: { index: false }`.
 - **Vỏ tĩnh không được chứa chữ nào của giao diện quản trị** (FR-5A.1) — TC-D.3.
@@ -135,7 +137,7 @@ Hai khối cạnh nhau, xếp dọc dưới 1024px:
 
 ### FR-D.6 — Một RPC gom mọi số
 
-- **`public.admin_dashboard_stats()`** trả về `jsonb` một lần gọi, bốn khoá: `kpi`, `revenue_by_month`, `top_books`, `category_sales`, `funnel`.
+- **`public.admin_dashboard_stats()`** trả về `jsonb` một lần gọi, năm khoá: `kpi`, `revenue_by_month`, `top_books`, `category_sales`, `funnel`.
 - **`SECURITY INVOKER`** (mặc định), KHÔNG `SECURITY DEFINER`: RLS của chính người gọi áp dụng, nên không cần hàm vượt rào. Thêm chặn tường minh ở đầu hàm: `if not public.is_admin() then raise exception 'KHONG_PHAI_ADMIN'; end if;`
 - `revoke execute ... from public, anon;` và `grant execute ... to authenticated;` — cùng khuôn với `place_order`.
 - Mọi phép gộp theo tháng dùng `at time zone 'Asia/Ho_Chi_Minh'`, không dùng UTC.
@@ -148,6 +150,16 @@ Hai khối cạnh nhau, xếp dọc dưới 1024px:
 - Database chưa có đơn nào → toàn trang là một `EmptyState` đủ bốn phần, không phải bốn ô KPI toàn số 0.
 - Giọng văn theo mục 3: xưng "chúng mình", không nhãn tiếng Anh kiểu "Coming soon".
 
+### FR-D.8 — "Khu quản trị" trong menu Tài khoản
+
+Vấn đề: admin đăng nhập xong không có đường nào vào `/admin` ngoài gõ URL.
+
+- `AccountItem` trong `components/Header.tsx` hiện đọc người dùng bằng `getClaims()`, KHÔNG truy vấn `profiles`, nên không biết `role`. Thêm **MỘT** truy vấn `select role from profiles where id = <uid>` trong `AccountItem` — nó đã nằm trong `<Suspense>` sẵn có, và chỉ chạy cho người đã đăng nhập. `getClaims()` giữ nguyên; cập nhật câu chú thích của `AccountItem` đang ghi "không truy vấn `profiles`".
+- **KHÔNG dùng Custom Access Token Hook của Supabase:** đó là một thiết lập trên dashboard chưa ai kiểm được bằng lệnh, đúng loại rủi ro đã làm "Confirm email" sai suốt nhiều tuần. Phương án hook ghi ở mục 7 làm đường nâng cấp.
+- `AccountMenu` (`components/AccountMenu.tsx`) nhận thêm prop `isAdmin: boolean`. Khi `true`, thêm **MỘT** mục "Khu quản trị" trỏ `/admin`, đặt **NGAY TRÊN** "Đăng xuất", có đường kẻ ngăn. Phải thêm ở **CẢ HAI**: dropdown (từ 768px) và sheet (dưới 768px). Hai panel cùng nằm trong DOM khi menu mở (CSS chọn cái hiển thị), nên mục xuất hiện hai lần.
+- Dùng lại `panelItemClass` và `sheetItemClass` đã có. Biểu tượng: thêm một icon vào `HeaderIcons.tsx` cùng kiểu nét với các icon hiện có.
+- Người không phải admin: mục này **KHÔNG được render**, không chỉ ẩn bằng CSS.
+
 ---
 
 ## 4. Migration
@@ -155,6 +167,37 @@ Hai khối cạnh nhau, xếp dọc dưới 1024px:
 **Đúng một file.** Chỉ tạo hàm `admin_dashboard_stats()`. Không bảng, không cột, không index, không trigger, không policy. Không `UPDATE` dòng nào.
 
 Chặn an toàn ở đầu migration: dừng nếu `public.is_admin` không tồn tại.
+
+---
+
+## 4A. Số đo ba thành phần biểu đồ
+
+Thêm vào hệ layout đóng băng theo luật mục 3 ("trang nào cần thành phần chưa có thì thêm vào hệ trước"). Đánh số 4A vì mục 4 đã là Migration và mục 7 phải giữ nguyên số.
+
+**Chung:** khung biểu đồ nằm trong `cardClass`, padding 24px (16px dưới 768px). Không lưới, không trục — mọi con số đã hiện bằng chữ. Không animation.
+
+**Cột đứng (doanh thu theo tháng):**
+- Khung cao 220px từ 768px, 180px dưới 768px; rộng 100%.
+- 7 cột; khe giữa cột 16px từ 768px, 8px dưới; bề rộng cột chia đều phần còn lại.
+- Cột cao tối đa 160px (120px dưới 768px); chừa 24px trên cho giá trị, 36px dưới cho nhãn.
+- Giá trị trên đỉnh cột: 12px, `ink-400`, canh giữa, rút gọn dạng "1,2tr".
+- Nhãn dưới: 12px, `ink-400`, dạng "T4" … "T10".
+- Màu cột `cham-700`. Tháng giá trị 0: vẽ vạch ngang 2px `ink-400` ở đáy để cột không biến mất.
+
+**Thanh ngang (5 danh mục cha):**
+- Mỗi hàng cao 40px, khe 8px.
+- Nhãn danh mục bên trái, cột cố định 140px từ 768px, 100px dưới.
+- Thanh cao 16px, bo góc 2px, dài tỉ lệ với danh mục lớn nhất.
+- Số bản ngay sau thanh, 12px `ink-900`.
+- Màu: đúng 5 màu danh mục đã có trong hệ.
+
+**Phễu 5 bước:**
+- 5 hàng, mỗi hàng cao 44px, khe 8px.
+- Thanh cao 20px, dài tỉ lệ với bước đầu (1.200 = 100%).
+- Trái thanh: tên bước 13px `ink-900`. Phải thanh: số tuyệt đối 13px `ink-900` và tỉ lệ 12px `ink-400`.
+- Màu `cham-700`, độ mờ 100 / 85 / 70 / 55 / 40% theo thứ tự bước — chỉ để trang trí, mọi thông tin đã nằm ở chữ.
+
+**Hàng KPI:** 4 ô `cardClass`, padding 24px; nhãn 12px `ink-400`; số 28px Be Vietnam Pro semibold `ink-900` (chữ đứng = thông tin hệ thống, mục 3); dòng giải thích 12px `ink-400`. Hai cột dưới 768px.
 
 ---
 
@@ -181,9 +224,10 @@ Chặn an toàn ở đầu migration: dừng nếu `public.is_admin` không tồ
 | **TC-D.6** | Phễu khớp bảng `events`. | `psql`: `group by event_type` | **1200 / 360 / 150 / 60 / 42** đúng từng con số; 5/5 bước giảm dần; `sign_up` = 25 và `login` = 60 hiện riêng, không nằm trong phễu |
 | **TC-D.7** | Sách bán chạy khớp SQL. | `psql`: `sum(quantity)` theo `book_id` và theo danh mục cha, chỉ đơn khác `cancelled` | **10/10** dòng top sách khớp SQL (tên, số bản, doanh thu); **5/5** danh mục cha khớp; tổng số bản của 5 danh mục = **98** |
 | **TC-D.8** | Accessibility. | Đọc HTML đã render; đo tương phản; đo vùng chạm ở 390px | **3/3** biểu đồ có `role="img"` và `aria-label` khác rỗng; **0** con số chỉ tồn tại dưới dạng hình; **0** vùng chạm < 44px; **0** cặp màu chữ < 4,5:1 |
-| **TC-D.9** | Không phình phạm vi. | `git diff --stat` so `origin/main`; `package.json`; đếm migration; đo CLS | Dependency production = **5**, `package.json` và `package-lock.json` **không đổi**; đúng **1** migration mới (20 → 20 + 1); `git diff` chỉ chạm `app/admin/`, `components/admin/`, `lib/admin/`, `supabase/migrations/`, `docs/`; HTML hai trang admin cũ đổi **đúng ở dải `AdminNav`**; CLS = **0** |
+| **TC-D.9** | Không phình phạm vi. | `git diff --stat` so `origin/main`; `package.json`; đếm migration; đo CLS | Dependency production = **5**, `package.json` và `package-lock.json` **không đổi**; đúng **1** migration mới (19 → 20 file `.sql`); `git diff` chỉ chạm `app/admin/`, `components/admin/`, `lib/admin/`, `next.config.ts`, `components/Header.tsx`, `components/AccountMenu.tsx`, `components/HeaderIcons.tsx`, `supabase/migrations/`, `docs/`; HTML hai trang admin cũ đổi **đúng ở dải `AdminNav`**; CLS = **0** |
+| **TC-D.10** | **Đối chứng — mục "Khu quản trị" chỉ hiện với admin.** Ba trạng thái: đăng nhập `admin-demo@example.com`; đăng nhập `nguoi-dung-01@example.com`; chưa đăng nhập. Mỗi trạng thái mở trang chủ, mở menu Tài khoản (nút `aria-label="Tài khoản"`) rồi đọc DOM. HTML thô của trang không chứa chuỗi này với bất kỳ ai, vì dropdown và sheet chỉ render khi menu mở (`AccountMenu`: `{open && …}`); nên không đo bằng `curl`. | Trình duyệt thật (Edge headless qua CDP): đếm chuỗi "Khu quản trị" và đọc `href` của mục đó trong DOM sau khi mở menu | Admin: chuỗi xuất hiện **2** lần (dropdown + sheet) và cả hai có `href="/admin"`; `nguoi-dung-01`: **0** lần; chưa đăng nhập: **0** lần — **2/0/0**. Hai phía cho cùng kết quả nghĩa là phép đo hỏng, không phải mã đạt |
 
-**Cách báo cáo.** Mỗi tiêu chí ghi lệnh đã chạy, con số thu được, số lượt. Ba tiêu chí có đối chứng ghi **cả hai phía** — phía đối chứng cũng "đạt" nghĩa là phép đo hỏng, phải nói ra thay vì báo đạt.
+**Cách báo cáo.** Mỗi tiêu chí ghi lệnh đã chạy, con số thu được, số lượt. Bốn tiêu chí có đối chứng (TC-D.1, TC-D.2, TC-D.3, TC-D.10) ghi **cả hai phía** — phía đối chứng cũng "đạt" nghĩa là phép đo hỏng, phải nói ra thay vì báo đạt.
 
 ---
 
@@ -201,12 +245,16 @@ Mọi số là toàn thời gian. Thêm bộ lọc kéo theo tham số URL, tr�
 
 Năm bước đếm **số dòng sự kiện**, không lần theo cùng một `session_id` đi hết năm bước. Phễu theo phiên đòi truy vấn window khác hẳn. Giao diện ghi rõ "số lượt, không phải số phiên".
 
+### 7.4 Đường nâng cấp: Custom Access Token Hook
+
+FR-D.8 biết `role` bằng một truy vấn `profiles` trong `AccountItem`. Đường nâng cấp là Custom Access Token Hook của Supabase đưa `role` vào claim của JWT, để `getClaims()` đọc được mà không cần truy vấn. Không làm ở đợt này: đó là một thiết lập trên dashboard chưa ai kiểm được bằng lệnh, đúng loại rủi ro đã làm "Confirm email" bật sai suốt nhiều tuần (file quyết định, mục 8). Làm khi có cách kiểm bằng lệnh.
+
 ---
 
 ## 8. Thứ tự làm
 
 1. Đọc `app/admin/don-hang/page.tsx`, `components/admin/AdminNav.tsx`, `lib/admin/requireAdmin.ts`, `lib/ui/classes.ts` — dùng lại, không viết mới.
 2. Chặng 1: viết migration, áp lên local, kiểm TC-D.2 và TC-D.4 → TC-D.7 bằng `psql` và PostgREST. Báo cáo, mở PR.
-3. Chặng 2: `AdminNav` ba liên kết; `app/admin/page.tsx`; ba component biểu đồ SVG trong `components/admin/`.
-4. Kiểm TC-D.1, TC-D.3, TC-D.8, TC-D.9. Báo cáo, mở PR.
+3. Chặng 2: `AdminNav` ba liên kết; `app/admin/page.tsx`; ba component biểu đồ SVG trong `components/admin/` theo mục 4A; bỏ chuyển hướng `/admin` ở `next.config.ts`; mục "Khu quản trị" (FR-D.8).
+4. Kiểm TC-D.1, TC-D.3, TC-D.8, TC-D.9, TC-D.10. Báo cáo, mở PR.
 5. Thêm **FR-7.7** vào `docs/SRS.md` mục 5.7 — commit riêng, không gộp vào commit mã.
