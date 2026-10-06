@@ -1,9 +1,9 @@
 # Đợt S — Seed dữ liệu demo
 
-Phiên bản 1.6 · 06/10/2026 · Dựng 25 tài khoản demo, 42 đơn trải 7 tháng lịch (cố định từ 01/04 đến 05/10/2026) đủ 5 trạng thái, và chuỗi sự kiện hình phễu, bằng MỘT script chạy lại được và gỡ được.
+Phiên bản 1.7 · 06/10/2026 · Dựng 25 tài khoản demo, 42 đơn trải 7 tháng lịch (cố định từ 01/04 đến 05/10/2026) đủ 5 trạng thái, và chuỗi sự kiện hình phễu, bằng MỘT script chạy lại được và gỡ được.
 Nhánh: chưa tạo. Một chặng, một PR. Đợt này **không có migration, không đổi schema, không đổi mã ứng dụng** — chỉ thêm `scripts/` và `docs/runbooks/`, và thêm hai tên biến rỗng vào `.env.local.example` (NFR-S.2).
 
-**Đổi so với 1.5** (06/10, do Claude Code đối chiếu spec với mã và môi trường đã đo): cửa sổ kết thúc `2026-10-05` kèm giờ trong ngày tất định và chốt chặn `now()` (FR-S.4), chốt `seed_ref` dùng chung một dãy 1–42 và 43–60 (FR-S.5), xác nhận mẫu email `nguoi-dung-%@example.com` kèm lý do (FR-S.7), thêm cảnh báo khi neo cửa sổ già hơn 12 tháng (FR-S.4), và thêm phép đo mốc cho `grep .next/static` (TC-S.10). **Lịch sử 1.0 → 1.5** (giữ lại một câu): tồn kho do vector cố định làm chủ và bỏ `xmin` (1.1); sửa tham chiếu SRS, cửa sổ 7 tháng lịch, hình dạng `metadata` theo mã (1.2); bước 0 và quét giỏ, luật phủ, tên biến theo `.env.local.example` (1.3); bốn bước gỡ tuần tự không cần transaction, `SUPABASE_SECRET_KEY`, công thức `confirmation_email_sent_at` (1.4); cửa sổ neo bằng hằng số trong `plan.json`, `seed_ref` nhận biết phiên bỏ dở, dữ kiện môi trường ngày 06/10 (1.5).
+**Đổi so với 1.6** (06/10, do Claude Code đối chiếu spec với mã và môi trường đã đo): `plan.json` chứa mảng 42 đơn tường minh và script chỉ đọc, kèm các luật sinh mảng và phép tự kiểm khi sinh file (FR-S.4); `created_at` sự kiện do PRNG tất định với `event_seed`, riêng `order_placed` lấy từ đơn, và TC-S.8 chỉ khẳng định trên tổng thể (FR-S.5); mô tả `plan.json` ở mục 6 đổi theo. **Lịch sử 1.0 → 1.6** (giữ lại một câu): tồn kho do vector cố định làm chủ và bỏ `xmin` (1.1); tham chiếu SRS, cửa sổ 7 tháng, hình dạng `metadata` theo mã (1.2); bước 0 và quét giỏ, luật phủ, tên biến (1.3); bốn bước gỡ tuần tự, `SUPABASE_SECRET_KEY`, công thức email xác nhận (1.4); cửa sổ neo bằng hằng số và dữ kiện môi trường ngày 06/10 (1.5); cửa sổ kết thúc 05/10, giờ trong ngày, `seed_ref` một dãy chung, mốc cho TC-S.10 (1.6).
 
 Tài liệu tham chiếu, KHÔNG chép lại nội dung vào đây:
 - `docs/SRS.md` mục 5.3 (FR-3.x giỏ hàng), 5.4 (FR-4.x checkout), 5.5 (FR-5.x tài khoản), 5.6 (FR-6.x lịch sử đơn hàng), 5.8 (FR-8.x ghi log sự kiện), 5.10 (RLS).
@@ -161,8 +161,8 @@ Local có đủ 40 cuốn sách qua `supabase/seed.sql`, nên điều kiện đo
 - **Quét giỏ sau vòng sinh đơn** (lưới an toàn, không thay bước 0): `DELETE FROM public.cart_items WHERE user_id IN (<25 id demo>)`, rồi khẳng định số dòng `cart_items` còn lại của 25 tài khoản đó = **0**.
 - Số lượng mỗi dòng: 1–2. Danh sách sách mỗi đơn chọn tất định từ 36 cuốn bán được, tôn trọng trần `min(5, V−1)` của FR-S.2. **Luật phủ:** (a) 42 đơn phải chạm **ít nhất 24 cuốn khác nhau** trong 36 cuốn bán được; (b) trong đó **ít nhất 20 cuốn** phải có mặt ở các đơn không `cancelled` (8 đơn hủy cộng trả hết nên không làm lệch kho).
 - **Phân bố:** 42 đơn trên 25 tài khoản, tối thiểu 1, tối đa 4 đơn mỗi tài khoản.
-- **`payment_method`:** 28 `cod`, 14 `bank_transfer`.
-- **`confirmation_email_sent_at`:** TẤT ĐỊNH, không ngẫu nhiên. Với đơn có số thứ tự `n` (1–42, cùng `n` với khoá idempotency ở FR-S.6): giá trị = `created_at` CUỐI CÙNG + (2 + (`n` × 7) mod 39) giây, tức 2–40 giây. 38/42 đơn có giá trị; 4 đơn có `n` chia hết cho 10 (10, 20, 30, 40) để `NULL`, để demo nhánh "trang xác nhận nói thật". Ghi bằng `UPDATE` trực tiếp — không gọi `mark_confirmation_sent` (hàm đó cũng cần `auth.uid()`). Đặt **SAU** khi đã lùi `created_at` (FR-S.4), không tính từ giờ `place_order` chạy.
+- **`payment_method`:** 28 `cod`, 14 `bank_transfer`; giá trị từng đơn nằm trong `plan.json` (`bank_transfer` khi `n` chia hết cho 3).
+- **`confirmation_email_sent_at`:** TẤT ĐỊNH, không ngẫu nhiên. Với đơn có số thứ tự `n` (1–42, cùng `n` với khoá idempotency ở FR-S.6): giá trị = `created_at` CUỐI CÙNG + (2 + (`n` × 7) mod 39) giây, tức 2–40 giây. 38/42 đơn có giá trị; 4 đơn có `has_confirmation` = false trong `plan.json` (`n` = 10, 20, 30, 40) để `NULL`, để demo nhánh "trang xác nhận nói thật". Ghi bằng `UPDATE` trực tiếp — không gọi `mark_confirmation_sent` (hàm đó cũng cần `auth.uid()`). Đặt **SAU** khi đã lùi `created_at` (FR-S.4), không tính từ giờ `place_order` chạy.
 
 ### FR-S.4 — Lịch sử trạng thái và lùi `created_at`
 
@@ -181,12 +181,21 @@ Local có đủ 40 cuốn sách qua `supabase/seed.sql`, nên điều kiện đo
 - **Tuyệt đối không tắt trigger.** Không `ALTER TABLE ... DISABLE TRIGGER`, không `session_replication_role`. Lệnh đó cần quyền chủ sở hữu bảng và lấy khoá `ACCESS EXCLUSIVE` trên `orders`; và không cần — tồn kho đã do vector làm chủ, còn phép toán của trigger tự đúng ở cả hai nhánh (đơn `cancelled`: `place_order` trừ → trigger cộng lại, net 0; đơn còn lại: trừ và giữ).
 - **Lùi thời gian:** `UPDATE public.orders SET created_at = <mốc>` cho **mọi** 42 đơn, sau khi đã dựng xong trạng thái.
   - **Cửa sổ là hằng số**, không tính từ ngày chạy: từ `2026-04-01` đến `2026-10-05`, ghi trong `scripts/seed-demo/plan.json` cùng `stock-vector.json`. `date_trunc('month', created_at)` cho đúng **7 nhóm**: 6 tháng đầy đủ (tháng 4 → 9) + 01–05/10.
-  - **Giờ trong ngày cũng tất định, là hàm của số thứ tự `n`** (giờ Việt Nam, UTC+7): giờ = 8 + (`n` mod 11), phút = (`n` × 17) mod 60, giây = 0; tức giờ từ 8 đến 18. Ngày của đơn `n` do `plan.json` định theo tháng.
+  - **`plan.json` QUYẾT ĐỊNH, không mô tả.** File chứa một MẢNG 42 phần tử, mỗi phần tử là một đơn với đủ `n`, `date` (YYYY-MM-DD), `time` (HH:MM:SS, giờ Việt Nam UTC+7), `status`, `payment_method`, `has_confirmation` (true/false). Script ĐỌC mảng này, KHÔNG tự tính ngày, giờ hay trạng thái; file không có trường `formula` dạng chuỗi. Các luật dưới đây chỉ để người đọc hiểu con số từ đâu; kết quả đã ĐÓNG BĂNG trong file:
+    - `n` = 1..42 theo thứ tự thời gian tăng dần.
+    - Tháng: `n` 1–6 = 04/2026, 7–12 = 05, 13–18 = 06, 19–24 = 07, 25–30 = 08, 31–36 = 09, 37–42 = 10/2026.
+    - Ngày trong tháng: 6 tháng đầy đủ lấy 3, 8, 13, 18, 23, 28 theo thứ tự `n` trong tháng; tháng 10 lấy 1, 2, 3, 4, 5, 5.
+    - Giờ = 8 + (`n` mod 11) (từ 8 đến 18); phút = (`n` × 17) mod 60; giây = 0.
+    - `cancelled`: `n` − 4 chia hết cho 5, tức `n` ∈ {4, 9, 14, 19, 24, 29, 34, 39} (8 đơn).
+    - Trong 34 đơn còn lại, xếp theo `n` GIẢM DẦN: 6 đơn đầu `pending`, 5 đơn kế `shipped`, 5 đơn kế `processing`, 18 đơn còn lại `completed`.
+    - `payment_method`: `bank_transfer` khi `n` chia hết cho 3 (14 đơn), còn lại `cod` (28 đơn).
+    - `has_confirmation` = false với `n` ∈ {10, 20, 30, 40}, true với 38 đơn còn lại.
+    - **Tự kiểm bắt buộc khi sinh file:** 42 phần tử; 7 nhóm tháng mỗi nhóm 6 đơn; trạng thái 6/5/5/18/8; payment 28/14; `has_confirmation` 38/4; mọi `date` + `time` đều TRƯỚC `2026-10-06 00:00`. Lệch bất kỳ con số nào thì DỪNG, không tự chỉnh luật.
   - **Chốt chặn thời điểm chạy:** script **DỪNG** với thông báo rõ nếu `now()` sớm hơn `2026-10-06 00:00` giờ Việt Nam. Cửa sổ cố định chỉ an toàn khi mọi mốc đã nằm trong quá khứ; ngày cuối `2026-10-05` cùng giờ tối đa 18:xx bảo đảm điều đó.
-  - **Chốt chặn neo bị bỏ quên:** script in **CẢNH BÁO** (không dừng) khi `now()` muộn hơn ngày cuối cửa sổ quá 12 tháng: "dữ liệu demo đang già hơn một năm, sửa hai ngày trong `plan.json`". Cảnh báo này cũng in ở `--verify`.
-  - **`created_at` của mọi đơn và mọi sự kiện là HÀM THUẦN của số thứ tự** (`n` của đơn; số thứ tự trong `seed_ref` của sự kiện) và của `plan.json`. Vì vậy bước lùi là phép gán tuyệt đối: chạy lại ngày nào, hay chạy tiếp sau một lần dở, đều ra cùng một kết quả.
-  - **Phân bố:** 6 đơn mỗi tháng đầy đủ (4→9, 36 đơn) + 6 đơn trong 01–05/10 = **42**.
-  - **Seed lại sau nhiều tháng thì SỬA hai ngày trong `plan.json`** (runbook cũng ghi điều này): đó là thay đổi có chủ ý, không được để nó trôi âm thầm.
+  - **Chốt chặn neo bị bỏ quên:** script in **CẢNH BÁO** (không dừng) khi `now()` muộn hơn ngày cuối cửa sổ quá 12 tháng: "dữ liệu demo đang già hơn một năm, sửa cửa sổ và sinh lại mảng đơn trong `plan.json`". Cảnh báo này cũng in ở `--verify`.
+  - **`created_at` của đơn là DỮ LIỆU trong `plan.json`** (`date` + `time`); của sự kiện do PRNG tất định (FR-S.5). Vì vậy bước lùi là phép gán tuyệt đối: chạy lại ngày nào, hay chạy tiếp sau một lần dở, đều ra cùng một kết quả.
+  - **Phân bố:** 6 đơn mỗi tháng đầy đủ (4→9, 36 đơn) + 6 đơn trong 01–05/10 = **42**, đã nằm sẵn trong mảng.
+  - **Seed lại sau nhiều tháng thì SỬA cửa sổ và sinh lại mảng 42 đơn trong `plan.json` theo các luật trên** (runbook cũng ghi điều này): đó là thay đổi có chủ ý, không được để nó trôi âm thầm.
   - Lệnh này **không** làm trigger chạy, vì mệnh đề `WHEN (OLD.status IS DISTINCT FROM NEW.status)`. **Phải chứng minh bằng đo, không tin spec** — TC-S.4(b).
 - **Ghi nhận:** `order_code` do `place_order` sinh theo `now()` giờ Việt Nam, nên mọi đơn demo mang năm của lúc `place_order` chạy (`2026` nếu chạy trong năm 2026), còn `created_at` neo cố định trong 2026; chạy sang năm khác thì năm trong mã khác năm của `created_at`. Script **không** sửa `order_code`.
 
@@ -206,7 +215,7 @@ Local có đủ 40 cuốn sách qua `supabase/seed.sql`, nên điều kiện đo
 - **Phễu đơn điệu giảm** qua `page_view → search → add_to_cart → checkout_started → order_placed`: 1200 > 360 > 150 > 60 > 42.
 - **`order_placed` khớp đơn 1–1:** đúng 42 dòng, `metadata` chứa `order_code` của đơn tương ứng, `user_id` là chủ đơn, `created_at` bằng `created_at` của đơn ± 5 giây.
 - **`session_id`:** UUID v4; phiên ẩn danh dùng `session_id` riêng, không trùng phiên của tài khoản. Tối thiểu 300 `session_id` khác nhau.
-- **`created_at`** trải cùng cửa sổ cố định của FR-S.4, là hàm thuần của số thứ tự trong `seed_ref`; mật độ ngày thường cao hơn cuối tuần.
+- **`created_at` của sự kiện** dùng một PRNG TẤT ĐỊNH (mulberry32 hoặc tương đương, viết thẳng trong script, KHÔNG thêm dependency — NFR-S.1), hạt giống là số nguyên `event_seed` trong `plan.json` (`20261006`): cùng hạt giống thì cùng kết quả ở mọi lần chạy, mọi máy. 42 dòng `order_placed` KHÔNG dùng PRNG: `created_at` = `created_at` của đơn `n` + (1 + (`n` mod 5)) giây, tức 1–5 giây, nằm trong ± 5 giây. Mọi `created_at` sự kiện nằm trong cùng cửa sổ `2026-04-01` → `2026-10-05`; mật độ ngày thường cao hơn cuối tuần. **TC-S.8 khẳng định về `created_at` trên TỔNG THỂ** (số dòng, phễu giảm dần, tỉ lệ ẩn danh), không trên từng dòng.
 - **`metadata`** ≤ 2048 byte mỗi dòng (trần của policy `events_insert_public`; service_role bỏ qua RLS nhưng giữ trần để dữ liệu hợp lệ với đường ghi thật).
 - Chèn theo lô, không 1.897 lời gọi lẻ.
 
@@ -238,7 +247,7 @@ Ba ràng buộc về giá trị:
 - **Tồn kho:** bước đặt vector là phép gán tuyệt đối, chạy bao nhiêu lần cũng ra một kết quả. Nhưng ở lần chạy thứ hai, đặt lại vector rồi **không** đặt đơn mới (bước 0 của FR-S.3 bỏ qua đơn đã có) sẽ làm tồn kho **cao hơn** lần chạy thứ nhất. Vì vậy: **bước đặt vector chỉ chạy khi chưa có tài khoản demo nào tồn tại**; lần chạy thứ hai bỏ qua bước này và báo rõ "đã có dữ liệu demo, bỏ qua bước đặt tồn kho". Đây là điều kiện bắt buộc để TC-S.1 đạt.
 - **Tài khoản:** email đã tồn tại → Admin API trả lỗi trùng; script **dùng lại tài khoản cũ**, không coi là lỗi.
 - **Sự kiện:** mỗi dòng có `metadata->>'seed_ref'` tất định (`'seed:' || <loại> || ':' || <số thứ tự>`). Trước khi chèn, xoá mọi dòng `events` có `seed_ref` trùng. Đây là *dữ liệu*, không phải cột schema mới.
-- **Trạng thái và lùi thời gian:** `UPDATE` trạng thái chỉ chạy khi trạng thái hiện tại khác đích và chuyển là hợp lệ; lùi `created_at` là phép gán tuyệt đối cho mọi đơn, theo hàm thuần của số thứ tự và `plan.json` (FR-S.4), nên chạy lại hay chạy tiếp sau một lần dở đều ra cùng kết quả. Cả hai tự idempotent.
+- **Trạng thái và lùi thời gian:** `UPDATE` trạng thái chỉ chạy khi trạng thái hiện tại khác đích và chuyển là hợp lệ; lùi `created_at` là phép gán tuyệt đối cho mọi đơn, theo `date` + `time` trong `plan.json` (FR-S.4), nên chạy lại hay chạy tiếp sau một lần dở đều ra cùng kết quả. Cả hai tự idempotent.
 
 ### FR-S.7 — Gỡ được (`--teardown`)
 
@@ -294,7 +303,7 @@ Bốn bước chạy **tuần tự**, mỗi bước **tự idempotent**. Không 
 |---|---|
 | `scripts/seed-demo.mjs` | Script duy nhất. Cờ: `--apply`, `--teardown`, `--verify`, `--dry-run`. Không cờ → in trợ giúp, thoát mã 1 |
 | `scripts/seed-demo/stock-vector.json` | Vector V dạng `{ "<slug>": <số> }`, 40 khoá. Script đọc từ đây, **không** chép số vào mã |
-| `scripts/seed-demo/plan.json` | Hai ngày neo cửa sổ (`2026-04-01`, `2026-10-05`), công thức giờ trong ngày, phân bố 42 đơn theo tháng, phân bố trạng thái, số dòng phễu sự kiện, luật phủ, công thức lệch giây. Script đọc từ đây, **không** chép số vào mã |
+| `scripts/seed-demo/plan.json` | MẢNG 42 đơn tường minh (`n`, `date`, `time`, `status`, `payment_method`, `has_confirmation`), `event_seed`, hai ngày neo cửa sổ (`2026-04-01`, `2026-10-05`), số dòng phễu sự kiện, luật phủ, các con số để tự kiểm. Script đọc từ đây, **không** chép số vào mã |
 | `scripts/seed-demo/README.md` | Cách chạy, biến môi trường, ghi chú số điện thoại bịa (FR-S.1), ghi chú `order_code_seq` (7.1), ghi chú cache (7.4) |
 | `docs/runbooks/chay-seed-demo.md` | Runbook cho chủ dự án chạy lên hosted (mục 8) |
 | `docs/specs/dot-seed-du-lieu-demo.md` | Chính spec này |
@@ -342,7 +351,7 @@ Runbook `docs/runbooks/chay-seed-demo.md` phải ghi đủ, theo khuôn của `d
 5. `--verify` lại, đối chiếu bảng kỳ vọng ở mục 5.
 6. Cách lùi: `node scripts/seed-demo.mjs --teardown`, rồi `--verify` so với vector.
 
-Runbook phải nêu rõ ba điều: **lần `--apply` đầu tiên ghi đè tồn kho hiện tại của 40 cuốn bằng vector** (7.2), **trang web có thể hiển thị số cũ tới khi hết `cacheLife`** (7.4), và **seed lại sau nhiều tháng thì sửa hai ngày trong `plan.json`** (FR-S.4).
+Runbook phải nêu rõ ba điều: **lần `--apply` đầu tiên ghi đè tồn kho hiện tại của 40 cuốn bằng vector** (7.2), **trang web có thể hiển thị số cũ tới khi hết `cacheLife`** (7.4), và **seed lại sau nhiều tháng thì sửa cửa sổ và sinh lại mảng 42 đơn trong `plan.json`** (FR-S.4).
 
 ---
 
