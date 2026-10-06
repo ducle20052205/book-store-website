@@ -1,9 +1,9 @@
 # Đợt S — Seed dữ liệu demo
 
-Phiên bản 1.7 · 06/10/2026 · Dựng 25 tài khoản demo, 42 đơn trải 7 tháng lịch (cố định từ 01/04 đến 05/10/2026) đủ 5 trạng thái, và chuỗi sự kiện hình phễu, bằng MỘT script chạy lại được và gỡ được.
+Phiên bản 1.8 · 06/10/2026 · Dựng 25 tài khoản demo, 42 đơn trải 7 tháng lịch (cố định từ 01/04 đến 05/10/2026) đủ 5 trạng thái, và chuỗi sự kiện hình phễu, bằng MỘT script chạy lại được và gỡ được.
 Nhánh: chưa tạo. Một chặng, một PR. Đợt này **không có migration, không đổi schema, không đổi mã ứng dụng** — chỉ thêm `scripts/` và `docs/runbooks/`, và thêm hai tên biến rỗng vào `.env.local.example` (NFR-S.2).
 
-**Đổi so với 1.6** (06/10, do Claude Code đối chiếu spec với mã và môi trường đã đo): `plan.json` chứa mảng 42 đơn tường minh và script chỉ đọc, kèm các luật sinh mảng và phép tự kiểm khi sinh file (FR-S.4); `created_at` sự kiện do PRNG tất định với `event_seed`, riêng `order_placed` lấy từ đơn, và TC-S.8 chỉ khẳng định trên tổng thể (FR-S.5); mô tả `plan.json` ở mục 6 đổi theo. **Lịch sử 1.0 → 1.6** (giữ lại một câu): tồn kho do vector cố định làm chủ và bỏ `xmin` (1.1); tham chiếu SRS, cửa sổ 7 tháng, hình dạng `metadata` theo mã (1.2); bước 0 và quét giỏ, luật phủ, tên biến (1.3); bốn bước gỡ tuần tự, `SUPABASE_SECRET_KEY`, công thức email xác nhận (1.4); cửa sổ neo bằng hằng số và dữ kiện môi trường ngày 06/10 (1.5); cửa sổ kết thúc 05/10, giờ trong ngày, `seed_ref` một dãy chung, mốc cho TC-S.10 (1.6).
+**Đổi so với 1.7** (06/10, do Claude Code đối chiếu spec với mã và môi trường đã đo): sửa luật xếp trạng thái theo đúng vòng đời, đơn mới hơn ở trạng thái sớm hơn, kèm lý do (FR-S.4); buộc `checkout_started` số `k` sớm hơn đơn `k` từ 1 đến 10 phút và ghi công thức `order_placed` (FR-S.5); bỏ hai khối `ordersShape` và `updatesPerOrderByStatus` khỏi `plan.json`; và ghi thứ bậc khi mảng đơn, khối `expected` và luật trong spec lệch nhau (mục 6). **Lịch sử 1.0 → 1.7** (giữ lại một câu): tồn kho do vector cố định làm chủ và bỏ `xmin` (1.1); tham chiếu SRS, cửa sổ 7 tháng, hình dạng `metadata` theo mã (1.2); bước 0 và quét giỏ, luật phủ, tên biến (1.3); bốn bước gỡ tuần tự, `SUPABASE_SECRET_KEY`, công thức email xác nhận (1.4); cửa sổ neo bằng hằng số và dữ kiện môi trường ngày 06/10 (1.5); cửa sổ kết thúc 05/10, giờ trong ngày, `seed_ref` một dãy chung, mốc cho TC-S.10 (1.6); `plan.json` liệt kê 42 đơn tường minh và PRNG tất định cho sự kiện (1.7).
 
 Tài liệu tham chiếu, KHÔNG chép lại nội dung vào đây:
 - `docs/SRS.md` mục 5.3 (FR-3.x giỏ hàng), 5.4 (FR-4.x checkout), 5.5 (FR-5.x tài khoản), 5.6 (FR-6.x lịch sử đơn hàng), 5.8 (FR-8.x ghi log sự kiện), 5.10 (RLS).
@@ -187,10 +187,10 @@ Local có đủ 40 cuốn sách qua `supabase/seed.sql`, nên điều kiện đo
     - Ngày trong tháng: 6 tháng đầy đủ lấy 3, 8, 13, 18, 23, 28 theo thứ tự `n` trong tháng; tháng 10 lấy 1, 2, 3, 4, 5, 5.
     - Giờ = 8 + (`n` mod 11) (từ 8 đến 18); phút = (`n` × 17) mod 60; giây = 0.
     - `cancelled`: `n` − 4 chia hết cho 5, tức `n` ∈ {4, 9, 14, 19, 24, 29, 34, 39} (8 đơn).
-    - Trong 34 đơn còn lại, xếp theo `n` GIẢM DẦN: 6 đơn đầu `pending`, 5 đơn kế `shipped`, 5 đơn kế `processing`, 18 đơn còn lại `completed`.
+    - Trong 34 đơn không hủy, xếp theo `n` GIẢM DẦN: 6 đơn đầu `pending`, 5 đơn kế `processing`, 5 đơn kế `shipped`, 18 đơn còn lại `completed`. Kết quả: `pending` ∈ {36, 37, 38, 40, 41, 42}, `processing` ∈ {30, 31, 32, 33, 35}, `shipped` ∈ {23, 25, 26, 27, 28}. **Vì sao thứ tự này đúng:** vòng đời là `pending → processing → shipped → completed`, nên đơn MỚI hơn phải ở trạng thái SỚM hơn; đừng đảo lại (bản 1.6 từng ghi `shipped` trước `processing`, sai).
     - `payment_method`: `bank_transfer` khi `n` chia hết cho 3 (14 đơn), còn lại `cod` (28 đơn).
     - `has_confirmation` = false với `n` ∈ {10, 20, 30, 40}, true với 38 đơn còn lại.
-    - **Tự kiểm bắt buộc khi sinh file:** 42 phần tử; 7 nhóm tháng mỗi nhóm 6 đơn; trạng thái 6/5/5/18/8; payment 28/14; `has_confirmation` 38/4; mọi `date` + `time` đều TRƯỚC `2026-10-06 00:00`. Lệch bất kỳ con số nào thì DỪNG, không tự chỉnh luật.
+    - **Tự kiểm bắt buộc khi sinh file:** `processing` đúng là {30, 31, 32, 33, 35} và `shipped` đúng là {23, 25, 26, 27, 28}; bỏ qua các `n` đã `cancelled`, `n` nhỏ nhất của `pending` > `n` lớn nhất của `processing` > `n` lớn nhất của `shipped` > `n` lớn nhất của `completed` (đơn mới hơn ở trạng thái sớm hơn); 42 phần tử; 7 nhóm tháng mỗi nhóm 6 đơn; trạng thái 6/5/5/18/8; payment 28/14; `has_confirmation` 38/4; mọi `date` + `time` đều TRƯỚC `2026-10-06 00:00`. Lệch bất kỳ con số nào thì DỪNG, không tự chỉnh luật.
   - **Chốt chặn thời điểm chạy:** script **DỪNG** với thông báo rõ nếu `now()` sớm hơn `2026-10-06 00:00` giờ Việt Nam. Cửa sổ cố định chỉ an toàn khi mọi mốc đã nằm trong quá khứ; ngày cuối `2026-10-05` cùng giờ tối đa 18:xx bảo đảm điều đó.
   - **Chốt chặn neo bị bỏ quên:** script in **CẢNH BÁO** (không dừng) khi `now()` muộn hơn ngày cuối cửa sổ quá 12 tháng: "dữ liệu demo đang già hơn một năm, sửa cửa sổ và sinh lại mảng đơn trong `plan.json`". Cảnh báo này cũng in ở `--verify`.
   - **`created_at` của đơn là DỮ LIỆU trong `plan.json`** (`date` + `time`); của sự kiện do PRNG tất định (FR-S.5). Vì vậy bước lùi là phép gán tuyệt đối: chạy lại ngày nào, hay chạy tiếp sau một lần dở, đều ra cùng một kết quả.
@@ -215,7 +215,7 @@ Local có đủ 40 cuốn sách qua `supabase/seed.sql`, nên điều kiện đo
 - **Phễu đơn điệu giảm** qua `page_view → search → add_to_cart → checkout_started → order_placed`: 1200 > 360 > 150 > 60 > 42.
 - **`order_placed` khớp đơn 1–1:** đúng 42 dòng, `metadata` chứa `order_code` của đơn tương ứng, `user_id` là chủ đơn, `created_at` bằng `created_at` của đơn ± 5 giây.
 - **`session_id`:** UUID v4; phiên ẩn danh dùng `session_id` riêng, không trùng phiên của tài khoản. Tối thiểu 300 `session_id` khác nhau.
-- **`created_at` của sự kiện** dùng một PRNG TẤT ĐỊNH (mulberry32 hoặc tương đương, viết thẳng trong script, KHÔNG thêm dependency — NFR-S.1), hạt giống là số nguyên `event_seed` trong `plan.json` (`20261006`): cùng hạt giống thì cùng kết quả ở mọi lần chạy, mọi máy. 42 dòng `order_placed` KHÔNG dùng PRNG: `created_at` = `created_at` của đơn `n` + (1 + (`n` mod 5)) giây, tức 1–5 giây, nằm trong ± 5 giây. Mọi `created_at` sự kiện nằm trong cùng cửa sổ `2026-04-01` → `2026-10-05`; mật độ ngày thường cao hơn cuối tuần. **TC-S.8 khẳng định về `created_at` trên TỔNG THỂ** (số dòng, phễu giảm dần, tỉ lệ ẩn danh), không trên từng dòng.
+- **`created_at` của sự kiện** dùng một PRNG TẤT ĐỊNH (mulberry32 hoặc tương đương, viết thẳng trong script, KHÔNG thêm dependency — NFR-S.1), hạt giống là số nguyên `event_seed` trong `plan.json` (`20261006`): cùng hạt giống thì cùng kết quả ở mọi lần chạy, mọi máy. Các dòng gắn đơn KHÔNG dùng PRNG, đều tất định theo `k` (= `n`): `order_placed` số `k`: `created_at` = `created_at` của đơn `k` + (1 + (`k` mod 5)) giây, tức 1–5 giây, nằm trong ± 5 giây; `checkout_started` số `k` (1–42): `created_at` = `created_at` của đơn `k` − (60 + (`k` × 13) mod 540) giây, tức luôn sớm hơn đơn từ 1 đến 10 phút. `checkout_started` số 43–60 (phiên bỏ dở) dùng PRNG tất định, rải trong cửa sổ. **Thứ tự thời gian trong phễu phải đúng với đời thật:** `checkout_started` trước `order_placed` của cùng số `k`, không bao giờ ngược. Mọi `created_at` sự kiện nằm trong cùng cửa sổ `2026-04-01` → `2026-10-05`; mật độ ngày thường cao hơn cuối tuần. **TC-S.8 khẳng định về `created_at` trên TỔNG THỂ** (số dòng, phễu giảm dần, tỉ lệ ẩn danh), không trên từng dòng.
 - **`metadata`** ≤ 2048 byte mỗi dòng (trần của policy `events_insert_public`; service_role bỏ qua RLS nhưng giữ trần để dữ liệu hợp lệ với đường ghi thật).
 - Chèn theo lô, không 1.897 lời gọi lẻ.
 
@@ -309,6 +309,8 @@ Bốn bước chạy **tuần tự**, mỗi bước **tự idempotent**. Không 
 | `docs/specs/dot-seed-du-lieu-demo.md` | Chính spec này |
 
 Chỉ sửa một file có sẵn: `.env.local.example`, thêm hai tên biến với giá trị rỗng.
+
+**Thứ bậc khi lệch:** mảng 42 đơn trong `plan.json` là thứ script ĐỌC; khối `expected` là phép tự kiểm (script assert ngược lại mảng); luật sinh trong spec là tài liệu giải thích. Ba thứ lệch nhau thì script DỪNG và báo, không tự chọn cái nào.
 
 ---
 
