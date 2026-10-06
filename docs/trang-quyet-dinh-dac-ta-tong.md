@@ -608,6 +608,35 @@ Một lần đo trên mã đã merge; không có thay đổi mã nào. Tài li�
 
 **Điều kiện còn lại (đã kiểm và chưa kiểm):** cache (`updateTag`) đã kiểm trên bản `next start` cục bộ (45/45; đối chứng 30/30), trên Vercel preview của PR #22 (15/15: thêm 5, sửa tên 5, nút "Đặt tồn kho về 0" 5) và trên production (6/6: thêm 3, sửa tên 3). **Nút "Đặt tồn kho về 0" (`setBookOutOfStock`) chưa kiểm trên production:** nút chỉ hiện ở cuốn đã có đơn nên phép đo đòi một đơn trong database, và chủ dự án quyết định không tạo đơn giả trên database thật; nút đã đạt ở cục bộ (5/5) và preview (5/5), và cả bốn action dùng chung một lời gọi `updateTag("books")` nên `createBook` và `updateBook` đã phủ tính chất cần chứng minh. Ghi chú để đối chiếu: preview dùng cùng database hosted, nơi lần đo trên preview đã tạo 5 đơn `cancelled` tạm rồi xoá (xem trên).
 
+### 7.11 Đợt seed dữ liệu demo (06/10/2026)
+
+Spec `docs/specs/dot-seed-du-lieu-demo.md` v1.8 (7 FR, 10 tiêu chí). Một chặng, nhánh `dot-seed-du-lieu-demo`, 16 commit trước commit của mục này. Không migration, không đổi schema, không đổi `app/`, `components/`, `lib/`, không thêm dependency (`package.json` và `package-lock.json` không đổi). Commit: spec v1.1 → v1.8 `2b33fc3`, `4d150d0`, `1b31214`, `3228fa1`, `1ffb252`, `90343a4`, `f15e881`, `a638aa5`; vector, kế hoạch và bảng hình dạng metadata `4e060da`, `f21a0e7`, `038ef4e`, `15612d3`; script `857f0e1`; README `a24be90`; runbook hosted `c0e6a02`; runbook cục bộ và `CLAUDE.md` `6998053`. File mới: `scripts/seed-demo.mjs` (637 dòng), `scripts/seed-demo/{plan.json, stock-vector.json, metadata-shapes.md, README.md}`, `docs/runbooks/chay-seed-demo.md`. File có sẵn sửa: `.env.local.example` (+2 tên biến, giá trị rỗng), `CLAUDE.md` (+1 dòng), `docs/runbooks/supabase-local.md`.
+
+**Điều kiện đo:** stack Supabase cục bộ (CLI 2.118.0, 12 container) sau `supabase db reset` (19 migration + `seed.sql`); SQL trực tiếp bằng `docker exec supabase_db_book-store-website psql -U postgres`; `--apply` chạy 4 lần (lần 1; lần 2 để đo TC-S.1; hai lần dựng lại cho TC-S.5). Mốc trước `--apply` lần 1: `books` 40, tồn kho 0 là 4, tổng 835, `auth.users` / `orders` / `events` 0, md5 `books` trừ `stock_quantity` `1f65fa33a015e5bdd0eecae5fa7c8d5c`, `order_code_seq.last_value` 1.
+
+| Tiêu chí | Số lượt, cỡ mẫu | Kết quả |
+|---|---|---|
+| TC-S.1 chạy lại không đổi gì | 1 lượt `--apply` lần 2; 6 số + md5 | 6/6 số giống hệt (25 / 42 / 84 / 1897 / 737 / 4), md5 `books` giống hệt; `skipped_existing` 42; log có dòng "đã có dữ liệu demo, bỏ qua bước đặt tồn kho" |
+| TC-S.2 gỡ về đúng vector | 2 lượt `--teardown`; 40 ô | ô khác vector 0/40 cả hai lượt; sum 835; 4 slug ở mức 0 đúng là 4 slug có V = 0; tài khoản, `orders`, `order_items`, `events` đều 0; md5 `books` trước = sau |
+| TC-S.3 đảo thứ tự xoá | 3 lượt đảo + 1 đối chứng | 3/3 `23503`: lượt 0 và 1 vi phạm `orders_user_id_fkey`, lượt 2 vi phạm `events_user_id_fkey`. Đối chứng đúng thứ tự (`orders` → `events` → tài khoản): `DELETE` 42 / 1897 / 25, thành công. Sau cả bốn lượt: 25 / 42 / 1897 |
+| TC-S.4 trigger trạng thái và mệnh đề `WHEN` | (a) 3 lượt + 1 đối chứng; (b) 3 lượt + 1 đối chứng | (a) 3/3 `P0001` `CHUYEN_TRANG_THAI_KHONG_HOP_LE`, detail `pending -> completed`; đối chứng `pending → processing`: `UPDATE 1`. (b) 3/3 `UPDATE 1`, tồn kho đổi ở 0/2, 0/1, 0/3 sách trong đơn; đối chứng hủy một đơn `pending`: tồn kho đổi ở 1/1 sách |
+| TC-S.5 bước đặt lại vector là bắt buộc | 2 lượt biến thể bỏ bước 4; 40 ô | cả hai lượt: 36/40 ô khác vector, 4/40 khớp, sum 737 < 835. Đối chứng (`--teardown` đầy đủ, TC-S.2): 0/40 ô khác vector |
+| TC-S.6 tài khoản | 1 lượt; 25 tài khoản | đủ 5 trường 25/25; email `@example.com` 25/25; 10 tỉnh khác nhau |
+| TC-S.7 đơn | 1 lượt; 42 đơn | 6 / 5 / 5 / 18 / 8 (`pending` / `processing` / `shipped` / `completed` / `cancelled`); 7 nhóm tháng × 6 (giờ +07); `created_at` ở tương lai 0; `confirmation_email_sent_at` có giá trị 38; mốc 2026-04-03 09:17 → 2026-10-05 17:54 (+07) |
+| TC-S.8 sự kiện | 1 lượt; 1.897 dòng | 1200 / 360 / 150 / 60 / 42 / 25 / 60; ẩn danh `page_view` 85,0%, `search` 85,0%; `order_placed` khớp đơn 42/42; `checkout_started` không sớm hơn `order_placed` cùng số: 0; `seed_ref` trùng 0. Số do `--verify` của script: `checkout_started` khớp đơn 42/42, bỏ dở hợp lệ 18/18, 325 `session_id` khác nhau, 6 từ khoá cho 0 kết quả |
+| TC-S.9 sách | 1 lượt; 40 sách | md5 `books` trừ `stock_quantity` trước = sau; 4 slug ở mức 0 đúng là 4 slug V = 0; 835 − 737 = 98 = tổng `quantity` của `order_items` thuộc đơn khác `cancelled` (98); tồn kho âm 0 |
+| TC-S.10 không rò bí mật, không đổi schema | 1 lượt mỗi phép | `grep` giá trị khoá trong `scripts/`: 0 dòng (đối chứng file giả: 1). `next build` rồi `grep "SERVICE_ROLE\|SECRET_KEY" .next/static`: 0, bằng mốc 0 (đối chứng file giả: 1). `git diff origin/main...HEAD` không chạm `supabase/migrations/`, `package.json`, `package-lock.json`, `app/`, `components/`, `lib/`. 19 file `.sql`. File có sẵn bị sửa: `.env.local.example`, `CLAUDE.md`, `docs/runbooks/supabase-local.md` |
+
+**Thời gian và số đếm:** `--apply` lần 1: 9,5 giây (script), 11 giây (đồng hồ ngoài); lần 2 (bỏ qua cả 42 đơn): 2,5 giây (script), 4 giây (đồng hồ ngoài); lần dựng lại: 9,3 giây (script). 77 lệnh `UPDATE` trạng thái (5×1 + 5×2 + 18×3 + 8×1). `--dry-run`: 21 từ khoá tìm kiếm, 6 cho 0 kết quả. `order_code_seq`: 126 sau ba lần dựng, không reset.
+
+**Chỗ phép đo yếu hơn tiêu chí gốc hoặc dựa trên giả định:**
+- **TC-S.1:** "bỏ qua 42/42" là bộ đếm `skipped_existing` của chính script; phần đo độc lập bằng truy vấn là 6/6 số đếm và md5 giống hệt.
+- **TC-S.3:** spec ghi một biến thể đảo thứ tự; đo 3 lượt (một lượt gốc, hai lượt tách từng khoá ngoại) để thấy cả `orders` lẫn `events` nổ.
+- **TC-S.5:** biến thể viết bằng SQL trực tiếp (không qua script, không qua Admin API); bước xoá tài khoản là `delete from auth.users`.
+- **TC-S.8:** 18 dòng `checkout_started` bỏ dở chỉ được kiểm `total_amount` > 0, `items_count` trong 1–3 và không có `order_placed` cùng số; "tính thật theo luật giá" không có phép đo. Các số lấy từ `--verify` của script chưa có bản đo SQL độc lập.
+- **TC-S.10:** điều khoản "`.env.local.example` là file có sẵn duy nhất được đổi" không đúng: `CLAUDE.md` và `docs/runbooks/supabase-local.md` cũng sửa trong cùng nhánh.
+- Mọi phép đo chạy trên stack cục bộ; chưa chạy lên hosted. `SEED_DEMO_PASSWORD` chỉ bắt buộc ở `--apply`; chốt `now() < 2026-10-06` chỉ chặn `--apply`, không chặn `--teardown` (khác chữ spec).
+
 ## 8. Bài học đã rút ra (giữ lại để không lặp)
 
 **Về tiêu chí nghiệm thu**
