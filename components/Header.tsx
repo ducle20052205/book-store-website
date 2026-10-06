@@ -127,9 +127,14 @@ export function HeaderView({ categories, accountItem, cartBadge }: HeaderViewPro
  * token đã bị thu hồi, thứ mà chỉ kiểm chữ ký không thấy được — xem comment ở
  * lib/supabase/proxy.ts.
  *
- * Tên và email lấy thẳng từ claim (user_metadata.full_name, email), không truy
- * vấn `profiles`. Đánh đổi: JWT làm mới mỗi giờ nên tên có thể cũ tới lần làm
- * mới kế tiếp khi đợt 2D cho sửa họ tên.
+ * Tên và email lấy thẳng từ claim (user_metadata.full_name, email). Đánh đổi:
+ * JWT làm mới mỗi giờ nên tên có thể cũ tới lần làm mới kế tiếp khi đợt 2D cho
+ * sửa họ tên.
+ *
+ * Đợt 6 (spec FR-D.8): `role` KHÔNG có trong claim, nên thêm MỘT truy vấn
+ * `profiles.role` của chính người đó (RLS `profiles_select_own_or_admin`), chỉ chạy
+ * cho người đã đăng nhập, để `AccountMenu` biết có hiện mục "Khu quản trị" không.
+ * Lỗi đọc coi như không phải admin. Không dùng Custom Access Token Hook (spec mục 7.4).
  */
 async function AccountItem() {
   const supabase = await createClient();
@@ -141,10 +146,13 @@ async function AccountItem() {
   const fullName = typeof rawName === "string" ? rawName.trim() : "";
   const email = typeof claims.email === "string" && claims.email.length > 0 ? claims.email : null;
 
+  const { data: profile, error } = await supabase.from("profiles").select("role").eq("id", claims.sub).maybeSingle();
+  const isAdmin = !error && profile?.role === "admin";
+
   return fullName ? (
-    <AccountMenu name={fullName} email={email} />
+    <AccountMenu name={fullName} email={email} isAdmin={isAdmin} />
   ) : (
-    <AccountMenu name={email ?? "Tài khoản của bạn"} email={null} />
+    <AccountMenu name={email ?? "Tài khoản của bạn"} email={null} isAdmin={isAdmin} />
   );
 }
 

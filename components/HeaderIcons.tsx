@@ -68,6 +68,15 @@ export function LogoutIcon({ className }: IconProps) {
   );
 }
 
+/** Khu quản trị (đợt 6, FR-D.8): ba cột đứng, cùng nét 1.7 với UserIcon/OrdersIcon. */
+export function AdminIcon({ className }: IconProps) {
+  return (
+    <svg {...base} strokeWidth="1.7" className={className}>
+      <path d="M5 20V11M12 20V4M19 20v-6" />
+    </svg>
+  );
+}
+
 export function CloseIcon({ className }: IconProps) {
   return (
     <svg {...base} strokeWidth="2" className={className}>
