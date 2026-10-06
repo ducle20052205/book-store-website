@@ -65,7 +65,11 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 
 **5B CRUD sách đã xong** (chặng 1: migration `20261004090859`; chặng 2: merge `622ea35`; số đo ở mục 7.10).
 
-**Thứ tự còn lại (đổi 06/10):** seed dữ liệu demo → dashboard thống kê → README cho nhà tuyển dụng → 5C scenario Make.com → 2C quên mật khẩu → 2D trang hồ sơ → đợt 1.6 → sửa accessibility → chatbot.
+**Đợt seed dữ liệu demo đã xong** (PR #23, squash `6257f0e`, 06/10/2026; số đo ở mục 7.11).
+
+**Thứ tự còn lại:** dashboard thống kê → README cho nhà tuyển dụng → 5C scenario Make.com → 2C quên mật khẩu → 2D trang hồ sơ → đợt 1.6 → sửa accessibility → chatbot.
+
+**Đợt seed dữ liệu demo: 7 FR, 10 tiêu chí nghiệm thu (5 trong đó là đối chứng).** Spec ở `docs/specs/dot-seed-du-lieu-demo.md` (v1.8, đóng băng). 25 tài khoản `@example.com`, 42 đơn trải 6 tháng đầy đủ + tháng hiện tại, 1.897 dòng `events` hình phễu, tồn kho sau khi chạy 737. Kết quả: **9/10 tiêu chí đạt**; TC-S.10 **trượt** vì điều khoản của chính nó không khả thi (xem mục 8). Dựng và đo toàn bộ trên stack cục bộ; **chưa chạy lên hosted** — đó là việc tay của chủ dự án theo `docs/runbooks/chay-seed-demo.md`.
 
 **Lý do đổi:** thứ tự cũ xếp hai việc tùy chọn (5C Make.com, chatbot) trước ba việc nằm trong định nghĩa "xong" (seed là nền cho bước 1–6, dashboard là bước 6, README là bước 7). Seed đứng trước dashboard vì hosted chỉ có 2 đơn và 3 người dùng, dashboard sẽ vẽ biểu đồ của số 0.
 
@@ -147,7 +151,11 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 | `GET /` ngay sau action | 4,2 s | **0,71–0,98 s** |
 
 - **Một thay đổi trong dashboard, không một dòng mã, lấy lại hệ số ~22 lần ở tầng truy vấn.** Bài học về thứ tự ưu tiên: kiểm hạ tầng trước khi tối ưu mã.
-- **Supabase cục bộ:** CLI 2.118.0 cài ngoài repo, stack 5 container Docker, cấu hình ở `supabase/config.toml`. Cổng: Kong 54321, Postgres 54322, Mailpit 54324, app cục bộ 3100 (dev trỏ hosted vẫn 3000). Biến môi trường ở `.env.supabase-local` (git-ignore). Khoá ký JWT cục bộ đặt **ES256** để khớp hosted.
+- **Supabase cục bộ (dựng lại 06/10/2026):** CLI 2.118.0, bản tải thẳng (không qua npm), đặt ở `D:\tools\supabase-cli\supabase.exe` và **không nằm trên PATH** — mọi lệnh gọi bằng đường dẫn đầy đủ. Cấu hình ở `supabase/config.toml`. Cổng host: Kong 54321, Postgres 54322, Mailpit 54324, app cục bộ 3100 (dev trỏ hosted vẫn 3000). Container Postgres tên `supabase_db_book-store-website`; trong container Postgres nghe 5432, còn 54322 là cổng host — `docker exec … psql` dùng 5432. Biến môi trường ở `.env.supabase-local` (git-ignore). Khoá ký JWT cục bộ đặt **ES256** để khớp hosted.
+- **`supabase start` trơn dựng 12 container và kéo ~7,97 GB image**, không phải 5 container như runbook mô tả — cờ `-x` của runbook là thứ cắt xuống 5. Lần dựng lại 06/10 chạy trơn, nên con số thật hiện tại là 12.
+- **Dữ liệu Docker nằm ở ổ E**, không phải ổ C: Docker Desktop → Settings → Resources → Advanced → Disk image location trỏ `E:\DockerData\DockerDesktopWSL`. File `.vhdx` **không tự co lại** khi xoá image; đo 06/10 là 10,2 GB.
+- **Mốc kiểm sau mỗi lần dựng lại stack:** `books` = 40, tồn kho 0 = 4 cuốn, `sum(stock_quantity)` = 835, migration = 19 file `.sql`. Khác bất kỳ con số nào thì dừng, đừng tự chữa.
+- **Vai `postgres` của stack cục bộ xoá được `auth.users`** (kiểm 06/10 bằng `begin; delete … where id = '00000000-…'; rollback;` — 0 dòng, không bị từ chối vì quyền).
 - **Lý do phải có stack cục bộ:** Claude Code không tạo/đăng nhập tài khoản trên hosted Auth (ranh giới an toàn của chính nó). Mọi kiểm thử cần phiên thật đều chạy trên `127.0.0.1`.
 - **Cục bộ chạy HTTP/1.1 (giới hạn 6 kết nối mỗi origin), hosted chạy HTTP/2** (xác nhận: Edge nhận `h2` ở 36/36 response của preview; `curl` trên máy đó không hỗ trợ h2 nên báo nhầm HTTP/1.1). Khác biệt này tạo ra một hiện tượng chỉ có ở local — xem mục 7.1.
 - **Giữ Supabase không bị tạm dừng:** free tier tạm dừng project sau 7 ngày ít hoạt động; đã có workflow GitHub Actions ping hằng ngày.
@@ -157,6 +165,7 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 - 40 cuốn sách thật, chọn bằng cách đối chiếu bảng bán chạy của Fahasa, Nhã Nam, Alpha Books, IPM.
 - **Nguyên tắc trung thực:** tên sách và tác giả là thật; ISBN, số trang, NXB, người dịch để trống vì không xác minh được; mô tả tự viết, không chép của nhà xuất bản. Footer ghi rõ "Dữ liệu sách chỉ nhằm minh họa cho dự án portfolio."
 - 16/40 cuốn có giảm giá, 4 cuốn hết hàng để demo đủ trạng thái UI.
+- **Tồn kho của 40 cuốn do một vector cố định trong `docs/specs/dot-seed-du-lieu-demo.md` (FR-S.2) làm chủ, không phải do giá trị đang nằm trong database.** Vector lấy nguyên từ `supabase/seed.sql`: tổng 835, đúng 4 cuốn ở mức 0 (`bach-da-hanh`, `ban-co-the-dam-phan-bat-cu-dieu-gi`, `mindset-tam-ly-hoc-thanh-cong`, `tham-tu-lung-danh-conan-tap-1`), cuốn thấp nhất còn hàng là 6. Script seed đặt tồn kho bằng vector lúc chạy và đặt lại đúng vector lúc gỡ. Hệ quả đã chấp nhận: lần chạy đầu tiên trên hosted **ghi đè** tồn kho hiện có (đã bị 2 đơn thật trừ đi) và không có đường quay lại con số đó.
 - **Repo là PUBLIC.** Không bao giờ commit email cá nhân, API key hay mật khẩu — kể cả trong mockup, ảnh chụp, chú thích và tài liệu. Dữ liệu mẫu dùng `ban.doc@example.com` (domain dành riêng theo RFC 2606).
 - **Bí mật chỉ nằm ở biến môi trường.** API key, webhook URL, token đặt ở Vercel environment variables và `.env.local`; **không dán vào chat, không đưa vào prompt, không vào repo, không vào migration.** Mục này trước đây chỉ nói về repo, nhưng đường rò thực tế là chat → prompt → file.
 - **Tài khoản thử trên hosted phải xoá sau mỗi đợt kiểm** (tiêu chí dọn dẹp). Quy trình: SELECT trước và in ra, xoá `events` của tài khoản đó trước (khoá ngoại NO ACTION), rồi xoá `auth.users` bằng id tường minh trong một transaction có chốt số dòng.
@@ -654,6 +663,7 @@ Spec `docs/specs/dot-seed-du-lieu-demo.md` v1.8 (7 FR, 10 tiêu chí). Một ch�
 - **Tiêu chí phải đặt sau khi chốt kiến trúc, không phải trước.**
 - **Tiêu chí cho đợt tính năng là assertion chức năng, không phải đo timing.** Giỏ hàng và checkout hỏng vì logic (merge sai, trừ kho sai, tổng tiền sai), không vì timing.
 - Với mỗi tiêu chí, trả lời trước một câu: *"lệnh nào cho ra con số này?"* Không trả lời được thì đó chưa phải tiêu chí.
+- **Tiêu chí về phạm vi thay đổi phải tính tới quy trình đóng đợt.** TC-S.10 của đợt seed cấm sửa mọi file có sẵn trừ `.env.local.example`, nhưng quy trình đóng đợt BẮT BUỘC sửa mục 7 của chính file quyết định — nên tiêu chí đó không đạt được ở bất kỳ đợt nào, kể cả một đợt hoàn hảo. Đã giữ nguyên kết quả TRƯỢT thay vì sửa tiêu chí sau khi đã thấy kết quả; bốn phép đo thực chất bên trong nó (grep khoá trong `scripts/`, grep `.next/static` so với mốc, 0 file trong đường dẫn cấm, 19 migration) đều đạt, hai lệnh grep có đối chứng file giả.
 
 **Về cách đọc số đo**
 
@@ -667,6 +677,7 @@ Spec `docs/specs/dot-seed-du-lieu-demo.md` v1.8 (7 FR, 10 tiêu chí). Một ch�
 - **Bằng chứng trái chiều mạnh hơn bằng chứng thuận chiều.** Nêu giả thuyết thì nêu kèm **phép đo để bác bỏ nó**.
 - **Đừng biến một quan sát đúng thành một khẳng định về cách dùng mà chưa đọc tài liệu.** "Request prefetch mang header X" là quan sát; "nên dùng header X để tách prefetch" là khẳng định về khả năng — và nó sai, vì Next xoá header đó trước khi gọi proxy.
 - **Đừng phát biểu cơ chế như sự thật rồi lấy nó làm cơ sở quyết định.** "Response GET mang `Set-Cookie` thì CDN không lưu" là một mệnh đề chưa đọc tài liệu. Quyết định chỉ an toàn vì phương án đã chọn không bao giờ tệ hơn phương án kia, dù mệnh đề đúng hay sai — và phép đo được giữ lại để kiểm, không để biện minh.
+- **Vá một lỗ có thể đào ra lỗ kế tiếp; khi bản vá thứ hai lại đẻ ra lỗ thứ ba thì vấn đề nằm ở gốc, không ở chỗ vá.** Luật "lùi `created_at` chỉ cho đơn vừa tạo trong lần chạy này" chữa được việc chạy lại khác ngày, nhưng đẻ ra lỗ "đơn của lần chạy dở không bao giờ được lùi". Sửa gốc là bỏ hẳn sự phụ thuộc vào ngày chạy: neo cửa sổ thời gian vào hai ngày hằng số, để `created_at` thành hàm thuần của số thứ tự và bước lùi thành phép gán tuyệt đối.
 
 **Về cách làm việc với Claude Code**
 
@@ -691,12 +702,14 @@ Spec `docs/specs/dot-seed-du-lieu-demo.md` v1.8 (7 FR, 10 tiêu chí). Một ch�
 - **Kiểm hạ tầng trước khi tối ưu mã.**
 - `requestAnimationFrame` trong trình duyệt tích hợp chạy ~2 Hz nên mọi phép đo theo frame đều vô dụng. Dùng trình duyệt thật (Edge headless qua CDP) với `MutationObserver` và `PerformanceObserver`.
 - Thiết lập trên dashboard mà chưa ai kiểm bằng lệnh thì coi như chưa biết. "Confirm email" bật sai suốt từ đầu và chỉ lộ ra khi chạy script kiểm.
+- **Thiết lập máy có thể biến mất giữa chừng, và phát hiện muộn thì cả kế hoạch đo phải viết lại.** Ngày 06/10 toàn bộ stack Supabase cục bộ đã không còn: không CLI, không image, không container, chỉ còn volume rỗng. Spec lúc đó đã có mười tiêu chí đều đo trên local. Một prompt kiểm môi trường mất 5 phút phát hiện ra điều này **trước** khi viết thêm một phiên bản spec nữa. Quy tắc: trước khi chốt tiêu chí phụ thuộc môi trường, kiểm môi trường đó còn sống không.
 
 **Về tài liệu**
 
 - **Tài liệu cũng lệch được mà không ai thấy.** Bản repo của chính file này lệch bản gốc 7 ngày (24/09 trong git, 29/09 trên đĩa, 01/10 ở bản gốc), ghi sai bảng màu và sai font, trong khi repo là public và đây là file nhà tuyển dụng đọc. `git status` có báo suốt thời gian đó. Hệ quả: đồng bộ file này là một bước có tên trong quy trình đóng đợt, không phải việc nhớ thì làm.
 - **Khi hợp nhất hai bản của một tài liệu, hãy ghép cơ học, đừng dựng lại từ báo cáo.** Bản hợp nhất sau đợt 3A được viết lại mục 7 từ báo cáo thay vì giữ nguyên bản trong git, và làm mất hơn hai chục số đo, cỡ mẫu và cảnh báo về selector. Phần nào đã có bản đúng thì cắt và dán phần đó, chỉ viết tay những phần thật sự mới.
 - **Dòng "Cập nhật lần cuối" chỉ chứa ngày**, không có chú thích mô tả lần sửa. Chú thích mô tả sẽ lệch ở lần sửa kế tiếp; lịch sử nằm ở git log.
+- **Spec sửa tám lần trong một ngày là dấu hiệu viết trước khi đọc, không phải dấu hiệu cầu toàn.** Spec đợt seed đi từ v1.0 tới v1.8 trong một ngày; chỉ một hai lần do mã thật buộc phải đổi, phần còn lại là tham chiếu mục SRS sai, tên biến môi trường sai, tiêu chí tự mâu thuẫn, và vá chồng lên vá. Mỗi lần sửa kéo theo một lượt Claude Code đọc lại, sửa lại, commit lại. Cách chặn: **đọc hết mã mà spec chạm vào TRƯỚC khi viết dòng đầu tiên**; nêu giới hạn gồm cả số lần được phép sửa; sau khi commit chỉ sửa khi Claude Code chứng minh mã không thỏa được, mọi thứ khác vào danh sách đợt sau.
 
 **Về thiết kế và giao diện**
 
@@ -730,6 +743,7 @@ Spec `docs/specs/dot-seed-du-lieu-demo.md` v1.8 (7 FR, 10 tiêu chí). Một ch�
 - **Tách database cho preview (đợt 1.6).** Preview và production dùng chung một database hosted (`xnqfswvtrgfokkhsrmkx`), nên mọi lần ghi khi đo ở preview nằm trong database mà production cũng đọc, với cache 60 giây; ghi chi tiết ở mục 7.10. Chưa làm.
 - **`BookForm` gắn bằng `onSubmit` phía client (đợt 1.6).** Form admin không có progressive enhancement: bấm Lưu trước khi trang hydrate xong thì form gửi kiểu GET tới chính URL, không lưu gì và đẩy giá trị các ô lên URL. Cần chọn giữa `<form action={serverAction}>` và vô hiệu nút Lưu tới khi hydrate xong; ghi chi tiết ở mục 7.10. Chưa làm.
 - **Lớp ảnh atmosphere** — chọn nguồn, số lượng, đặt ở những trang nào. Gom vào đợt 1.6 mở rộng.
+- **Repo có 19 file migration `.sql`, hosted báo 20.** Chênh 1 chưa giải thích được; mục 7 chỉ ghi dãy 17→18→19. Không chặn đợt nào vì mọi phép đo của đợt seed chạy trên local. Kiểm khi làm đợt 1.6 (tách database preview), bằng cách liệt kê migration hosted ở chế độ chỉ đọc.
 - Persona chính trong 18–30.
 - Logo chính thức.
 - System prompt cho chatbot.
