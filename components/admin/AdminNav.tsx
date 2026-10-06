@@ -1,20 +1,22 @@
 import Link from "next/link";
 
 /**
- * Dải điều hướng tối thiểu của khu quản trị (đợt 5A, spec FR-5A.2): chỉ một liên kết văn bản "Đơn hàng"
- * (`aria-current="page"` ở các trang đơn hàng — hiện chỉ có khu này). Không thanh bên, không bảng điều khiển.
- * Chỉ được render SAU `requireAdmin()` bên trong `<Suspense>`: vỏ tĩnh của trang không được chứa chữ nào của
- * giao diện quản trị (FR-5A.1).
+ * Dải điều hướng tối thiểu của khu quản trị (đợt 5A, spec FR-5A.2; đợt 5B thêm "Sách"): hai liên kết văn bản,
+ * "Đơn hàng" và "Sách", `aria-current="page"` ở mục đang xem (`current`). Không thanh bên, không bảng điều
+ * khiển. Chỉ được render SAU `requireAdmin()` bên trong `<Suspense>`: vỏ tĩnh của trang không được chứa chữ
+ * nào của giao diện quản trị (FR-5A.1).
  */
-export function AdminNav() {
+const linkClass =
+  "inline-flex min-h-11 min-w-11 items-center text-body-sm font-medium text-cham-700 hover:underline aria-[current=page]:underline aria-[current=page]:underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600";
+
+export function AdminNav({ current = "orders" }: { current?: "orders" | "books" }) {
   return (
-    <nav aria-label="Khu quản trị" className="mb-4">
-      <Link
-        href="/admin/don-hang"
-        aria-current="page"
-        className="inline-flex min-h-11 items-center text-body-sm font-medium text-cham-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
-      >
+    <nav aria-label="Khu quản trị" className="mb-4 flex gap-6">
+      <Link href="/admin/don-hang" aria-current={current === "orders" ? "page" : undefined} className={linkClass}>
         Đơn hàng
+      </Link>
+      <Link href="/admin/sach" aria-current={current === "books" ? "page" : undefined} className={linkClass}>
+        Sách
       </Link>
     </nav>
   );

@@ -1,6 +1,6 @@
 import { cache } from "react";
 import type { ParsedCatalogParams } from "@/lib/catalog";
-import { cacheLife } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 
 /*
@@ -9,6 +9,12 @@ import { createPublicClient } from "@/lib/supabase/public";
  *  - Có `use cache` + cacheLife("minutes") (làm mới sau 60 giây, như `revalidate = 60`
  *    trước đây): mọi hàm mà trang chủ, /tu-sach, /tu-sach/[slug], Header và
  *    Footer cần — nhờ vậy các route này prerender thành shell tĩnh.
+ *  - Đợt 5B (spec FR-5B.7): chín hàm trong số đó ĐỌC bảng `books` (getBestsellingBooks, getNewestBooks,
+ *    getFeaturedBookExtrasBySlug, getBookCollectionRefMap, getCollectionsWithPreview, getCategoryCounts,
+ *    getEditorialPick, getFeaturedCollection, getCollectionBySlug) nên mang thẻ `books` (lời gọi cacheTag
+ *    đặt ngay dưới cacheLife); mỗi Server Action ghi sách của khu admin làm hết hạn thẻ đó bằng updateTag để
+ *    chúng đổi ngay (app/actions/admin-books.ts). Bốn hàm còn lại chỉ đọc `categories` hoặc `collections`
+ *    nên KHÔNG gắn thẻ.
  *  - KHÔNG cache: searchBooks, getCategoryBySlug, getBookBySlug,
  *    getBookCollections, getRelatedBooks — phụ thuộc URL/từ khoá tuỳ ý hoặc cần
  *    dữ liệu mới (/sach, /sach/[slug]); các route đó luôn render theo request.
@@ -237,6 +243,7 @@ export async function searchBooks(params: ParsedCatalogParams): Promise<SearchBo
 export async function getBestsellingBooks(): Promise<SearchBooksResult> {
   "use cache";
   cacheLife("minutes");
+  cacheTag("books");
   return searchBooks({ sort: "bestseller", page: 1 });
 }
 
@@ -244,6 +251,7 @@ export async function getBestsellingBooks(): Promise<SearchBooksResult> {
 export async function getNewestBooks(limit = 8): Promise<BookSummary[]> {
   "use cache";
   cacheLife("minutes");
+  cacheTag("books");
   const supabase = createPublicClient();
   const { data } = await supabase
     .from("books")
@@ -281,6 +289,7 @@ export interface FeaturedBookExtra {
 export async function getFeaturedBookExtrasBySlug(slugs: string[]): Promise<Record<string, FeaturedBookExtra>> {
   "use cache";
   cacheLife("minutes");
+  cacheTag("books");
   if (slugs.length === 0) return {};
   const supabase = createPublicClient();
   const { data } = await supabase
@@ -338,6 +347,7 @@ export interface BookCollectionRef {
 export async function getBookCollectionRefMap(): Promise<Map<string, BookCollectionRef>> {
   "use cache";
   cacheLife("minutes");
+  cacheTag("books");
   const supabase = createPublicClient();
   const { data } = await supabase.from("collection_books").select("books(slug), collections(slug, title)");
 
@@ -387,6 +397,7 @@ export interface CollectionPreview extends CollectionSummary {
 export async function getCollectionsWithPreview(): Promise<CollectionPreview[]> {
   "use cache";
   cacheLife("minutes");
+  cacheTag("books");
   const supabase = createPublicClient();
   // E1: tủ nổi bật hiện 4 bìa (thẻ lớn hơn), tủ thường chỉ dùng 3 — lấy
   // dư 1 cho mọi tủ rồi cắt bớt lúc hiển thị, đơn giản hơn 2 nhánh truy vấn.
@@ -447,6 +458,7 @@ export interface CategoryWithCount {
 export async function getCategoryCounts(): Promise<CategoryWithCount[]> {
   "use cache";
   cacheLife("minutes");
+  cacheTag("books");
   const supabase = createPublicClient();
   const { data } = await supabase
     .from("categories")
@@ -483,6 +495,7 @@ export interface EditorialPick {
 export async function getEditorialPick(): Promise<EditorialPick | null> {
   "use cache";
   cacheLife("minutes");
+  cacheTag("books");
   const supabase = createPublicClient();
   const { data: candidateCollections } = await supabase
     .from("collections")
@@ -544,6 +557,7 @@ interface CollectionBookWithBookRow {
 export async function getFeaturedCollection(): Promise<FeaturedCollection | null> {
   "use cache";
   cacheLife("minutes");
+  cacheTag("books");
   const supabase = createPublicClient();
   const { data: collection } = await supabase
     .from("collections")
@@ -581,6 +595,7 @@ export interface CollectionDetail extends CollectionSummary {
 export async function getCollectionBySlug(slug: string): Promise<CollectionDetail | null> {
   "use cache";
   cacheLife("minutes");
+  cacheTag("books");
   const supabase = createPublicClient();
   const { data: collection } = await supabase
     .from("collections")

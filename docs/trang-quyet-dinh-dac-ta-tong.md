@@ -6,7 +6,7 @@
 >
 > **Hướng đồng bộ.** Bản gốc này giữ mục 1–6, 8, 9. **Mục 7 chỉ nằm ở repo**, do Claude Code ghi — bản gốc không giữ bản sao của nó. Khi dán bản gốc đè lên repo, phải nối lại mục 7 của repo bằng cách cắt–dán theo dòng, không viết lại. **`docs/SRS.md` chỉ nằm ở repo** — Project knowledge không giữ bản sao nào. Bản sao ở đó không có chủ sở hữu và đã lệch thật (v1.3 trong Project knowledge so với v1.5 trong repo, phát hiện 02/10). Cần đọc SRS thì gắn repo vào chat và đọc `docs/SRS.md`.
 >
-> **Cập nhật lần cuối:** 03/10/2026
+> **Cập nhật lần cuối:** 06/10/2026
 > **Nguồn chân lý:** repo `github.com/ducle20052205/book-store-website`. Các file `docs/SRS.md`, `docs/specs/*`, `CLAUDE.md` trong repo là bản gốc; file này là bản tóm tắt cấp quyết định.
 
 ## 1. Bối cảnh & mục tiêu (đã chốt)
@@ -158,7 +158,7 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 - **Tài khoản thử trên hosted phải xoá sau mỗi đợt kiểm** (tiêu chí dọn dẹp). Quy trình: SELECT trước và in ra, xoá `events` của tài khoản đó trước (khoá ngoại NO ACTION), rồi xoá `auth.users` bằng id tường minh trong một transaction có chốt số dòng.
 - **Ảnh mockup phải là bản xuất từ canvas ở 2×, không phải ảnh chụp màn hình** — ảnh chụp mang theo giao diện công cụ, không đạt chuẩn cho repo public. Lưu ở `docs/mockups/buoc-N/`, kèm README ghi quyết định thiết kế và phạm vi.
 
-## 7. Tiến độ (03/10/2026)
+## 7. Tiến độ (06/10/2026)
 
 | Hạng mục | Trạng thái |
 |---|---|
@@ -181,7 +181,9 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 | Đợt 5A chặng 2: danh sách đơn, chi tiết đơn, đổi trạng thái (khu quản trị) | Xong, đã merge (PR #18, `3fc5c52`); 1 lần đổi trạng thái thật trên production ngày 03/10/2026 |
 | Đợt N+1: chữa chuỗi truy vấn tuần tự ở trang chủ | Xong, đã merge (PR #19, `424e96f`); không áp gì lên hosted |
 | Rà soát accessibility (một lần đo, không phải đợt sửa) | Xong: 20 phát hiện, 9 đóng, 11 mở (3 Trung bình, 8 Thấp, 0 Cao); `docs/specs/dot-accessibility-ra-soat.md` bản 1.3 (`7cfe9ff`); SRS lên 1.9 (`2580589`) |
-| 5B CRUD sách · 5C scenario Make.com · Chatbot · Dashboard thống kê | Chưa bắt đầu (phần admin đơn hàng đã xong ở 5A) |
+| Đợt 5B chặng 1: ràng buộc dữ liệu cho `books` (ba CHECK, CHECK slug, hai `NOT NULL`) | Xong, đã merge (PR #21, `4b08d44`); migration `20261004090859` đã áp lên hosted ngày 04/10/2026 |
+| Đợt 5B chặng 2: quản lý sách (`/admin/sach*`, form thêm/sửa, xoá có chặn) và làm mới cache bằng `updateTag` | PR #22 (commit mã `b491dee`); 108 phép kiểm cục bộ (không tính TC-15) và 15/15 lượt trên Vercel preview, xem 7.10; cache chưa kiểm trên production |
+| 5C scenario Make.com · Chatbot · Dashboard thống kê | Chưa bắt đầu (admin đơn hàng xong ở 5A, admin sách ở 5B) |
 | README cho nhà tuyển dụng · Logo | Chưa bắt đầu |
 
 **Quy trình làm việc đã định hình:** mockup (Claude Design) → spec trong `docs/specs/` kèm tiêu chí nghiệm thu đo được → Claude Code làm theo từng đợt, mỗi hạng mục một commit và một lần đo → báo cáo kèm số đo → kiểm tay trên preview Vercel (những gì Claude Code không làm được) → PR → merge. Mỗi đợt một nhánh riêng.
@@ -543,6 +545,57 @@ Một lần đo trên mã đã merge; không có thay đổi mã nào. Tài li�
 - **"Bên cạnh" được thao tác hoá** là tổ tiên gần nhất có từ 20 ký tự chữ thật, ngoài bìa và ngoài cây `aria-hidden`; ngưỡng 20 chưa được thử đổi.
 - **Tương phản của chữ trên bìa đo theo màu nền bìa**; lớp vân giấy và gáy sách phủ lên bìa không được tính. Chữ trắng trên các màu bìa có mặt ở dữ liệu đo đạt ≥ 5,0:1 (thấp nhất `cover-4` 5,02:1); dữ liệu cục bộ không dùng hết 12 màu bìa.
 - **Phép đo hỏng đã bắt được và sửa, rồi đo lại:** vòng focus báo "yếu" ở thẻ `hover-lift` là dương tính giả do đọc `box-shadow` giữa lúc chuyển dần (tắt transition khi đo); 3 "vùng chạm 20×20" ở `/thanh-toan` là ô chọn trong `<label>` (đo theo nhãn: 0 dưới 44px); truy vấn `[role=dialog]` khớp hộp thoại mobile đang ẩn bằng CSS; nhãn "nơi" của bìa ở `/dang-nhap` và `/gio-hang` gán sai và `<details>` tóm tắt đơn gập ở 390px không có bìa nhìn thấy; bộ đo điều kiện mới lần chạy đầu chỉ 4/6 đối chứng khớp (bỏ qua `<img alt>` con của nút gốc bị đánh "bỏ qua"; coi mọi nhãn không rỗng là tên sách), sửa rồi chạy lại 32 lượt: 219/219 không đổi, 6/6 đối chứng. Một câu sai của chính tài liệu ở bản 1.2 ("tên và tác giả vẫn có trong tên truy cập của bìa") đã sửa ở 1.3: tên khả truy cập của bìa chỉ có tên sách.
+
+### 7.10 Đợt 5B — quản lý sách (04–06/10/2026)
+
+Đợt chia hai chặng. PR #20 (mockup) merge (squash) vào `main` commit `1bae2c9`; PR #21 (chặng 1, tầng dữ liệu) merge (squash) commit `4b08d44`, migration `20261004090859_books_constraints.sql` đã áp lên hosted ngày 04/10/2026; PR #22 (chặng 2, giao diện và cache): commit mã `b491dee` (16 file, +1.621/−17), commit SRS `a959c27` (`docs/SRS.md` lên v1.11; v1.10 ở `d2fb8ce`, spec ở `ff2bf73`), CI Vercel đạt; commit merge của PR #22 do bước merge ghi, không nằm trong mục này. Spec: `docs/specs/buoc-5b-admin-sach.md` (FR-5B.1 → 5B.7, 22 tiêu chí), mockup: `docs/mockups/buoc-5b/`.
+
+**Phạm vi chặng 1 (1 migration):** ba CHECK của chủ dự án trên `books` (`books_price_check`, `books_discount_price_check`, `books_stock_quantity_check`), cộng `books_slug_format_check` và `NOT NULL` cho `stock_quantity` và `category_id`. Chặn xoá sách đã đặt dùng khoá ngoại `order_items_book_id_fkey` có sẵn (`NO ACTION`), không thêm trigger.
+
+**Phạm vi chặng 2:** `/admin/sach` (20 dòng mỗi trang, tìm không dấu bằng RPC `search_books`, lọc danh mục, bộ lọc nằm trên URL), `/admin/sach/moi` và `/admin/sach/[slug]` dùng chung một `BookForm` (15 trường), vùng xoá có chặn khi sách đã nằm trong đơn kèm nút "Đặt tồn kho về 0". Bốn Server Action `createBook`, `updateBook`, `deleteBook`, `setBookOutOfStock` (`checkAdmin()` trước hết, client của phiên admin, không dùng khoá secret). Luật dùng chung `lib/admin/bookRules.ts` cho client và Server Action; lỗi database dịch theo ô. Cache: `cacheTag("books")` ở chín hàm đọc `books` của `lib/queries.ts`, `updateTag("books")` sau khi database xác nhận ghi. File mới: `app/actions/admin-books.ts`, `app/admin/sach/{page,moi/page,[slug]/page}.tsx`, `components/admin/{BookForm,BookDeleteSection,ResultStrip}.tsx`, `lib/admin/{bookRules,books,slug}.ts`. File sửa: `lib/queries.ts`, `components/admin/AdminNav.tsx`, `components/AuthFields.tsx`, `components/InlineConfirm.tsx`, `components/Breadcrumb.tsx`, `lib/ui/classes.ts`. `proxy.ts`, `package.json`, `package-lock.json`, RLS: không đổi.
+
+**Điều kiện đo:** stack Supabase cục bộ; bản production (`next build` rồi `next start`); Edge headless qua CDP; bản dựng thử đối chứng ở thư mục sao chép ngoài repo; bộ đo không nằm trong repo.
+
+| Phép đo | Số mẫu | Kết quả |
+|---|---|---|
+| **TC-4/5/8 làm mới cache, bản thật** (đo trong cửa sổ TTL: mốc SQL chưa hiện ở `/` trước khi ghi, trình duyệt mới không cookie đọc ngay và đọc lại ở ~8,3 s) | 45 lượt: thêm 10; đổi tên, giá, giá giảm, danh mục, tồn kho 0 (form), slug mỗi loại 5; nút "Đặt tồn kho về 0" 5 | **45/45** dữ liệu mới ở `/` và `/tu-sach/<tủ>`, đọc lần 1 muộn nhất 0,8 s sau lúc lưu; 0 lượt bị loại |
+| **TC-4/5/8 đối chứng: bản gỡ mọi `updateTag`** | 30 lượt: thêm 10; đổi tên 5; đổi giá 5; đổi slug 5; nút về 0 5 | **30/30 dữ liệu CŨ ở cả hai lần đọc** (số đếm danh mục không đổi, chip "Trong tủ sách" biến mất khi đổi slug), `/sach?q=` và `/sach/<slug>` có sách mới (đọc theo request); 0 lượt bị loại |
+| **Vercel preview của PR #22** (hosted Supabase, function `hnd1`, edge `hkg1`, HTTP/2) | 15 lượt: thêm 5, sửa tên 5, nút "Đặt tồn kho về 0" 5; mỗi lượt đọc `/` bằng trình duyệt mới sau lúc lưu và lại ở 30 s | **15/15** dữ liệu mới. Đọc lần 1: phản hồi 0,38–0,88 s sau lúc lưu (tải xong ≤ 1,49 s). `x-vercel-cache`: tiền kiểm `HIT` (`age` 19–31 s, một lượt 5 s) và mốc chưa hiện → đọc lần 1 `REVALIDATED` (`age` 0) → đọc lần 2 `HIT` (`age` 28–29 s) |
+| TC-1 chặn truy cập | (a) 3 route × 3; (b) 9; (c) 4 action × 2 vai × 3 = 24; (d) 9 | 7/7 kèm đối chứng admin |
+| TC-2, TC-21 danh sách và biên URL | 45 sách (2 cuốn cùng giây); 22 danh mục; 6 ca tìm; 4 ca trình duyệt (đổi bộ lọc, Back) | 17/17 |
+| TC-3, TC-10, TC-22 thêm sách, bìa, tập trường | 3 cuốn; 15 trường = 15 cột | 13/13; sửa không chạm `cover_image_url` 3/3 |
+| TC-6, TC-11, TC-12 slug | 3+3 ca trùng; 40/40 slug sinh lại đúng; 3 lượt mỗi hành vi | 13/13 |
+| TC-13, TC-14 lỗi cạnh ô, hai lớp trên | 15 trường × 3; 8 luật × 3 × hai đường | 7/7. Bản bỏ kiểm ở client: 21/21 vẫn bị Server Action chặn; bản bỏ cả hai: 12 + 4 lượt bị CHECK của database chặn |
+| TC-7, TC-8 xoá và nút về 0 qua giao diện | 3 + 3 + 3; 5 + 5 | 6/6 |
+| TC-15 hồi quy HTML | 12 trang × 3 bản | 10 trang giống hệt baseline (sau chuẩn hoá id build và tên chunk); 2 trang admin chỉ khác ở `AdminNav` (so phần DOM bỏ `<script>`); sửa một ký tự bị bắt ở 12/12 |
+| TC-16 kiểm tĩnh phạm vi cache | 11 phép | 11/11: đúng 9 `cacheTag("books")`, 4 `updateTag("books")`, bảng route vẫn `◐` |
+| TC-17 lớp 2 khi `proxy.ts` bị bỏ qua | 18 HTML + 18 trình duyệt + 24 Server Action | 6/6 kèm đối chứng admin |
+| TC-20 ở 390×844 | 10 trạng thái; luồng thêm 3 × 16 điểm dừng; luồng xoá 3 | 7/7 |
+
+**Hosted trong lúc đo trên preview (06/10/2026):** tạo 5 sách tiền tố `Thử5B-VC` bằng giao diện admin, 1 sách mốc mỗi lượt bằng PostgREST (xoá ngay sau lượt), 5 đơn `cancelled` mã `NA-9798-0001…0005` gắn vào tài khoản admin của chủ dự án (nút "Đặt tồn kho về 0" chỉ hiện ở cuốn đã có đơn); chủ dự án tự đăng nhập admin vào cửa sổ Edge do Claude Code mở. Dọn: 5 `order_items`, 5 đơn, 5 sách. Sau dọn: 40 sách, 2 đơn, 6 `order_items`, 17 `collection_books`; `xmin` lớn nhất của 40 dòng gốc 1670, nhỏ hơn `xmin` nhỏ nhất của dòng thử (1738), nên không dòng gốc nào bị `UPDATE`.
+
+**Năm chỗ spec lệch thực tế, đã chốt:**
+1. **Breadcrumb:** mockup có "Sách / Thêm sách", spec không nhắc, nhưng TC-20 đòi mọi liên kết ≥ 44px. Giữ breadcrumb, nới vùng chạm bằng prop tuỳ chọn `linkClassName`.
+2. **FR-5B.4 và TC-11:** FR nói tên chỉ có dấu câu thì báo lỗi cạnh ô tên; TC-11 nói ô slug để trống và có lỗi. Làm cả hai (`aria-invalid` ở cả hai ô).
+3. **TC-1 (c):** khi `proxy.ts` bật, request tới Server Action của khách và người chưa đăng nhập bị chuyển hướng 307 trước khi tới action, nên (c) đo 307 và `books` không đổi (24/24). Kết quả `forbidden` và `signed_out` của lớp 2, tức đường gọi thẳng Server Action, do TC-17 phủ trên bản không có `proxy.ts`.
+4. **`refresh()`:** spec mục 9 ghi `refresh()` ở mọi action. Thêm, sửa, xoá kết thúc bằng `redirect()` đặt sau `updateTag`; chỉ `setBookOutOfStock` dùng `refresh()`.
+5. **Ba thành phần dùng chung** mở rộng ngoài hai mục spec nêu (`AdminNav`, `lib/queries.ts`): `InlineConfirm` (prop `confirmClassName`), `Breadcrumb` (prop `linkClassName`), `lib/ui/classes.ts` (hai hằng). Đều là prop tuỳ chọn, HTML mặc định không đổi (TC-15). Thêm: chuỗi kỹ thuật trong ảnh mockup (`updateTag`, `cover_image_url`, `NFR-3.3`, `order_items_book_id_fkey`) không có trong giao diện.
+
+**Bốn lỗi mã tìm ra khi đo, đã sửa trước khi mở PR:**
+1. **Đặt tồn kho về 0 rồi Lưu sẽ ghi đè tồn kho về số cũ.** Sau khi bấm "Đặt tồn kho về 0", ô "Tồn kho" của form trên cùng trang vẫn hiện số cũ; một lần "Lưu thay đổi" sau đó ghi lại số cũ vào database. Đo trước khi sửa: DB = 0, ô = 6. Sửa: ô tồn kho theo giá trị của trang được làm mới (các ô khác giữ nguyên bản đang sửa dở) và `setBookOutOfStock` gọi `refresh()`; đo sau sửa: ô = 0 ở 5/5 lượt.
+2. Escape và "Không" ở vùng xoá không trả focus về nút mở (nút bị gỡ khỏi cây khi mở bước xác nhận). Sửa: giữ nút, thêm `aria-expanded` và `aria-controls`; đo lại 3/3 lượt trả focus.
+3. 24 cặp (trạng thái, phần tử) dưới 44px ở 390px: liên kết "Sách" của `AdminNav` rộng 35,2px, breadcrumb cao 20px, nút trong tóm tắt lỗi cao 21px, liên kết trong dải kết quả cao 18–39px. Sửa: nới vùng chạm; đo lại 0 phần tử dưới 44×44px ở 10 trạng thái.
+4. Viền focus của ô "Địa chỉ trang" nằm ở khung bọc chứ không ở ô nhập (TC-20 đo `box-shadow` trên phần tử đang focus). Sửa: tiền tố "/sach/" chồng lên phần đệm trái của chính ô nhập; đo lại 48/48 điểm dừng có viền.
+
+**Chỗ phép đo yếu hơn tiêu chí gốc, hoặc dựa trên giả định:**
+- **TC-21 "đúng 20 / 21 sách"** đo bằng bộ lọc `q` có tiền tố riêng (20 và 21 kết quả khớp), vì không thể xoá 40 cuốn gốc để còn đúng 20.
+- **TC-15 "giống hệt từng byte"** đo sau khi chuẩn hoá id build và tên chunk (tên chunk theo nội dung, đổi vì thêm lớp CSS); hai trang admin so phần DOM bỏ `<script>` vì payload RSC đánh số lại khi thêm một liên kết.
+- **TC-20** đo trong vùng nội dung chính, không tính Header và Footer cửa hàng.
+- **TC-1 (c)** đo 307 thay cho `forbidden`/`signed_out` (xem trên).
+- **Phép đo hỏng của chính bộ đo, đã sửa và chạy lại:** dấu "không tìm thấy" của TC-21 nằm sẵn trong payload RSC của mọi trang (đọc DOM thay vì thân HTML); nhật ký truy vấn của TC-14 ban đầu mù vì `ALTER SYSTEM` bị từ chối với vai `postgres` (đối chứng bắt được, chuyển sang `supabase_admin`); bản vá đối chứng "bỏ cả hai lớp kiểm" ban đầu có biểu thức xoá mọi ký tự nên mọi ca dội về `books_price_check`; ngưỡng "tuổi entry < 55 s" ở bộ đo cache loại nhầm mọi lượt của lần chạy thử đầu bản đối chứng; lần đo đầu trên preview hỏng vì bấm lưu trước khi form hydrate trong cửa sổ Edge nền (form gửi kiểu GET; 1 sách mốc dư, xoá ngay).
+- **Lệch có sẵn, ngoài phạm vi đợt, không sửa ở đây:** mục 4 của file này (dòng "Thứ tự") còn xếp 5B là việc sắp làm; FR-6.4 và FR-7.4 của SRS còn câu "trạng thái đích, chưa cài" của đợt 5A dù migration `20261003063859` đã áp.
+
+**Điều kiện còn lại:** cache (`updateTag`) đã kiểm trên bản `next start` cục bộ (45/45; đối chứng 30/30) và trên Vercel preview của PR #22 (15/15); **chưa kiểm trên production**.
 
 ## 8. Bài học đã rút ra (giữ lại để không lặp)
 
