@@ -1,0 +1,92 @@
+{
+  "window": {
+    "start": "2026-04-01",
+    "end": "2026-10-05",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "refuseIfNowBefore": "2026-10-06T00:00:00+07:00",
+    "warnIfNowLaterThanEndByMonths": 12
+  },
+  "timeOfDay": {
+    "formula": "hour = hour.base + (n mod hour.modulus); minute = (n * minute.multiplier) mod minute.modulus; second = 0",
+    "hour": { "base": 8, "modulus": 11 },
+    "minute": { "multiplier": 17, "modulus": 60 },
+    "second": 0
+  },
+  "accounts": {
+    "count": 25,
+    "emailPattern": "nguoi-dung-NN@example.com",
+    "distinctProvincesMin": 8
+  },
+  "orders": {
+    "total": 42,
+    "perAccount": { "min": 1, "max": 4 },
+    "linesPerOrder": { "min": 1, "max": 3 },
+    "quantityPerLine": { "min": 1, "max": 2 },
+    "byMonth": [
+      { "month": "2026-04", "orders": 6, "dayFrom": 1, "dayTo": 30 },
+      { "month": "2026-05", "orders": 6, "dayFrom": 1, "dayTo": 31 },
+      { "month": "2026-06", "orders": 6, "dayFrom": 1, "dayTo": 30 },
+      { "month": "2026-07", "orders": 6, "dayFrom": 1, "dayTo": 31 },
+      { "month": "2026-08", "orders": 6, "dayFrom": 1, "dayTo": 31 },
+      { "month": "2026-09", "orders": 6, "dayFrom": 1, "dayTo": 30 },
+      { "month": "2026-10", "orders": 6, "dayFrom": 1, "dayTo": 5 }
+    ],
+    "byStatus": {
+      "pending": 6,
+      "processing": 5,
+      "shipped": 5,
+      "completed": 18,
+      "cancelled": 8
+    },
+    "updatesPerOrderByStatus": {
+      "pending": 0,
+      "processing": 1,
+      "shipped": 2,
+      "completed": 3,
+      "cancelled": 1
+    },
+    "paymentMethod": { "cod": 28, "bank_transfer": 14 },
+    "confirmationEmail": {
+      "withValue": 38,
+      "nullOrderNumbers": [10, 20, 30, 40],
+      "offsetSeconds": { "base": 2, "multiplier": 7, "modulus": 39 },
+      "formula": "created_at_final + (offsetSeconds.base + (n * offsetSeconds.multiplier) mod offsetSeconds.modulus) seconds"
+    }
+  },
+  "sales": {
+    "sellableBooks": 36,
+    "capPerBook": { "maxUnits": 5, "reserveUnits": 1, "formula": "min(maxUnits, V - reserveUnits)" },
+    "neverSellStockZero": true,
+    "coverage": {
+      "distinctBooksMin": 24,
+      "distinctBooksInNonCancelledOrdersMin": 20
+    }
+  },
+  "events": {
+    "total": 1897,
+    "byType": {
+      "page_view": 1200,
+      "search": 360,
+      "add_to_cart": 150,
+      "checkout_started": 60,
+      "order_placed": 42,
+      "sign_up": 25,
+      "login": 60
+    },
+    "anonymousShareMin": {
+      "page_view": 0.75,
+      "search": 0.75,
+      "add_to_cart": 0.5
+    },
+    "sessionIdsDistinctMin": 300,
+    "metadataMaxBytes": 2048,
+    "seedRef": {
+      "format": "seed:<event_type>:<number>",
+      "order_placed": { "from": 1, "to": 42 },
+      "checkout_started_matched": { "from": 1, "to": 42 },
+      "checkout_started_abandoned": { "from": 43, "to": 60 }
+    },
+    "abandonedCart": { "totalQuantityMin": 1, "totalQuantityMax": 3 },
+    "search": { "distinctKeywords": 20, "zeroResultKeywordsMin": 2 }
+  }
+}
