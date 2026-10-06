@@ -1,9 +1,9 @@
 # Đợt S — Seed dữ liệu demo
 
-Phiên bản 1.2 · 06/10/2026 · Dựng 25 tài khoản demo, 42 đơn trải 7 tháng lịch (6 tháng đầy đủ + tháng hiện tại) đủ 5 trạng thái, và chuỗi sự kiện hình phễu, bằng MỘT script chạy lại được và gỡ được.
-Nhánh: chưa tạo. Một chặng, một PR. Đợt này **không có migration, không đổi schema, không đổi mã ứng dụng** — chỉ thêm `scripts/` và `docs/runbooks/`.
+Phiên bản 1.3 · 06/10/2026 · Dựng 25 tài khoản demo, 42 đơn trải 7 tháng lịch (6 tháng đầy đủ + tháng hiện tại) đủ 5 trạng thái, và chuỗi sự kiện hình phễu, bằng MỘT script chạy lại được và gỡ được.
+Nhánh: chưa tạo. Một chặng, một PR. Đợt này **không có migration, không đổi schema, không đổi mã ứng dụng** — chỉ thêm `scripts/` và `docs/runbooks/`, và thêm hai tên biến rỗng vào `.env.local.example` (NFR-S.2).
 
-**Đổi so với 1.1** (06/10, do Claude Code đối chiếu spec với mã và tài liệu hiện tại): sửa các tham chiếu mục SRS và số bảng, bỏ việc đợt này ghi vào `docs/SRS.md`, chính xác hoá ghi chú trigger `protect_profile_role()`, đổi cửa sổ thời gian của đơn từ "180 ngày lùi" sang 7 tháng lịch (FR-S.4, TC-S.7), đổi lệnh `grep` của TC-S.10 từ tên biến sang giá trị khoá và đếm migration là 19 file `.sql`, bỏ con số mã đơn dự đoán ở 7.1, và chốt hình dạng `metadata` của sự kiện theo mã (FR-S.5, TC-S.8). **Đổi 1.0 → 1.1** (giữ lại để không mất lịch sử): tồn kho do **một vector cố định trong spec** làm chủ (mục 3, FR-S.2) thay vì "đo rồi lập hạn mức"; bước gỡ **đặt lại vector**, bỏ hẳn logic cộng trả tay; bất biến `xmin` bị bỏ, thay bằng băm theo cột; thêm mục 7.4 về cache.
+**Đổi so với 1.2** (06/10, do Claude Code đối chiếu spec với mã và tài liệu hiện tại): thêm bước 0 và bước quét giỏ để chạy lại không sót `cart_items` (FR-S.3, FR-S.6), chốt 18 dòng `checkout_started` bỏ dở và thứ tự tính `confirmation_email_sent_at`, thêm luật phủ ít nhất 24 cuốn kèm mối liên hệ với TC-S.5, tách gỡ thành pha A và pha B (FR-S.7, TC-S.3), bỏ cụm "khoá thứ tám" và ghi số khoá từng loại, đổi tên biến môi trường theo `.env.local.example` (NFR-S.2, mục 6, TC-S.10), bỏ câu trùng ở "Đánh số", và ghi `search_books` không trả dòng nào khi 0 kết quả. **Đổi 1.1 → 1.2** (giữ lại): sửa tham chiếu SRS và số bảng, đổi cửa sổ thời gian sang 7 tháng lịch, đổi lệnh `grep` của TC-S.10, chốt hình dạng `metadata` theo mã. **Đổi 1.0 → 1.1** (giữ lại để không mất lịch sử): tồn kho do **một vector cố định trong spec** làm chủ (mục 3, FR-S.2) thay vì "đo rồi lập hạn mức"; bước gỡ **đặt lại vector**, bỏ hẳn logic cộng trả tay; bất biến `xmin` bị bỏ, thay bằng băm theo cột; thêm mục 7.4 về cache.
 
 Tài liệu tham chiếu, KHÔNG chép lại nội dung vào đây:
 - `docs/SRS.md` mục 5.3 (FR-3.x giỏ hàng), 5.4 (FR-4.x checkout), 5.5 (FR-5.x tài khoản), 5.6 (FR-6.x lịch sử đơn hàng), 5.8 (FR-8.x ghi log sự kiện), 5.10 (RLS).
@@ -13,7 +13,7 @@ Tài liệu tham chiếu, KHÔNG chép lại nội dung vào đây:
 - `supabase/migrations/20261003063859_orders_status_trigger.sql` (`orders_status_guard`, `cancel_order`).
 - `docs/runbooks/supabase-local.md` (dựng stack cục bộ).
 
-**Đánh số.** Tiền tố `FR-S.x`, tiêu chí `TC-S.x`. Đợt này không thêm FR nào vào SRS: nó tạo *dữ liệu* cho các FR đã có. Đợt này **không sửa `docs/SRS.md`**: seed tạo dữ liệu cho các FR đã có, không phải yêu cầu mới. Dòng ghi nhận quyền sở hữu tồn kho thuộc mục 6 file quyết định, do chủ dự án viết.
+**Đánh số.** Tiền tố `FR-S.x`, tiêu chí `TC-S.x`. Đợt này **không sửa `docs/SRS.md`**: seed tạo dữ liệu cho các FR đã có, không phải yêu cầu mới. Dòng ghi nhận quyền sở hữu tồn kho thuộc mục 6 file quyết định, do chủ dự án viết.
 
 ---
 
@@ -115,7 +115,7 @@ Local có đủ 40 cuốn sách qua `supabase/seed.sql`, nên điều kiện đo
 Đây là quyết định nền của cả đợt. Nó đóng ba vấn đề cùng lúc: `place_order` không bao giờ gặp `HET_HANG` giữa chừng; "đúng 4 cuốn tồn kho 0" trở thành thứ spec **quy định** thay vì thứ phải cầu may; và bước gỡ không cần cộng trả tay, không cần tắt trigger, không phụ thuộc file snapshot.
 
 - **Bước đầu tiên của `--apply`:** `UPDATE public.books SET stock_quantity = <V[slug]>` cho đúng 40 slug dưới đây, **trước** khi tạo tài khoản và đơn hàng.
-- **Bước cuối của `--teardown`:** đặt lại **đúng vector này**.
+- **Bước cuối của pha A của `--teardown`** (FR-S.7): đặt lại **đúng vector này**.
 - **Khoá theo `slug`, không theo `id`.** `books.id` là `gen_random_uuid()` nên khác nhau giữa local và hosted; `slug` là `unique not null` và ổn định.
 - **Vector V** — lấy nguyên văn từ `supabase/seed.sql`, không phát minh số mới. Tổng **835**, đúng **4** ô bằng 0, cuốn thấp nhất còn hàng là **6**.
 
@@ -152,15 +152,17 @@ Local có đủ 40 cuốn sách qua `supabase/seed.sql`, nên điều kiện đo
 ### FR-S.3 — 42 đơn hàng, sinh qua `place_order`
 
 - **Bắt buộc đi qua `place_order`, không `INSERT` thẳng vào `orders`.** Với mỗi đơn:
+  0. **Truy vấn `orders` theo `idempotency_key`** của đơn này (khoá tất định ở FR-S.6). Đã có dòng thì **bỏ qua toàn bộ bước 1–4 cho đơn đó**: không đăng nhập, không chèn `cart_items`, không gọi RPC.
   1. Đăng nhập chủ đơn qua `POST /auth/v1/token?grant_type=password` (anon key) → `access_token`.
   2. `INSERT` 1–3 dòng `cart_items` cho user đó.
   3. Tính `p_expected_total` bằng **đúng luật giá của `place_order`**: dùng `discount_price` khi nó có *và nhỏ hơn* `price`, ngược lại dùng `price`. Sai luật này nhận `GIA_DA_DOI`.
   4. Gọi RPC `place_order` **bằng JWT của user** — service_role có `auth.uid()` NULL nên sẽ nhận `KHONG_DANG_NHAP`.
-  - `place_order` tự xoá `cart_items` khi xong, nên sau đợt này **không tài khoản demo nào còn giỏ hàng** — khớp với "seed giỏ đang mở" nằm ngoài phạm vi.
-- Số lượng mỗi dòng: 1–2. Danh sách sách mỗi đơn chọn tất định từ 36 cuốn bán được, tôn trọng trần `min(5, V−1)` của FR-S.2.
+  - `place_order` tự xoá `cart_items` khi **tạo đơn mới** (nhánh `created = false` thì không, xem FR-S.6), nên sau đợt này **không tài khoản demo nào còn giỏ hàng** — khớp với "seed giỏ đang mở" nằm ngoài phạm vi.
+- **Quét giỏ sau vòng sinh đơn** (lưới an toàn, không thay bước 0): `DELETE FROM public.cart_items WHERE user_id IN (<25 id demo>)`, rồi khẳng định số dòng `cart_items` còn lại của 25 tài khoản đó = **0**.
+- Số lượng mỗi dòng: 1–2. Danh sách sách mỗi đơn chọn tất định từ 36 cuốn bán được, tôn trọng trần `min(5, V−1)` của FR-S.2. **Luật phủ:** (a) 42 đơn phải chạm **ít nhất 24 cuốn khác nhau** trong 36 cuốn bán được; (b) trong đó **ít nhất 20 cuốn** phải có mặt ở các đơn không `cancelled` (8 đơn hủy cộng trả hết nên không làm lệch kho).
 - **Phân bố:** 42 đơn trên 25 tài khoản, tối thiểu 1, tối đa 4 đơn mỗi tài khoản.
 - **`payment_method`:** 28 `cod`, 14 `bank_transfer`.
-- **`confirmation_email_sent_at`:** đặt cho 38/42 đơn (`created_at` + 2–40 giây); 4 đơn để `NULL` để demo nhánh "trang xác nhận nói thật". Ghi bằng `UPDATE` trực tiếp — không gọi `mark_confirmation_sent` (hàm đó cũng cần `auth.uid()`).
+- **`confirmation_email_sent_at`:** đặt cho 38/42 đơn (`created_at` + 2–40 giây, tính từ giá trị `created_at` CUỐI CÙNG); 4 đơn để `NULL` để demo nhánh "trang xác nhận nói thật". Ghi bằng `UPDATE` trực tiếp — không gọi `mark_confirmation_sent` (hàm đó cũng cần `auth.uid()`). Đặt **SAU** khi đã lùi `created_at` (FR-S.4), không tính từ giờ `place_order` chạy.
 
 ### FR-S.4 — Lịch sử trạng thái và lùi `created_at`
 
@@ -206,43 +208,45 @@ Local có đủ 40 cuốn sách qua `supabase/seed.sql`, nên điều kiện đo
 
 **Hình dạng `metadata`.** Mỗi dòng sự kiện seed phải mang `metadata` ĐÚNG hình dạng mà ứng dụng đang ghi cho loại đó. Nguồn hình dạng là các chỗ gọi `track()` và `trackServer()` trong mã (`lib/analytics.ts`, `lib/analytics.server.ts` và mọi nơi gọi chúng), **không phải** câu chữ FR-8.4 của SRS. Đọc từ mã ngày 06/10/2026:
 
-| `event_type` | Khoá `metadata` theo mã | Nơi ghi |
-|---|---|---|
-| `page_view` | `page` (luôn là `"book_detail"`), `book_id`, `slug` | `app/sach/[slug]/page.tsx` |
-| `search` | `q`, `results_count`, `category` (slug hoặc `null`), `sort` (`newest`, `price_asc`, `price_desc`, `bestseller`) | `app/sach/page.tsx` |
-| `add_to_cart` | `book_id`, `quantity` | `components/PurchasePanel.tsx` |
-| `checkout_started` | `items_count`, `total_amount` | `components/checkout/CheckoutView.tsx` |
-| `order_placed` | `order_code`, `items_count`, `total_amount`, `payment_method` | `app/actions/checkout.ts` |
-| `sign_up`, `login` | `method` (luôn là `"password"`) | `app/actions/auth.ts` |
+| `event_type` | Số khoá (chưa tính `seed_ref`) | Khoá `metadata` theo mã | Nơi ghi |
+|---|---|---|---|
+| `page_view` | 3 | `page` (luôn là `"book_detail"`), `book_id`, `slug` | `app/sach/[slug]/page.tsx` |
+| `search` | 4 | `q`, `results_count`, `category` (slug hoặc `null`), `sort` (`newest`, `price_asc`, `price_desc`, `bestseller`) | `app/sach/page.tsx` |
+| `add_to_cart` | 2 | `book_id`, `quantity` | `components/PurchasePanel.tsx` |
+| `checkout_started` | 2 | `items_count`, `total_amount` | `components/checkout/CheckoutView.tsx` |
+| `order_placed` | 4 | `order_code`, `items_count`, `total_amount`, `payment_method` | `app/actions/checkout.ts` |
+| `sign_up`, `login` | 1 mỗi loại | `method` (luôn là `"password"`) | `app/actions/auth.ts` |
 
 `items_count` ở `checkout_started` và `order_placed` là **tổng `quantity`** của các dòng trong giỏ hoặc đơn, không phải số dòng. Hai chỗ mã khác chữ của SRS FR-8.4: `page_view` trong mã có thêm khoá `page`; `add_to_cart` không có khoá nào được SRS nêu. Script theo mã.
 
 Ba ràng buộc về giá trị:
 - **`page_view`:** `book_id` và `slug` phải trỏ tới một cuốn CÓ THẬT trong 40 cuốn. Tra `book_id` theo `slug` lúc chạy, không chép UUID (`id` khác nhau giữa local và hosted, như FR-S.2).
-- **`search`:** `results_count` là số THẬT. Chọn khoảng 20 từ khoá khác nhau, gọi RPC `search_books` một lần cho mỗi từ khoá, lấy `total_count`, rồi dùng lại cho 360 dòng; RPC không trả dòng nào thì `results_count` = 0, đúng như `searchBooks` của ứng dụng. Không bịa số. Có ít nhất 2 từ khoá cho ra 0 kết quả. `category` và `sort` ghi đúng giá trị đã truyền vào lần gọi RPC đó.
-- **`order_placed` và `checkout_started`:** `order_placed` (42 dòng) và 42 trong 60 dòng `checkout_started` ứng với một đơn thật, nên `items_count` và `total_amount` bằng của đơn đó. 18 dòng `checkout_started` còn lại không có đơn (phiên bỏ dở): `items_count` ≥ 1 và `total_amount` tính từ giá thật của các cuốn đó, không bịa.
+- **`search`:** `results_count` là số THẬT. Chọn khoảng 20 từ khoá khác nhau, gọi RPC `search_books` một lần cho mỗi từ khoá, lấy `total_count`, rồi dùng lại cho 360 dòng. `search_books` KHÔNG trả dòng nào khi 0 kết quả (`total_count` là `count(*) over ()` nên vắng mặt cùng các dòng), nên script đọc thành 0 — cùng cách `lib/queries.ts` làm: `rows[0]?.total_count ?? 0`. Không coi "không có dòng" là lỗi. Không bịa số. Có ít nhất 2 từ khoá cho ra 0 kết quả. `category` và `sort` ghi đúng giá trị đã truyền vào lần gọi RPC đó.
+- **`order_placed` và `checkout_started`:** `order_placed` (42 dòng) khớp đơn thật. **42/60** dòng `checkout_started` khớp một đơn thật, nên `items_count` và `total_amount` bằng của đơn đó. **18/60** dòng còn lại là phiên bỏ giữa chừng — chỗ RƠI của phễu, cố ý giữ: `items_count` và `total_amount` tính THẬT từ một giỏ sách có thật theo đúng luật giá của `place_order` (`discount_price` khi nó có và nhỏ hơn `price`), chỉ là không có đơn theo sau. Không bịa số.
 
-Khoá `seed_ref` (FR-S.6) nằm NGOÀI hình dạng của ứng dụng, cố ý thêm để làm tay cầm cho bước gỡ. Nó hợp FR-8.5 (không dữ liệu cá nhân, dưới 2KB) và không phải cột schema mới.
+`seed_ref` (FR-S.6) là một khoá THÊM, nằm ngoài tập khoá ứng dụng ghi cho loại đó, cố ý thêm để làm tay cầm cho bước gỡ. Nó hợp FR-8.5 (không dữ liệu cá nhân, dưới 2KB) và không phải cột schema mới.
 
 ### FR-S.6 — Chạy lại được (idempotent)
 
-- **Khoá idempotency tất định.** Mỗi đơn có `idempotency_key = uuidv5(namespace_cố_định, 'na-books-seed:order:' || <số thứ tự>)`. `place_order` đã có sẵn: cùng khoá, cùng user → trả `created = false`, **không tạo đơn thứ hai, không trừ kho lần hai**.
-- **Tồn kho:** bước đặt vector là phép gán tuyệt đối, chạy bao nhiêu lần cũng ra một kết quả. Nhưng ở lần chạy thứ hai, đặt lại vector rồi **không** đặt đơn mới (vì `created = false`) sẽ làm tồn kho **cao hơn** lần chạy thứ nhất. Vì vậy: **bước đặt vector chỉ chạy khi chưa có tài khoản demo nào tồn tại**; lần chạy thứ hai bỏ qua bước này và báo rõ "đã có dữ liệu demo, bỏ qua bước đặt tồn kho". Đây là điều kiện bắt buộc để TC-S.1 đạt.
+- **Khoá idempotency tất định.** Mỗi đơn có `idempotency_key = uuidv5(namespace_cố_định, 'na-books-seed:order:' || <số thứ tự>)`. `place_order` đã có sẵn: cùng khoá, cùng user → trả `created = false`, **không tạo đơn thứ hai, không trừ kho lần hai**. Nhánh `created = false` này **KHÔNG xoá giỏ**: hàm thoát (`return query select v_existing_code, false`) trước khi đọc giỏ và trước lệnh `delete from public.cart_items` (`20261002160851_checkout_3b_schema.sql`). Đó là lý do bước 0 của FR-S.3 tồn tại.
+- **Tồn kho:** bước đặt vector là phép gán tuyệt đối, chạy bao nhiêu lần cũng ra một kết quả. Nhưng ở lần chạy thứ hai, đặt lại vector rồi **không** đặt đơn mới (bước 0 của FR-S.3 bỏ qua đơn đã có) sẽ làm tồn kho **cao hơn** lần chạy thứ nhất. Vì vậy: **bước đặt vector chỉ chạy khi chưa có tài khoản demo nào tồn tại**; lần chạy thứ hai bỏ qua bước này và báo rõ "đã có dữ liệu demo, bỏ qua bước đặt tồn kho". Đây là điều kiện bắt buộc để TC-S.1 đạt.
 - **Tài khoản:** email đã tồn tại → Admin API trả lỗi trùng; script **dùng lại tài khoản cũ**, không coi là lỗi.
 - **Sự kiện:** mỗi dòng có `metadata->>'seed_ref'` tất định (`'seed:' || <loại> || ':' || <số thứ tự>`). Trước khi chèn, xoá mọi dòng `events` có `seed_ref` trùng. Đây là *dữ liệu*, không phải cột schema mới.
 - **Trạng thái và lùi thời gian:** `UPDATE` trạng thái chỉ chạy khi trạng thái hiện tại khác đích và chuyển là hợp lệ; lùi `created_at` là phép gán tuyệt đối. Cả hai tự idempotent.
 
 ### FR-S.7 — Gỡ được (`--teardown`)
 
-Thứ tự bắt buộc, phần SQL trong **một transaction**:
+Hai pha, theo thứ tự. Xoá tài khoản là lời gọi HTTP, không gói được vào một transaction SQL, nên tách làm hai.
 
+**Pha A — MỘT transaction SQL, commit xong mới sang pha B:**
 1. `DELETE FROM public.orders WHERE user_id IN (<25 id demo>)` — `order_items` tự xoá theo (`ON DELETE CASCADE`).
 2. `DELETE FROM public.events` với `user_id IN (<25 id demo>)` **hoặc** `metadata->>'seed_ref' IS NOT NULL` (bắt cả dòng ẩn danh có `user_id IS NULL`).
-3. Xoá 25 tài khoản qua Admin API (`DELETE /auth/v1/admin/users/<id>`) — `profiles` và `cart_items` tự xoá theo (`ON DELETE CASCADE`).
-4. **Đặt lại `books.stock_quantity` bằng đúng vector V của FR-S.2.**
+3. **Đặt lại `books.stock_quantity` bằng đúng vector V của FR-S.2.**
 
-- Bước 4 **không** suy ra từ `order_items` và **không** phụ thuộc trigger. `orders_status_transition` là `BEFORE UPDATE`; `DELETE` không kích hoạt nó, nên xoá đơn không hoàn kho. Gán thẳng vector là đường duy nhất không có trạng thái trung gian để sai.
-- `orders.user_id` và `events.user_id` là `ON DELETE NO ACTION`, nên đảo bước 3 lên trước bước 1–2 sẽ **thất bại bằng lỗi khoá ngoại**. Đó là TC-S.3, không phải rủi ro.
+**Pha B — sau khi pha A đã commit:** xoá 25 tài khoản qua Admin API (`DELETE /auth/v1/admin/users/<id>`) — `profiles` và `cart_items` tự xoá theo (`ON DELETE CASCADE`).
+
+- **Lý do thứ tự:** khoá ngoại `NO ACTION` của `orders.user_id` và `events.user_id` chỉ được thoả sau pha A. Đảo pha B lên trước pha A sẽ **thất bại bằng lỗi khoá ngoại**. Đó là TC-S.3, không phải rủi ro.
+- Bước 3 của pha A **không** suy ra từ `order_items` và **không** phụ thuộc trigger. `orders_status_transition` là `BEFORE UPDATE`; `DELETE` không kích hoạt nó, nên xoá đơn không hoàn kho. Gán thẳng vector là đường duy nhất không có trạng thái trung gian để sai.
 - Script **không** đụng `books` ngoài cột `stock_quantity`; không đụng `categories`, `collections`, `collection_books`; không đụng tài khoản nào ngoài 25 email demo.
 - **Không có cột đánh dấu dữ liệu demo.** Ranh giới là quyền sở hữu: mọi đơn và mọi sự kiện có danh tính thuộc 25 email `@example.com`; dòng `events` ẩn danh nhận diện bằng `metadata->>'seed_ref'`. Hai đơn thật hiện có thuộc tài khoản admin nên nằm ngoài mọi câu lệnh.
 - **Chế độ `--verify`** (chỉ đọc): in bảng số đếm của cả mười tiêu chí, chạy lại được bất cứ lúc nào.
@@ -252,7 +256,7 @@ Thứ tự bắt buộc, phần SQL trong **một transaction**:
 ## 4. Yêu cầu phi chức năng
 
 - **NFR-S.1 — Không thêm dependency.** Chỉ `node:crypto` (uuid v5), `fetch` có sẵn của Node 18+, và `@supabase/supabase-js` đã có trong `package.json`. Không cài `faker`, `chance`, `dayjs`.
-- **NFR-S.2 — Bí mật chỉ ở biến môi trường.** Script đọc `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, `SEED_DEMO_PASSWORD`. **Không giá trị mặc định nào trong mã**, không khoá nào trong repo, không in khoá ra log. Script nằm ngoài cây build của Next nên tiêu chí `grep -rn "SERVICE_ROLE" .next/static` trả 0 dòng của đợt 2A/2B không bị ảnh hưởng — TC-S.10 kiểm lại.
+- **NFR-S.2 — Bí mật chỉ ở biến môi trường.** Script dùng lại hai tên ứng dụng đã có trong `.env.local.example`, `NEXT_PUBLIC_SUPABASE_URL` và `NEXT_PUBLIC_SUPABASE_ANON_KEY` (không tạo `SUPABASE_URL` hay `SUPABASE_ANON_KEY`), cộng đúng hai biến mới `SUPABASE_SERVICE_ROLE_KEY` và `SEED_DEMO_PASSWORD`. Hai biến mới được thêm vào `.env.local.example` với **giá trị rỗng**. **Không giá trị mặc định nào trong mã**, không khoá nào trong repo, không in khoá ra log. Script nằm ngoài cây build của Next nên tiêu chí `grep -rn "SERVICE_ROLE" .next/static` trả 0 dòng của đợt 2A/2B không bị ảnh hưởng — TC-S.10 kiểm lại.
 - **NFR-S.3 — Chạy xong dưới 180 giây** trên stack cục bộ.
 - **NFR-S.4 — Dữ liệu trung thực.** Tên người, số điện thoại, địa chỉ đều bịa; phường/tỉnh lấy từ bảng tra thật. Không tên người thật, không số thật, không email thật trong repo và trong báo cáo.
 
@@ -264,16 +268,16 @@ Thứ tự bắt buộc, phần SQL trong **một transaction**:
 
 | # | Tiêu chí | Lệnh cho ra con số | Đạt khi |
 |---|---|---|---|
-| **TC-S.1** | **Đối chứng — chạy lại không đổi gì.** `--apply` lần 1, ghi 6 số đếm (`auth.users` demo, `orders`, `order_items`, `events`, `sum(books.stock_quantity)`, `count(*) filter (stock_quantity = 0)`). Chạy `--apply` lần 2. | `--verify` in 6 số, so hai lần | **6/6 số giống hệt**; `place_order` trả `created = false` đúng **42/42** lần ở lần 2; log lần 2 có dòng "bỏ qua bước đặt tồn kho" (FR-S.6) |
+| **TC-S.1** | **Đối chứng — chạy lại không đổi gì.** `--apply` lần 1, ghi 6 số đếm (`auth.users` demo, `orders`, `order_items`, `events`, `sum(books.stock_quantity)`, `count(*) filter (stock_quantity = 0)`). Chạy `--apply` lần 2. | `--verify` in 6 số, so hai lần | **6/6 số giống hệt**; bước 0 của FR-S.3 bỏ qua đúng **42/42** đơn ở lần 2 (log lần 2); `cart_items` của 25 tài khoản demo = **0** sau lần 2; log lần 2 có dòng "bỏ qua bước đặt tồn kho" (FR-S.6) |
 | **TC-S.2** | **Đối chứng — gỡ về đúng vector.** `--apply` → `--teardown`. | So từng dòng `select slug, stock_quantity from books order by slug` với bảng vector | **40/40 ô bằng đúng V**; `count(*) where stock_quantity = 0` = **4**, và 4 slug đó đúng là `bach-da-hanh`, `ban-co-the-dam-phan-bat-cu-dieu-gi`, `mindset-tam-ly-hoc-thanh-cong`, `tham-tu-lung-danh-conan-tap-1`; `sum(stock_quantity)` = **835**; tài khoản demo = 0; `orders` và `events` về mốc trước |
-| **TC-S.3** | **Đối chứng — sai thứ tự xoá phải nổ.** Chạy biến thể gỡ **đảo bước 3 lên trước bước 1**, trong transaction rollback. | SQL biến thể, bắt `SQLSTATE` | Thất bại `23503` (foreign_key_violation) ở **cả** `orders` và `events`, **2/2**. Lệnh đảo thứ tự mà **thành công** nghĩa là phép đo hỏng, không phải script đạt |
+| **TC-S.3** | **Đối chứng — sai thứ tự xoá phải nổ.** Chạy biến thể gỡ **đảo pha B lên trước pha A**, trong transaction rollback. | SQL biến thể, bắt `SQLSTATE` | Thất bại `23503` (foreign_key_violation) ở **cả** `orders` và `events`, **2/2**. Lệnh đảo thứ tự mà **thành công** nghĩa là phép đo hỏng, không phải script đạt |
 | **TC-S.4** | **Đối chứng — trigger còn canh.** (a) `UPDATE orders SET status='completed' WHERE status='pending'` trên 1 đơn demo. (b) `UPDATE orders SET created_at = created_at - interval '1 day'` trên 1 đơn demo đang `cancelled`. | SQL trực tiếp, bắt lỗi + đo `stock_quantity` trước/sau | (a) ném `CHUYEN_TRANG_THAI_KHONG_HOP_LE`, detail `pending -> completed`, **3/3** lượt. (b) chạy thành công **và** `stock_quantity` mọi sách trong đơn **không đổi**, **3/3** lượt — chứng minh mệnh đề `WHEN` hoạt động |
-| **TC-S.5** | **Đối chứng — chứng minh bước 4 của gỡ là bắt buộc.** Chạy một biến thể `--teardown` **bỏ bước đặt lại vector**, đo tồn kho. | `sum(stock_quantity)` và số ô lệch vector sau biến thể | Tồn kho **khác vector** ở ít nhất 20/40 ô và `sum` **< 835**, **2/2** lượt. Nếu biến thể bỏ bước 4 vẫn ra đúng vector thì phép đo hỏng (đang có đường cộng trả khác mà spec chưa biết), phải báo thay vì ghi đạt |
+| **TC-S.5** | **Đối chứng — chứng minh bước 3 của pha A (đặt lại vector) là bắt buộc.** Chạy một biến thể `--teardown` **bỏ bước đặt lại vector**, đo tồn kho. | `sum(stock_quantity)` và số ô lệch vector sau biến thể | Tồn kho **khác vector** ở ít nhất 20/40 ô và `sum` **< 835**, **2/2** lượt. Ngưỡng 20/40 đạt được nhờ luật phủ ở FR-S.3 (≥ 20 cuốn có mặt ở đơn không `cancelled`). Nếu biến thể bỏ bước đặt lại vector vẫn ra đúng vector thì phép đo hỏng (đang có đường cộng trả khác mà spec chưa biết), phải báo thay vì ghi đạt |
 | **TC-S.6** | 25 tài khoản demo, toàn bộ `@example.com`, mỗi tài khoản đủ `full_name`, `phone`, `address_line`, `ward_code`, `province_code`. | `select … from profiles join auth.users` | **25/25** đủ 5 trường; **25/25** email khớp `@example\.com$`; `count(distinct province_code) >= 8` |
 | **TC-S.7** | 42 đơn, phân bố trạng thái đúng bảng FR-S.4, trải 7 tháng lịch (6 tháng đầy đủ + tháng hiện tại), mỗi tháng 6 đơn. | `group by status`; `count(distinct date_trunc('month', created_at))`; `group by date_trunc('month', created_at)` | **6/5/5/18/8** đúng từng con số; `count(distinct date_trunc('month', created_at))` = **7**; **6** nhóm tháng đầy đủ, mỗi nhóm = **6** đơn; nhóm tháng hiện tại = **6** đơn; **0** đơn có `created_at` trong tương lai |
 | **TC-S.8** | Phễu đơn điệu giảm; phần lớn lưu lượng ẩn danh; `order_placed` khớp đơn 1–1. | `group by event_type`; `count(*) filter (user_id is null)`; nối `books` theo `metadata->>'book_id'`; `metadata ? '<khoá>'`; nối `orders` theo `metadata->>'order_code'` | **1200/360/150/60/42** đúng và giảm dần **5/5** bước; `page_view` và `search` có ≥ 75% `user_id IS NULL`; **42/42** dòng `order_placed` có `order_code` khớp một đơn có thật; **1200/1200** dòng `page_view` có `metadata->>'book_id'` khớp một `books.id` có thật; **360/360** dòng `search` có đủ 4 khoá của mã (`q`, `results_count`, `category`, `sort`; `category` có mặt kể cả khi giá trị `null`); ≥ 2 từ khoá có `results_count` = 0; **42/42** dòng `order_placed` có `total_amount` bằng `orders.total_amount` của đơn tương ứng |
 | **TC-S.9** | 40 cuốn sách **chỉ** đổi `stock_quantity`; sau `--apply` vẫn đúng 4 cuốn bằng 0 và không cuốn nào rơi xuống 0 vì bán. | `md5(string_agg(…))` trên mọi cột của `books` **trừ** `stock_quantity`, sắp theo `slug`, đo trước `--apply` và sau `--apply`. Riêng tồn kho: đẳng thức dưới | Hai checksum **giống hệt**; số dòng `books` = **40** cả hai lần. Sau `--apply`: `count(*) where stock_quantity = 0` = **4**, đúng 4 slug của TC-S.2; và `835 − sum(stock_quantity)` = tổng `quantity` của `order_items` thuộc đơn demo có `status <> 'cancelled'` |
-| **TC-S.10** | Không rò bí mật, không thêm dependency, không đổi schema. | `grep -rnE -e "eyJ[A-Za-z0-9_-]{20,}" -e "sb_secret_" -e "sbp_" scripts/`; `grep -rn "SERVICE_ROLE" .next/static` sau `next build`; `git diff --stat` so với `main`; `supabase migration list`; `bash -c 'set -- supabase/migrations/*.sql; echo $#'` | `grep` trên `scripts/` trả **0 dòng**. Tên biến `SUPABASE_SERVICE_ROLE_KEY` được phép xuất hiện trong mã và README (NFR-S.2 đòi nó); thứ bị cấm là giá trị khoá. `grep "SERVICE_ROLE" .next/static` (tiêu chí có sẵn của đợt 2A/2B) vẫn **0 dòng**. `git diff` **không chạm** `supabase/migrations/`, `package.json`, `app/`, `components/`, `lib/`; số migration không đổi: **19** file `.sql` |
+| **TC-S.10** | Không rò bí mật, không thêm dependency, không đổi schema. | `grep -rnE -e "eyJ[A-Za-z0-9_-]{20,}" -e "sb_secret_" -e "sbp_" scripts/`; `grep -rn "SERVICE_ROLE" .next/static` sau `next build`; `git diff --stat` so với `main`; `supabase migration list`; `bash -c 'set -- supabase/migrations/*.sql; echo $#'` | `grep` trên `scripts/` trả **0 dòng**. Tên biến `SUPABASE_SERVICE_ROLE_KEY` được phép xuất hiện trong mã và README (NFR-S.2 đòi nó); thứ bị cấm là giá trị khoá. `grep "SERVICE_ROLE" .next/static` (tiêu chí có sẵn của đợt 2A/2B) vẫn **0 dòng**. `git diff` **không chạm** `supabase/migrations/`, `package.json`, `app/`, `components/`, `lib/`; `.env.local.example` là file có sẵn **DUY NHẤT** được phép đổi (chỉ thêm hai tên biến, giá trị rỗng); số migration không đổi: **19** file `.sql` |
 
 **Cách báo cáo.** Mỗi tiêu chí ghi: lệnh đã chạy, con số thu được, số lượt. Tiêu chí có đối chứng ghi **cả hai phía** — phía đối chứng cũng "đạt" nghĩa là phép đo hỏng, phải nói ra thay vì báo đạt.
 
@@ -289,7 +293,7 @@ Thứ tự bắt buộc, phần SQL trong **một transaction**:
 | `docs/runbooks/chay-seed-demo.md` | Runbook cho chủ dự án chạy lên hosted (mục 8) |
 | `docs/specs/dot-seed-du-lieu-demo.md` | Chính spec này |
 
-Không sửa file nào có sẵn.
+Chỉ sửa một file có sẵn: `.env.local.example`, thêm hai tên biến với giá trị rỗng.
 
 ---
 
