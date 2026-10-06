@@ -61,9 +61,13 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 - **Trang tạm cho giai đoạn sau.** Khuôn đã dùng hai lần: trả 200, có header và footer như mọi trang, nói thẳng rằng tính năng thuộc đợt sau, kèm liên kết quay lại. `/gio-hang` tạm (2B.1) đã được thay bằng trang thật ở 3A; `/thanh-toan` tạm (3A) sẽ được thay ở 3B.
 - **Bước 3 tách làm đôi:** 3A giỏ hàng, 3B checkout. Gộp lại là 15+ FR trong một đợt — đúng cách đã làm phần auth phình thành bốn lần.
 
-### Thứ tự còn lại và định nghĩa "xong" (chốt 02/10)
+### Thứ tự còn lại và định nghĩa "xong" (chốt 02/10; thứ tự đổi 06/10)
 
-**Thứ tự:** 5B CRUD sách → 5C scenario Make.com → 2C quên mật khẩu → 2D trang hồ sơ → seed dữ liệu demo → dashboard thống kê → chatbot → đợt 1.6 → sửa accessibility → README cho nhà tuyển dụng.
+**5B CRUD sách đã xong** (chặng 1: migration `20261004090859`; chặng 2: merge `622ea35`; số đo ở mục 7.10).
+
+**Thứ tự còn lại (đổi 06/10):** seed dữ liệu demo → dashboard thống kê → README cho nhà tuyển dụng → 5C scenario Make.com → 2C quên mật khẩu → 2D trang hồ sơ → đợt 1.6 → sửa accessibility → chatbot.
+
+**Lý do đổi:** thứ tự cũ xếp hai việc tùy chọn (5C Make.com, chatbot) trước ba việc nằm trong định nghĩa "xong" (seed là nền cho bước 1–6, dashboard là bước 6, README là bước 7). Seed đứng trước dashboard vì hosted chỉ có 2 đơn và 3 người dùng, dashboard sẽ vẽ biểu đồ của số 0.
 
 **Định nghĩa "xong"** — bảy bước một người lạ phải làm được, viết trước để không bị dời:
 
@@ -674,12 +678,21 @@ Một lần đo trên mã đã merge; không có thay đổi mã nào. Tài li�
 - **Thiếu hụt thị giác của site không nằm ở thẩm mỹ mà ở lớp hình ảnh.** Chính sách không dùng bìa bản quyền khiến toàn trang không có một pixel ảnh nào, nên 40 ô màu phẳng đọc ra là placeholder. Các đợt nâng cấp trước chữa bằng typography và layout nên luôn hụt. Cách chữa đúng là thêm một lớp ảnh atmosphere giấy phép mở, không phải gõ lại font.
 - **Một artboard cố định bằng đúng kích thước màn hình bị đọc là "toàn bộ trang".** Mockup mobile 390×844 không vẽ footer vì footer nằm dưới fold, và điều đó đã bị hiểu là "trang này không có footer". Khung một màn hình phải được ghi rõ trong README của thư mục mockup.
 
+**Từ đợt 5B**
+
+- **Đo chiều cao bằng font thay thế chỉ cho CHẶN TRÊN, không phải số thật.** Google Fonts bị proxy chặn nên bản đo trong container dùng DejaVu, dày hơn bản thật khoảng 24px ở 1280px và khoảng 42px ở 390px. Kẹp khoảng bằng hai font rộng và hẹp rồi lấy cận trên.
+- **Giá trị enum của tweak trong Claude Design phải là slug ASCII.** Bản dùng tên tiếng Việt có dấu và khoảng trắng bị editor chuẩn hoá, làm mọi `sc-if` so sánh trượt và artboard ra trang trống.
+- **Phép đo cache phải nằm TRONG cửa sổ TTL và phải có đối chứng.** Chín hàm dùng `cacheLife("minutes")` nên đo sau 60 giây thì TTL tự làm phép đo đạt mà không chứng minh `updateTag` có tác dụng. Cách đúng: chèn một bản ghi mốc, xác nhận mốc chưa hiện (entry còn sống), ghi, đọc lại trong 10 giây, và chạy một bản gỡ `updateTag` để thấy dữ liệu cũ.
+- **Preview và production dùng chung một database thì mọi lần ghi khi đo ở preview là ghi vào trang thật.**
+
 ## 9. Việc cần bàn tiếp trong project
 
 - **Ô "Nhập lại email"** — giữ nguyên, hay thay bằng gợi ý typo domain ("Ý bạn là …@gmail.com?"), hay bật lại xác nhận email. Hiện giữ nguyên; nghiêng về gợi ý typo cho đợt sau.
 - **Khoá ngoại `events.user_id` và `orders.user_id` đang là ON DELETE NO ACTION**, nên chặn việc xoá user. Với bảng analytics, cách thường dùng là **SET NULL** (giữ sự kiện, bỏ danh tính). Quyết khi làm chức năng xoá tài khoản hoặc ở 2D.
 - **Footer xuống layout theo route** — cách chữa đúng cho dịch chuyển bố cục ghi ở 7.4, gom vào đợt 1.6.
-- **URL route động có dãy `%XX` hỏng hoặc `%25` trả HTTP 500** ở mọi route động (đo ở bốn route động: `/sach/[slug]`, `/tu-sach/[slug]`, `/thanh-toan/hoan-tat/[order_code]`, `/tai-khoan/don-hang/[order_code]` — đều 500; route động thứ năm `/admin/don-hang/[order_code]`, thêm ở đợt 5A, **chưa đo**). Lỗi xảy ra trước khi tới mã trang nên có từ trước, không do đợt nào gây ra; đường dẫn không động vẫn trả 404 đúng. Không lộ dữ liệu. Gom vào đợt 1.6.
+- **URL route động có dãy `%XX` hỏng hoặc `%25` trả HTTP 500** ở mọi route động (hiện có sáu route động; đo ở bốn: `/sach/[slug]`, `/tu-sach/[slug]`, `/thanh-toan/hoan-tat/[order_code]`, `/tai-khoan/don-hang/[order_code]` — đều 500; hai route còn lại, `/admin/don-hang/[order_code]` (đợt 5A) và `/admin/sach/[slug]` (đợt 5B), **chưa đo**). Lỗi xảy ra trước khi tới mã trang nên có từ trước, không do đợt nào gây ra; đường dẫn không động vẫn trả 404 đúng. Không lộ dữ liệu. Gom vào đợt 1.6.
+- **Tách database cho preview (đợt 1.6).** Preview và production dùng chung một database hosted (`xnqfswvtrgfokkhsrmkx`), nên mọi lần ghi khi đo ở preview nằm trong database mà production cũng đọc, với cache 60 giây; ghi chi tiết ở mục 7.10. Chưa làm.
+- **`BookForm` gắn bằng `onSubmit` phía client (đợt 1.6).** Form admin không có progressive enhancement: bấm Lưu trước khi trang hydrate xong thì form gửi kiểu GET tới chính URL, không lưu gì và đẩy giá trị các ô lên URL. Cần chọn giữa `<form action={serverAction}>` và vô hiệu nút Lưu tới khi hydrate xong; ghi chi tiết ở mục 7.10. Chưa làm.
 - **Lớp ảnh atmosphere** — chọn nguồn, số lượng, đặt ở những trang nào. Gom vào đợt 1.6 mở rộng.
 - Persona chính trong 18–30.
 - Logo chính thức.
