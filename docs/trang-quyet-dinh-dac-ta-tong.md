@@ -95,7 +95,7 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 | Automation | Make.com — lớp vận hành back-office (sổ đơn hàng, báo đơn mới, digest kho); làm ở đợt admin, **không gửi email cho khách** |
 | Deploy | Vercel, nhánh `main` là production |
 
-- **Database: 9 bảng**, tất cả bật RLS: `profiles`, `categories`, `books`, `cart_items`, `orders`, `order_items`, `events`, `collections`, `collection_books`. Đợt 3B sẽ thêm `provinces`, `wards` (thành 11).
+- **Database: 11 bảng**, tất cả bật RLS: `profiles`, `categories`, `books`, `cart_items`, `orders`, `order_items`, `events`, `collections`, `collection_books`, `provinces`, `wards` (hai bảng hành chính, áp ở đợt 3B).
 - **Khoá ngoại tới `auth.users`:** `profiles` và `cart_items` là **CASCADE**; `events` và `orders` là **NO ACTION**. Hệ quả: không xoá được một user từng có sự kiện hoặc đơn hàng nếu chưa xoá tay các dòng đó trước — xem mục 9.
 - **Quy tắc bắt buộc:** mọi thay đổi schema đi qua migration trong `supabase/migrations/`, apply bằng Supabase MCP, đặt tên file theo version Supabase ghi nhận. Không sửa trực tiếp qua Table Editor.
 - Tìm kiếm theo tên sách và tác giả, không phân biệt dấu qua `unaccent`; toàn bộ lọc/sắp xếp/phân trang gói trong hàm RPC `search_books` (`SECURITY DEFINER` để tính "bán chạy" vượt qua RLS của `orders`).
@@ -684,6 +684,11 @@ Một lần đo trên mã đã merge; không có thay đổi mã nào. Tài li�
 - **Giá trị enum của tweak trong Claude Design phải là slug ASCII.** Bản dùng tên tiếng Việt có dấu và khoảng trắng bị editor chuẩn hoá, làm mọi `sc-if` so sánh trượt và artboard ra trang trống.
 - **Phép đo cache phải nằm TRONG cửa sổ TTL và phải có đối chứng.** Chín hàm dùng `cacheLife("minutes")` nên đo sau 60 giây thì TTL tự làm phép đo đạt mà không chứng minh `updateTag` có tác dụng. Cách đúng: chèn một bản ghi mốc, xác nhận mốc chưa hiện (entry còn sống), ghi, đọc lại trong 10 giây, và chạy một bản gỡ `updateTag` để thấy dữ liệu cũ.
 - **Preview và production dùng chung một database thì mọi lần ghi khi đo ở preview là ghi vào trang thật.**
+
+**Từ khâu chuẩn bị đợt seed (06/10/2026)**
+
+- **Một bất biến đo được chọn cho đợt chỉ-đọc sẽ sai ở đợt có ghi.** Bất biến phải chọn theo việc sắp làm, không bê nguyên từ đợt trước. Ví dụ: `xmin` lớn nhất của `books` là bất biến đúng khi đo cache ở 5B, nhưng sai ở đợt seed vì `place_order` có `UPDATE books`.
+- **Trigger `BEFORE UPDATE` trên `orders` không chạy khi `DELETE`.** Xoá một đơn đã trừ kho sẽ không cộng trả, và đơn `completed` không chuyển sang `cancelled` được. Mọi kịch bản dọn dẹp đụng tới `orders` phải tính tồn kho riêng.
 
 ## 9. Việc cần bàn tiếp trong project
 
