@@ -48,7 +48,7 @@ async function AdminOrders({ searchParams }: { searchParams: PageProps<"/admin/d
   if (!list) {
     return (
       <>
-        <AdminNav />
+        <AdminNav current="orders" />
         <PageTitle title="Quản lý đơn hàng" />
         <p role="alert" className="mt-6 text-body text-ink-600">
           Chúng mình chưa tải được danh sách đơn hàng lúc này. Bạn thử tải lại trang sau ít phút nhé.
@@ -62,7 +62,7 @@ async function AdminOrders({ searchParams }: { searchParams: PageProps<"/admin/d
 
   return (
     <>
-      <AdminNav />
+      <AdminNav current="orders" />
       <PageTitle title="Quản lý đơn hàng" count={total} unit="đơn" countTestId="admin-order-count" />
       <FilterForm parsed={parsed} filtering={filtering} />
 

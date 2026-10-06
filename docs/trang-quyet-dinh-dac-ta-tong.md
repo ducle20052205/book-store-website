@@ -67,6 +67,8 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 
 **Đợt seed dữ liệu demo đã xong** (PR #23, squash `6257f0e`, 06/10/2026; số đo ở mục 7.11).
 
+- **Tạm dừng toàn bộ giao diện và chức năng cho mobile (chốt 06/10/2026).** Từ thời điểm này mọi đợt chỉ xây và chỉ đo cho máy tính. Mã mobile đã có — sheet của `AccountMenu` dưới 768px, thanh thao tác đáy dưới 1024px, các lớp responsive — **giữ nguyên, không gỡ**: gỡ là việc phải làm thêm, không phải tiết kiệm. Điều thay đổi: không xây giao diện mobile mới, không đặt tiêu chí nghiệm thu ở 390px, không chụp ảnh duyệt ở 390px, và mọi phát hiện chỉ xuất hiện ở bề rộng mobile (ví dụ 9/302 vùng chạm dưới 44px ở 390px, mục 9) chuyển sang danh sách sau thay vì sửa trong đợt. Yêu cầu accessibility KHÔNG được nới theo: tương phản, `aria-label`, bàn phím, trạng thái focus vẫn đo ở mọi đợt, chỉ bỏ phần đo theo bề rộng mobile. **Mobile là một GIAI ĐOẠN SAU KHI SẢN PHẨM HOÀN THÀNH, không phải một đợt trong danh sách còn lại.** Nó không nằm trong định nghĩa "xong" (bảy bước ở mục này) và không chen vào thứ tự các đợt đang chờ (dashboard, README, 5C, 2C, 2D, đợt 1.6, accessibility, chatbot). Chỉ khi toàn bộ phần máy tính đã xong — bao gồm cả README cho nhà tuyển dụng và đợt accessibility — mới mở giai đoạn mobile.
+
 **Thứ tự còn lại:** dashboard thống kê → README cho nhà tuyển dụng → 5C scenario Make.com → 2C quên mật khẩu → 2D trang hồ sơ → đợt 1.6 → sửa accessibility → chatbot.
 
 **Đợt seed dữ liệu demo: 7 FR, 10 tiêu chí nghiệm thu (5 trong đó là đối chứng).** Spec ở `docs/specs/dot-seed-du-lieu-demo.md` (v1.8, đóng băng). 25 tài khoản `@example.com`, 42 đơn trải 6 tháng đầy đủ + tháng hiện tại, 1.897 dòng `events` hình phễu, tồn kho sau khi chạy 737. Kết quả: **9/10 tiêu chí đạt**; TC-S.10 **trượt** vì điều khoản của chính nó không khả thi (xem mục 8). Dựng và đo toàn bộ trên stack cục bộ; **chưa chạy lên hosted** — đó là việc tay của chủ dự án theo `docs/runbooks/chay-seed-demo.md`.
@@ -196,7 +198,8 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 | Rà soát accessibility (một lần đo, không phải đợt sửa) | Xong: 20 phát hiện, 9 đóng, 11 mở (3 Trung bình, 8 Thấp, 0 Cao); `docs/specs/dot-accessibility-ra-soat.md` bản 1.3 (`7cfe9ff`); SRS lên 1.9 (`2580589`) |
 | Đợt 5B chặng 1: ràng buộc dữ liệu cho `books` (ba CHECK, CHECK slug, hai `NOT NULL`) | Xong, đã merge (PR #21, `4b08d44`); migration `20261004090859` đã áp lên hosted ngày 04/10/2026 |
 | Đợt 5B chặng 2: quản lý sách (`/admin/sach*`, form thêm/sửa, xoá có chặn) và làm mới cache bằng `updateTag` | PR #22 (commit mã `b491dee`); merge `622ea35`; 108 phép kiểm cục bộ (không tính TC-15), 15/15 lượt trên Vercel preview và 6/6 lượt trên production (nút "Đặt tồn kho về 0" chỉ kiểm ở cục bộ và preview), xem 7.10 |
-| 5C scenario Make.com · Chatbot · Dashboard thống kê | Chưa bắt đầu (admin đơn hàng xong ở 5A, admin sách ở 5B) |
+| Đợt 6: dashboard thống kê (`/admin`, RPC `admin_dashboard_stats()`, mục "Khu quản trị" trong menu) | PR #24; 10 tiêu chí đo trên cục bộ, hai phép đo yếu hơn tiêu chí gốc (TC-D.3, CLS), xem 7.12 |
+| 5C scenario Make.com · Chatbot | Chưa bắt đầu (admin đơn hàng xong ở 5A, admin sách ở 5B) |
 | README cho nhà tuyển dụng · Logo | Chưa bắt đầu |
 
 **Quy trình làm việc đã định hình:** mockup (Claude Design) → spec trong `docs/specs/` kèm tiêu chí nghiệm thu đo được → Claude Code làm theo từng đợt, mỗi hạng mục một commit và một lần đo → báo cáo kèm số đo → kiểm tay trên preview Vercel (những gì Claude Code không làm được) → PR → merge. Mỗi đợt một nhánh riêng.
@@ -647,6 +650,39 @@ Spec `docs/specs/dot-seed-du-lieu-demo.md` v1.8 (7 FR, 10 tiêu chí). Một ch�
 - Mọi phép đo chạy trên stack cục bộ; chưa chạy lên hosted. `SEED_DEMO_PASSWORD` chỉ bắt buộc ở `--apply`; chốt `now() < 2026-10-06` chỉ chặn `--apply`, không chặn `--teardown` (khác chữ spec).
 
 **TC-S.10 trượt, ghi nhận sau merge.** PR #23 merge (squash) vào `main` commit `6257f0e`; các hash liệt kê ở đầu mục này nằm trên nhánh `dot-seed-du-lieu-demo`, đã xoá sau squash. Tiêu chí gốc đòi: `grep` giá trị khoá trong `scripts/` = 0 dòng; `grep` `SERVICE_ROLE` và `SECRET_KEY` trong `.next/static` bằng con số mốc; `git diff` không chạm `supabase/migrations/`, `package.json`, `app/`, `components/`, `lib/`; 19 file `.sql`; và "`.env.local.example` là file có sẵn DUY NHẤT được phép đổi". Phép đo thực tế: `grep` khoá trong `scripts/` = 0 (đối chứng file giả: 1); `grep` `.next/static` = 0, bằng mốc 0 (đối chứng file giả: 1); 0 file trong các đường dẫn cấm; 19 file `.sql`; file có sẵn bị sửa = 3: `.env.local.example` (thuộc đợt), `CLAUDE.md` và `docs/runbooks/supabase-local.md` (việc hoãn từ trước, gộp vào đợt này). Bốn phép đo đầu đều đạt; điều khoản cuối không đạt. Điều khoản cuối không khả thi ở bất kỳ đợt nào: quy trình đóng đợt bắt buộc sửa mục 7 của chính file `docs/trang-quyet-dinh-dac-ta-tong.md`, mà điều khoản không tính tới file này. Spec không sửa.
+
+### 7.12 Đợt 6 — dashboard thống kê (06/10/2026)
+
+Spec `docs/specs/dot-6-dashboard-thong-ke.md` v1.1 (8 FR, 10 tiêu chí). Hai chặng, nhánh `dot-6-dashboard`, PR #24. Không thêm dependency (production = 5; `package.json` và `package-lock.json` không đổi). Commit: spec v1.0 `98a5db3`, migration `5a4d80f`, spec v1.1 `b323519`, `AdminNav` và `next.config.ts` `13d0ee4`, trang thống kê `5969efd`, mục menu `f2b730e`, SRS lên 1.14 (FR-7.7) `0452711`. File mới: `supabase/migrations/20261006164939_admin_dashboard_stats.sql` (163 dòng; tên file lúc tạo là `20261006154854`, đổi theo version hosted ở commit `bf665d0`), `app/admin/page.tsx` (163), `lib/admin/dashboard.ts` (58), `components/admin/RevenueChart.tsx` (48), `CategoryBars.tsx` (44), `FunnelChart.tsx` (39). File có sẵn sửa: `components/admin/AdminNav.tsx`, `app/admin/don-hang/page.tsx`, `app/admin/don-hang/[order_code]/page.tsx`, `next.config.ts`, `components/Header.tsx`, `components/AccountMenu.tsx`, `components/HeaderIcons.tsx`. `git diff --stat origin/main...HEAD` ở lúc mở PR: 14 file, 0 file ngoài danh sách cho phép của spec mục 0.
+
+**Điều kiện đo:** stack Supabase cục bộ sau `db reset` và `scripts/seed-demo.mjs --apply` (42 đơn, 1.897 sự kiện, 25 tài khoản); chặng 2 đo trên `next build` + `next start` cổng 3100, Edge headless qua CDP. Migration chỉ tạo một hàm (`admin_dashboard_stats()`), không bảng, cột, trigger, policy, không `UPDATE`. Migration đã áp lên hosted ngày 06/10/2026 (version `20261006164939`, `prosecdef = false`, ACL gồm `postgres`, `authenticated`, `service_role`, không có `public` và `anon`; 20 → 21 migration); gọi hàm bằng vai `postgres` (không có `auth.uid()`) ném `KHONG_PHAI_ADMIN`. Phía trả dữ liệu cho admin chưa kiểm trên hosted (Claude Code không đăng nhập hosted).
+
+| Tiêu chí | Số lượt, cỡ mẫu | Kết quả |
+|---|---|---|
+| TC-D.1 không import hàm `"use cache"` | 1 lượt quét cây import `app/admin/page.tsx` | 0 hàm. Đối chứng: thêm tạm `import { getNewestBooks }` → 1 hàm, `lib/queries.ts` vào cây; đã hoàn lại, `grep -c getNewestBooks` = 0 |
+| TC-D.2 chặn người không phải admin | 3 + 3 lượt, PostgREST với JWT thật | vai thường (`nguoi-dung-01`): 3/3 HTTP 400 `KHONG_PHAI_ADMIN`; vai admin (`admin-demo`): 3/3 HTTP 200, đủ 5 khoá |
+| TC-D.3 vỏ tĩnh không lộ chữ quản trị | `curl` `/admin` 3 + 3 lượt | chưa đăng nhập: 0/4 chuỗi, nhưng HTTP 307 (3/3); admin: 4/4 chuỗi, HTTP 200 (3/3) |
+| TC-D.4 bốn KPI | 1 lượt, so 4 câu SQL | 4/4 khớp: doanh thu 9.575.000, số đơn 34 (42 − 8 hủy), giá trị đơn trung bình 281.618, khách đã mua 20. Đối chứng: DB có 42 đơn, RPC ra 34 |
+| TC-D.5 doanh thu theo tháng | 1 lượt | 7 phần tử (2026-04 → 2026-10), 7/7 khớp SQL `date_trunc('month', created_at at time zone 'Asia/Ho_Chi_Minh')`, tổng = KPI |
+| TC-D.6 phễu | 1 lượt | 1200 / 360 / 150 / 60 / 42, giảm dần ở cả 4 so sánh liền kề; `sign_up` 25 và `login` 60 nằm ngoài `steps` |
+| TC-D.7 sách bán chạy | 1 lượt | `top_books` 10/10 và `category_sales` 5/5 khớp SQL; tổng 98 bản |
+| TC-D.8 truy cập được | 4 khổ (390, 768, 1024, 1280) × 1 lượt | 3/3 biểu đồ có `role="img"` và `aria-label` không rỗng ở cả 4 khổ; vùng chạm dưới 44px: 0; cặp màu chữ 6, thấp nhất 5,92:1, 0 cặp dưới 4,5:1 |
+| TC-D.9 không phình phạm vi | `git diff`, `package.json`, đếm file `.sql`, CLS ở 4 khổ × 1 lượt | dependency production 5; `package.json` và lock diff 0 dòng; migration 19 → 20; 14 file đổi, 0 file ngoài danh sách; CLS 0 ở 4 khổ |
+| TC-D.10 mục "Khu quản trị" chỉ hiện với admin | 3 trạng thái × 2 lượt, DOM sau khi mở menu Tài khoản | admin 2 (cả hai `href="/admin"`) / `nguoi-dung-01` 0 / chưa đăng nhập 0 ở cả 2 lượt; HTML thô 0 ở cả ba |
+
+**Đối chứng và hai phía:** TC-D.1 1 (có import) so 0 (thật). TC-D.2 3/3 từ chối so 3/3 trả dữ liệu. TC-D.3 0/4 so 4/4. TC-D.10 2 so 0 và 0. TC-D.4: bộ lọc `status <> 'cancelled'` có chạy (42 đơn, RPC ra 34). Không có đối chứng nào "đạt" ở phía ngược lại.
+
+**Chi phí FR-D.8** (truy vấn `profiles.role` ở `AccountItem` cho người đã đăng nhập; trang chủ có cookie admin, cục bộ, 10 lượt mỗi phía, đếm ở nhật ký Kong): `/rest/v1/` 1 → 2 lời gọi mỗi lượt, `/auth/v1/` 1 → 1; TTFB trung vị 68,4 → 66,1 ms (trong nhiễu của phép đo). Chi phí trên hosted là ước tính hosted 12,5 ms (một vòng PostgREST, trung vị ở mục 5.2), không phải số đo.
+
+**Chỗ phải ghi trung thực:**
+- **Mục 0.1 của spec chia chặng SAI.** Spec ghi D.6 ở chặng 2 và bỏ sót D.2 và D.4. Danh sách đúng của chặng 2 là FR-D.1, D.2, D.3, D.4, D.5, D.7, D.8; D.6 (RPC) xong ở chặng 1. Spec không sửa vì đã hết lượt sửa tự đặt.
+- **TC-D.3, phép đo yếu hơn tiêu chí gốc.** Tiêu chí gốc đòi `curl` `/admin` khi chưa đăng nhập cho thấy vỏ tĩnh không chứa chữ quản trị. Phép đo thực tế: 3 lượt `curl` chưa đăng nhập đều nhận HTTP 307 từ `proxy.ts` (không có vỏ tĩnh nào của `/admin` đến được khách vãng lai), nên 0/4 chuỗi chỉ chứng minh trang chuyển hướng, không chứng minh vỏ tĩnh sạch. Tính chất "vỏ tĩnh không lộ chữ quản trị" không được kiểm ở `/admin` cho khách vãng lai.
+- **CLS = 0, phép đo yếu hơn tiêu chí gốc.** Đo trong khung 900px nên chân trang bị đẩy xuống nằm ngoài tầm bộ đo; baseline với fallback nhỏ hơn nội dung cũng ra 0 (đối chứng không phân biệt được), nên 0 không chứng minh được fallback đúng. `min-h` của fallback được chỉnh theo chiều cao đo được của khối thống kê: 2368 / 2275 / 1904 / 1913 px ở 390 / 768 / 1024 / 1280.
+- **TC-D.9, "HTML hai trang admin cũ đổi đúng ở dải `AdminNav`"** chỉ kiểm bằng `git diff` mã nguồn (mỗi trang chỉ thêm `current="orders"`), không so HTML trước và sau.
+- **TC-D.10, phía chưa đăng nhập** không có nút "Tài khoản" để mở (header hiện "Đăng nhập"); phép đo là đếm chuỗi trong DOM trang chủ.
+- **Chưa dựng được ảnh `/admin` khi DB không có đơn** (phải xoá dữ liệu mẫu): trạng thái rỗng chưa được quan sát, chỉ có mã.
+- **Một lỗi thật được bắt trong lúc đo:** ở 390px, `/admin` rộng 498px vì một cột lưới `auto` bị tên sách dài kéo giãn; sửa bằng `grid-cols-1`, đo lại thấy 390px.
+- **Tác dụng phụ của bộ đo:** đăng nhập admin và `nguoi-dung-01` qua giao diện ghi sự kiện `login` thật (35 dòng qua hai lần dọn, 28 + 7); đã xoá, bảng `events` về 1200 / 360 / 150 / 60 / 42 / 25 / 60.
 
 ## 8. Bài học đã rút ra (giữ lại để không lặp)
 

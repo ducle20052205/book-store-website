@@ -47,7 +47,7 @@ async function Detail({ params }: { params: PageProps<"/admin/don-hang/[order_co
 
   return (
     <>
-      <AdminNav />
+      <AdminNav current="orders" />
       <Link
         href="/admin/don-hang"
         className="mb-4 inline-flex min-h-11 items-center text-body-sm font-medium text-cham-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"

@@ -10,13 +10,19 @@ import {
   navItemActiveClass,
   navItemClass,
 } from "@/components/headerStyles";
-import { ChevronUpIcon, CloseIcon, LogoutIcon, OrdersIcon, UserIcon } from "@/components/HeaderIcons";
+import { AdminIcon, ChevronUpIcon, CloseIcon, LogoutIcon, OrdersIcon, UserIcon } from "@/components/HeaderIcons";
 
 interface AccountMenuProps {
   /** Họ tên hiển thị trong menu (đã có phương án dự phòng ở Header). */
   name: string;
   /** Email đăng nhập, lấy từ auth.users — null nếu không có (không kỳ vọng xảy ra). */
   email: string | null;
+  /**
+   * Đợt 6 (FR-D.8): true thì thêm mục "Khu quản trị" (→ /admin) NGAY TRÊN "Đăng xuất", ở cả dropdown lẫn sheet.
+   * Người không phải admin: mục này KHÔNG được render (không ẩn bằng CSS). Chỉ để hiển thị lối vào — quyền
+   * thật nằm ở proxy.ts, `requireAdmin()` và RLS.
+   */
+  isAdmin: boolean;
 }
 
 const panelItemClass =
@@ -35,7 +41,7 @@ const sheetItemClass =
  * lại nút sau khi đóng. Sheet là hộp thoại modal: focus nhảy vào nút đóng
  * khi mở, Tab xoay vòng trong sheet, cuộn nền bị khoá.
  */
-export function AccountMenu({ name, email }: AccountMenuProps) {
+export function AccountMenu({ name, email, isAdmin }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -135,6 +141,12 @@ export function AccountMenu({ name, email }: AccountMenuProps) {
               <OrdersIcon className="h-4 w-4 shrink-0 text-ink-400" />
               Đơn hàng của tôi
             </Link>
+            {isAdmin && (
+              <Link href="/admin" prefetch={false} onClick={() => setOpen(false)} className={panelItemClass}>
+                <AdminIcon className="h-4 w-4 shrink-0 text-ink-400" />
+                Khu quản trị
+              </Link>
+            )}
             <div className="my-1.5 h-px bg-menu-sep" />
             <form action={signOut}>
               <button type="submit" className={panelItemClass}>
@@ -188,6 +200,12 @@ export function AccountMenu({ name, email }: AccountMenuProps) {
                 <OrdersIcon className="h-[19px] w-[19px] shrink-0 text-ink-400" />
                 Đơn hàng của tôi
               </Link>
+              {isAdmin && (
+                <Link href="/admin" prefetch={false} onClick={() => setOpen(false)} className={sheetItemClass}>
+                  <AdminIcon className="h-[19px] w-[19px] shrink-0 text-ink-400" />
+                  Khu quản trị
+                </Link>
+              )}
               <div className="my-2 h-px bg-menu-sep" />
               <form action={signOut}>
                 <button type="submit" className={sheetItemClass}>
