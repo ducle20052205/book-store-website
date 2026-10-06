@@ -637,6 +637,8 @@ Spec `docs/specs/dot-seed-du-lieu-demo.md` v1.8 (7 FR, 10 tiêu chí). Một ch�
 - **TC-S.10:** điều khoản "`.env.local.example` là file có sẵn duy nhất được đổi" không đúng: `CLAUDE.md` và `docs/runbooks/supabase-local.md` cũng sửa trong cùng nhánh.
 - Mọi phép đo chạy trên stack cục bộ; chưa chạy lên hosted. `SEED_DEMO_PASSWORD` chỉ bắt buộc ở `--apply`; chốt `now() < 2026-10-06` chỉ chặn `--apply`, không chặn `--teardown` (khác chữ spec).
 
+**TC-S.10 trượt, ghi nhận sau merge.** PR #23 merge (squash) vào `main` commit `6257f0e`; các hash liệt kê ở đầu mục này nằm trên nhánh `dot-seed-du-lieu-demo`, đã xoá sau squash. Tiêu chí gốc đòi: `grep` giá trị khoá trong `scripts/` = 0 dòng; `grep` `SERVICE_ROLE` và `SECRET_KEY` trong `.next/static` bằng con số mốc; `git diff` không chạm `supabase/migrations/`, `package.json`, `app/`, `components/`, `lib/`; 19 file `.sql`; và "`.env.local.example` là file có sẵn DUY NHẤT được phép đổi". Phép đo thực tế: `grep` khoá trong `scripts/` = 0 (đối chứng file giả: 1); `grep` `.next/static` = 0, bằng mốc 0 (đối chứng file giả: 1); 0 file trong các đường dẫn cấm; 19 file `.sql`; file có sẵn bị sửa = 3: `.env.local.example` (thuộc đợt), `CLAUDE.md` và `docs/runbooks/supabase-local.md` (việc hoãn từ trước, gộp vào đợt này). Bốn phép đo đầu đều đạt; điều khoản cuối không đạt. Điều khoản cuối không khả thi ở bất kỳ đợt nào: quy trình đóng đợt bắt buộc sửa mục 7 của chính file `docs/trang-quyet-dinh-dac-ta-tong.md`, mà điều khoản không tính tới file này. Spec không sửa.
+
 ## 8. Bài học đã rút ra (giữ lại để không lặp)
 
 **Về tiêu chí nghiệm thu**
