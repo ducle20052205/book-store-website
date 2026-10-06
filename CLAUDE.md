@@ -64,6 +64,11 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 - Repo này là public. Không commit email cá nhân, khoá, mật khẩu — kể cả trong tài liệu, mockup, ảnh chụp màn hình và comment. Dữ liệu mẫu dùng `ban.doc@example.com`.
 - Trước khi commit thư mục có tài liệu hoặc ảnh mới, quét: `grep -rn "gmail.com" <thư mục>` trên các file text.
 
+## Bí mật và quyền riêng tư
+
+- Repo này là PUBLIC. API key, webhook URL và token chỉ nằm ở Vercel environment variables và `.env.local`; không bao giờ vào chat, prompt, repo hay migration.
+- Không in email, tên, số điện thoại hay địa chỉ của người thật vào báo cáo. Dữ liệu demo dùng `@example.com`.
+
 ## Giao diện
 
 - Chỉ dùng token màu khai báo trong `@theme` (`app/globals.css`) — không viết cứng mã hex trong component.
@@ -93,6 +98,12 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 - File tạm, route thử, script đo: xoá trước khi commit, chạy `git status` xác nhận sạch.
 - **Không bao giờ chạy `taskkill /IM node.exe` hay lệnh tương đương giết mọi tiến trình Node.** Máy của chủ dự án có thể đang chạy tiến trình Node khác. Dừng đúng tiến trình mình tạo: ghi lại PID khi khởi động, hoặc tìm theo cổng đang nghe (`netstat -ano | findstr :3100`) rồi `taskkill /PID <pid>`.
 - Đóng đợt: trước khi mở PR, chạy `git status --short` và liệt kê mọi file modified nằm ngoài phạm vi đợt.
+
+## Kỷ luật đo
+
+- Mọi khẳng định dạng "đã chặn", "đã mới", "không đổi", "an toàn" phải kèm một ĐỐI CHỨNG chứng minh bộ đo nhìn thấy được vi phạm. Đối chứng cũng "đạt" nghĩa là phép đo hỏng, không phải mã đạt.
+- Mỗi phép đo ghi số lượt và cỡ mẫu, không ghi "đạt" trống không.
+- Tiêu chí dùng selector phải nêu selector chỉ khớp đúng trạng thái đang kiểm.
 
 ## Ranh giới sửa file
 
