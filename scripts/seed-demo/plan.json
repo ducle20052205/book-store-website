@@ -6,31 +6,353 @@
     "refuseIfNowBefore": "2026-10-06T00:00:00+07:00",
     "warnIfNowLaterThanEndByMonths": 12
   },
-  "timeOfDay": {
-    "formula": "hour = hour.base + (n mod hour.modulus); minute = (n * minute.multiplier) mod minute.modulus; second = 0",
-    "hour": { "base": 8, "modulus": 11 },
-    "minute": { "multiplier": 17, "modulus": 60 },
-    "second": 0
-  },
+  "event_seed": 20261006,
   "accounts": {
     "count": 25,
     "emailPattern": "nguoi-dung-NN@example.com",
     "distinctProvincesMin": 8
   },
-  "orders": {
-    "total": 42,
-    "perAccount": { "min": 1, "max": 4 },
-    "linesPerOrder": { "min": 1, "max": 3 },
-    "quantityPerLine": { "min": 1, "max": 2 },
-    "byMonth": [
-      { "month": "2026-04", "orders": 6, "dayFrom": 1, "dayTo": 30 },
-      { "month": "2026-05", "orders": 6, "dayFrom": 1, "dayTo": 31 },
-      { "month": "2026-06", "orders": 6, "dayFrom": 1, "dayTo": 30 },
-      { "month": "2026-07", "orders": 6, "dayFrom": 1, "dayTo": 31 },
-      { "month": "2026-08", "orders": 6, "dayFrom": 1, "dayTo": 31 },
-      { "month": "2026-09", "orders": 6, "dayFrom": 1, "dayTo": 30 },
-      { "month": "2026-10", "orders": 6, "dayFrom": 1, "dayTo": 5 }
-    ],
+  "orders": [
+    {
+      "n": 1,
+      "date": "2026-04-03",
+      "time": "09:17:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 2,
+      "date": "2026-04-08",
+      "time": "10:34:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 3,
+      "date": "2026-04-13",
+      "time": "11:51:00",
+      "status": "completed",
+      "payment_method": "bank_transfer",
+      "has_confirmation": true
+    },
+    {
+      "n": 4,
+      "date": "2026-04-18",
+      "time": "12:08:00",
+      "status": "cancelled",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 5,
+      "date": "2026-04-23",
+      "time": "13:25:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 6,
+      "date": "2026-04-28",
+      "time": "14:42:00",
+      "status": "completed",
+      "payment_method": "bank_transfer",
+      "has_confirmation": true
+    },
+    {
+      "n": 7,
+      "date": "2026-05-03",
+      "time": "15:59:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 8,
+      "date": "2026-05-08",
+      "time": "16:16:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 9,
+      "date": "2026-05-13",
+      "time": "17:33:00",
+      "status": "cancelled",
+      "payment_method": "bank_transfer",
+      "has_confirmation": true
+    },
+    {
+      "n": 10,
+      "date": "2026-05-18",
+      "time": "18:50:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "has_confirmation": false
+    },
+    {
+      "n": 11,
+      "date": "2026-05-23",
+      "time": "08:07:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 12,
+      "date": "2026-05-28",
+      "time": "09:24:00",
+      "status": "completed",
+      "payment_method": "bank_transfer",
+      "has_confirmation": true
+    },
+    {
+      "n": 13,
+      "date": "2026-06-03",
+      "time": "10:41:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 14,
+      "date": "2026-06-08",
+      "time": "11:58:00",
+      "status": "cancelled",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 15,
+      "date": "2026-06-13",
+      "time": "12:15:00",
+      "status": "completed",
+      "payment_method": "bank_transfer",
+      "has_confirmation": true
+    },
+    {
+      "n": 16,
+      "date": "2026-06-18",
+      "time": "13:32:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 17,
+      "date": "2026-06-23",
+      "time": "14:49:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 18,
+      "date": "2026-06-28",
+      "time": "15:06:00",
+      "status": "completed",
+      "payment_method": "bank_transfer",
+      "has_confirmation": true
+    },
+    {
+      "n": 19,
+      "date": "2026-07-03",
+      "time": "16:23:00",
+      "status": "cancelled",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 20,
+      "date": "2026-07-08",
+      "time": "17:40:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "has_confirmation": false
+    },
+    {
+      "n": 21,
+      "date": "2026-07-13",
+      "time": "18:57:00",
+      "status": "completed",
+      "payment_method": "bank_transfer",
+      "has_confirmation": true
+    },
+    {
+      "n": 22,
+      "date": "2026-07-18",
+      "time": "08:14:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 23,
+      "date": "2026-07-23",
+      "time": "09:31:00",
+      "status": "processing",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 24,
+      "date": "2026-07-28",
+      "time": "10:48:00",
+      "status": "cancelled",
+      "payment_method": "bank_transfer",
+      "has_confirmation": true
+    },
+    {
+      "n": 25,
+      "date": "2026-08-03",
+      "time": "11:05:00",
+      "status": "processing",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 26,
+      "date": "2026-08-08",
+      "time": "12:22:00",
+      "status": "processing",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 27,
+      "date": "2026-08-13",
+      "time": "13:39:00",
+      "status": "processing",
+      "payment_method": "bank_transfer",
+      "has_confirmation": true
+    },
+    {
+      "n": 28,
+      "date": "2026-08-18",
+      "time": "14:56:00",
+      "status": "processing",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 29,
+      "date": "2026-08-23",
+      "time": "15:13:00",
+      "status": "cancelled",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 30,
+      "date": "2026-08-28",
+      "time": "16:30:00",
+      "status": "shipped",
+      "payment_method": "bank_transfer",
+      "has_confirmation": false
+    },
+    {
+      "n": 31,
+      "date": "2026-09-03",
+      "time": "17:47:00",
+      "status": "shipped",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 32,
+      "date": "2026-09-08",
+      "time": "18:04:00",
+      "status": "shipped",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 33,
+      "date": "2026-09-13",
+      "time": "08:21:00",
+      "status": "shipped",
+      "payment_method": "bank_transfer",
+      "has_confirmation": true
+    },
+    {
+      "n": 34,
+      "date": "2026-09-18",
+      "time": "09:38:00",
+      "status": "cancelled",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 35,
+      "date": "2026-09-23",
+      "time": "10:55:00",
+      "status": "shipped",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 36,
+      "date": "2026-09-28",
+      "time": "11:12:00",
+      "status": "pending",
+      "payment_method": "bank_transfer",
+      "has_confirmation": true
+    },
+    {
+      "n": 37,
+      "date": "2026-10-01",
+      "time": "12:29:00",
+      "status": "pending",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 38,
+      "date": "2026-10-02",
+      "time": "13:46:00",
+      "status": "pending",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 39,
+      "date": "2026-10-03",
+      "time": "14:03:00",
+      "status": "cancelled",
+      "payment_method": "bank_transfer",
+      "has_confirmation": true
+    },
+    {
+      "n": 40,
+      "date": "2026-10-04",
+      "time": "15:20:00",
+      "status": "pending",
+      "payment_method": "cod",
+      "has_confirmation": false
+    },
+    {
+      "n": 41,
+      "date": "2026-10-05",
+      "time": "16:37:00",
+      "status": "pending",
+      "payment_method": "cod",
+      "has_confirmation": true
+    },
+    {
+      "n": 42,
+      "date": "2026-10-05",
+      "time": "17:54:00",
+      "status": "pending",
+      "payment_method": "bank_transfer",
+      "has_confirmation": true
+    }
+  ],
+  "expected": {
+    "ordersTotal": 42,
+    "ordersPerMonth": 6,
     "byStatus": {
       "pending": 6,
       "processing": 5,
@@ -38,24 +360,51 @@
       "completed": 18,
       "cancelled": 8
     },
-    "updatesPerOrderByStatus": {
-      "pending": 0,
-      "processing": 1,
-      "shipped": 2,
-      "completed": 3,
-      "cancelled": 1
+    "paymentMethod": {
+      "cod": 28,
+      "bank_transfer": 14
     },
-    "paymentMethod": { "cod": 28, "bank_transfer": 14 },
-    "confirmationEmail": {
-      "withValue": 38,
-      "nullOrderNumbers": [10, 20, 30, 40],
-      "offsetSeconds": { "base": 2, "multiplier": 7, "modulus": 39 },
-      "formula": "created_at_final + (offsetSeconds.base + (n * offsetSeconds.multiplier) mod offsetSeconds.modulus) seconds"
+    "hasConfirmation": {
+      "true": 38,
+      "false": 4
+    }
+  },
+  "updatesPerOrderByStatus": {
+    "pending": 0,
+    "processing": 1,
+    "shipped": 2,
+    "completed": 3,
+    "cancelled": 1
+  },
+  "ordersShape": {
+    "perAccount": {
+      "min": 1,
+      "max": 4
+    },
+    "linesPerOrder": {
+      "min": 1,
+      "max": 3
+    },
+    "quantityPerLine": {
+      "min": 1,
+      "max": 2
+    },
+    "confirmationEmailOffsetSeconds": {
+      "base": 2,
+      "multiplier": 7,
+      "modulus": 39
+    },
+    "orderPlacedOffsetSeconds": {
+      "base": 1,
+      "modulus": 5
     }
   },
   "sales": {
     "sellableBooks": 36,
-    "capPerBook": { "maxUnits": 5, "reserveUnits": 1, "formula": "min(maxUnits, V - reserveUnits)" },
+    "capPerBook": {
+      "maxUnits": 5,
+      "reserveUnits": 1
+    },
     "neverSellStockZero": true,
     "coverage": {
       "distinctBooksMin": 24,
@@ -82,11 +431,26 @@
     "metadataMaxBytes": 2048,
     "seedRef": {
       "format": "seed:<event_type>:<number>",
-      "order_placed": { "from": 1, "to": 42 },
-      "checkout_started_matched": { "from": 1, "to": 42 },
-      "checkout_started_abandoned": { "from": 43, "to": 60 }
+      "order_placed": {
+        "from": 1,
+        "to": 42
+      },
+      "checkout_started_matched": {
+        "from": 1,
+        "to": 42
+      },
+      "checkout_started_abandoned": {
+        "from": 43,
+        "to": 60
+      }
     },
-    "abandonedCart": { "totalQuantityMin": 1, "totalQuantityMax": 3 },
-    "search": { "distinctKeywords": 20, "zeroResultKeywordsMin": 2 }
+    "abandonedCart": {
+      "totalQuantityMin": 1,
+      "totalQuantityMax": 3
+    },
+    "search": {
+      "distinctKeywords": 20,
+      "zeroResultKeywordsMin": 2
+    }
   }
 }
