@@ -193,7 +193,7 @@
       "n": 23,
       "date": "2026-07-23",
       "time": "09:31:00",
-      "status": "processing",
+      "status": "shipped",
       "payment_method": "cod",
       "has_confirmation": true
     },
@@ -209,7 +209,7 @@
       "n": 25,
       "date": "2026-08-03",
       "time": "11:05:00",
-      "status": "processing",
+      "status": "shipped",
       "payment_method": "cod",
       "has_confirmation": true
     },
@@ -217,7 +217,7 @@
       "n": 26,
       "date": "2026-08-08",
       "time": "12:22:00",
-      "status": "processing",
+      "status": "shipped",
       "payment_method": "cod",
       "has_confirmation": true
     },
@@ -225,7 +225,7 @@
       "n": 27,
       "date": "2026-08-13",
       "time": "13:39:00",
-      "status": "processing",
+      "status": "shipped",
       "payment_method": "bank_transfer",
       "has_confirmation": true
     },
@@ -233,7 +233,7 @@
       "n": 28,
       "date": "2026-08-18",
       "time": "14:56:00",
-      "status": "processing",
+      "status": "shipped",
       "payment_method": "cod",
       "has_confirmation": true
     },
@@ -249,7 +249,7 @@
       "n": 30,
       "date": "2026-08-28",
       "time": "16:30:00",
-      "status": "shipped",
+      "status": "processing",
       "payment_method": "bank_transfer",
       "has_confirmation": false
     },
@@ -257,7 +257,7 @@
       "n": 31,
       "date": "2026-09-03",
       "time": "17:47:00",
-      "status": "shipped",
+      "status": "processing",
       "payment_method": "cod",
       "has_confirmation": true
     },
@@ -265,7 +265,7 @@
       "n": 32,
       "date": "2026-09-08",
       "time": "18:04:00",
-      "status": "shipped",
+      "status": "processing",
       "payment_method": "cod",
       "has_confirmation": true
     },
@@ -273,7 +273,7 @@
       "n": 33,
       "date": "2026-09-13",
       "time": "08:21:00",
-      "status": "shipped",
+      "status": "processing",
       "payment_method": "bank_transfer",
       "has_confirmation": true
     },
@@ -289,7 +289,7 @@
       "n": 35,
       "date": "2026-09-23",
       "time": "10:55:00",
-      "status": "shipped",
+      "status": "processing",
       "payment_method": "cod",
       "has_confirmation": true
     },
@@ -367,36 +367,6 @@
     "hasConfirmation": {
       "true": 38,
       "false": 4
-    }
-  },
-  "updatesPerOrderByStatus": {
-    "pending": 0,
-    "processing": 1,
-    "shipped": 2,
-    "completed": 3,
-    "cancelled": 1
-  },
-  "ordersShape": {
-    "perAccount": {
-      "min": 1,
-      "max": 4
-    },
-    "linesPerOrder": {
-      "min": 1,
-      "max": 3
-    },
-    "quantityPerLine": {
-      "min": 1,
-      "max": 2
-    },
-    "confirmationEmailOffsetSeconds": {
-      "base": 2,
-      "multiplier": 7,
-      "modulus": 39
-    },
-    "orderPlacedOffsetSeconds": {
-      "base": 1,
-      "modulus": 5
     }
   },
   "sales": {
