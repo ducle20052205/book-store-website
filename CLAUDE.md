@@ -61,6 +61,7 @@ Những điều dưới đây trông như có thể "dọn cho gọn" nhưng kh�
 
 - Không bao giờ commit `.env*`, trừ `.env.local.example` (chỉ chứa placeholder rỗng, không có giá trị thật).
 - Secret key (vd. `SUPABASE_SECRET_KEY`) chỉ dùng phía server, không bao giờ prefix `NEXT_PUBLIC_`; bảng mới trong Supabase phải bật RLS trước khi có dữ liệu thật.
+- Không `tail` hay in thẳng đầu ra của `supabase start` và `supabase status` (chứa `JWT_SECRET` và khoá S3 cục bộ); đọc giá trị cần dùng bằng `supabase status -o env` rồi lấy đúng biến.
 - Repo này là public. Không commit email cá nhân, khoá, mật khẩu — kể cả trong tài liệu, mockup, ảnh chụp màn hình và comment. Dữ liệu mẫu dùng `ban.doc@example.com`.
 - Trước khi commit thư mục có tài liệu hoặc ảnh mới, quét: `grep -rn "gmail.com" <thư mục>` trên các file text.
 
