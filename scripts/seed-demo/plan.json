@@ -1,0 +1,990 @@
+{
+  "window": {
+    "start": "2026-04-01",
+    "end": "2026-10-05",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "refuseIfNowBefore": "2026-10-06T00:00:00+07:00",
+    "warnIfNowLaterThanEndByMonths": 12
+  },
+  "event_seed": 20261006,
+  "accounts": {
+    "count": 25,
+    "emailPattern": "nguoi-dung-NN@example.com",
+    "distinctProvincesMin": 8
+  },
+  "orders": [
+    {
+      "n": 1,
+      "account": 1,
+      "date": "2026-04-03",
+      "time": "09:17:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "nha-gia-kim",
+          "qty": 2
+        },
+        {
+          "slug": "cay-cam-ngot-cua-toi",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 9,
+      "orderPlacedOffsetSeconds": 2
+    },
+    {
+      "n": 2,
+      "account": 2,
+      "date": "2026-04-08",
+      "time": "10:34:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "rung-na-uy",
+          "qty": 1
+        },
+        {
+          "slug": "ho-diep-va-kinh-ngu",
+          "qty": 2
+        },
+        {
+          "slug": "xu-tuyet",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 16,
+      "orderPlacedOffsetSeconds": 3
+    },
+    {
+      "n": 3,
+      "account": 3,
+      "date": "2026-04-13",
+      "time": "11:51:00",
+      "status": "completed",
+      "payment_method": "bank_transfer",
+      "lines": [
+        {
+          "slug": "phia-sau-nghi-can-x",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 23,
+      "orderPlacedOffsetSeconds": 4
+    },
+    {
+      "n": 4,
+      "account": 4,
+      "date": "2026-04-18",
+      "time": "12:08:00",
+      "status": "cancelled",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "dieu-ky-dieu-cua-tiem-tap-hoa-namiya",
+          "qty": 1
+        },
+        {
+          "slug": "mat-biec",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 30,
+      "orderPlacedOffsetSeconds": 5
+    },
+    {
+      "n": 5,
+      "account": 5,
+      "date": "2026-04-23",
+      "time": "13:25:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "toi-thay-hoa-vang-tren-co-xanh",
+          "qty": 2
+        },
+        {
+          "slug": "ke-toan-via-he",
+          "qty": 1
+        },
+        {
+          "slug": "cha-giau-cha-ngheo",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 37,
+      "orderPlacedOffsetSeconds": 1
+    },
+    {
+      "n": 6,
+      "account": 6,
+      "date": "2026-04-28",
+      "time": "14:42:00",
+      "status": "completed",
+      "payment_method": "bank_transfer",
+      "lines": [
+        {
+          "slug": "tam-ly-hoc-ve-tien",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 5,
+      "orderPlacedOffsetSeconds": 2
+    },
+    {
+      "n": 7,
+      "account": 7,
+      "date": "2026-05-03",
+      "time": "15:59:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "tu-tot-den-vi-dai",
+          "qty": 2
+        },
+        {
+          "slug": "con-bo-tim",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 12,
+      "orderPlacedOffsetSeconds": 3
+    },
+    {
+      "n": 8,
+      "account": 8,
+      "date": "2026-05-08",
+      "time": "16:16:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "khoi-nghiep-tinh-gon",
+          "qty": 1
+        },
+        {
+          "slug": "tu-khong-den-mot",
+          "qty": 2
+        },
+        {
+          "slug": "dac-nhan-tam",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 19,
+      "orderPlacedOffsetSeconds": 4
+    },
+    {
+      "n": 9,
+      "account": 9,
+      "date": "2026-05-13",
+      "time": "17:33:00",
+      "status": "cancelled",
+      "payment_method": "bank_transfer",
+      "lines": [
+        {
+          "slug": "thoi-quen-nguyen-tu",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 26,
+      "orderPlacedOffsetSeconds": 5
+    },
+    {
+      "n": 10,
+      "account": 10,
+      "date": "2026-05-18",
+      "time": "18:50:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "tuoi-tre-dang-gia-bao-nhieu",
+          "qty": 1
+        },
+        {
+          "slug": "con-duong-chang-may-ai-di",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": false,
+      "emailOffsetSeconds": null,
+      "orderPlacedOffsetSeconds": 1
+    },
+    {
+      "n": 11,
+      "account": 11,
+      "date": "2026-05-23",
+      "time": "08:07:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "tu-duy-nhanh-va-cham",
+          "qty": 2
+        },
+        {
+          "slug": "phi-ly-tri",
+          "qty": 1
+        },
+        {
+          "slug": "hieu-ve-trai-tim",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 40,
+      "orderPlacedOffsetSeconds": 2
+    },
+    {
+      "n": 12,
+      "account": 12,
+      "date": "2026-05-28",
+      "time": "09:24:00",
+      "status": "completed",
+      "payment_method": "bank_transfer",
+      "lines": [
+        {
+          "slug": "sapiens-luoc-su-loai-nguoi",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 8,
+      "orderPlacedOffsetSeconds": 3
+    },
+    {
+      "n": 13,
+      "account": 13,
+      "date": "2026-06-03",
+      "time": "10:41:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "homo-deus-luoc-su-tuong-lai",
+          "qty": 2
+        },
+        {
+          "slug": "sung-vi-trung-va-thep",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 15,
+      "orderPlacedOffsetSeconds": 4
+    },
+    {
+      "n": 14,
+      "account": 14,
+      "date": "2026-06-08",
+      "time": "11:58:00",
+      "status": "cancelled",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "luoc-su-thoi-gian",
+          "qty": 1
+        },
+        {
+          "slug": "vu-tru",
+          "qty": 2
+        },
+        {
+          "slug": "the-gioi-cua-sophie",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 22,
+      "orderPlacedOffsetSeconds": 5
+    },
+    {
+      "n": 15,
+      "account": 15,
+      "date": "2026-06-13",
+      "time": "12:15:00",
+      "status": "completed",
+      "payment_method": "bank_transfer",
+      "lines": [
+        {
+          "slug": "suy-tuong",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 29,
+      "orderPlacedOffsetSeconds": 1
+    },
+    {
+      "n": 16,
+      "account": 16,
+      "date": "2026-06-18",
+      "time": "13:32:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "dandadan-tap-1",
+          "qty": 1
+        },
+        {
+          "slug": "spy-x-family-tap-1",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 36,
+      "orderPlacedOffsetSeconds": 2
+    },
+    {
+      "n": 17,
+      "account": 17,
+      "date": "2026-06-23",
+      "time": "14:49:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "frieren-phap-su-tien-tang-tap-1",
+          "qty": 2
+        },
+        {
+          "slug": "van-hao-luu-lac-tap-1",
+          "qty": 1
+        },
+        {
+          "slug": "horimiya-tap-1",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 4,
+      "orderPlacedOffsetSeconds": 3
+    },
+    {
+      "n": 18,
+      "account": 18,
+      "date": "2026-06-28",
+      "time": "15:06:00",
+      "status": "completed",
+      "payment_method": "bank_transfer",
+      "lines": [
+        {
+          "slug": "overlord-tap-6",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 11,
+      "orderPlacedOffsetSeconds": 4
+    },
+    {
+      "n": 19,
+      "account": 19,
+      "date": "2026-07-03",
+      "time": "16:23:00",
+      "status": "cancelled",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "nha-gia-kim",
+          "qty": 2
+        },
+        {
+          "slug": "cay-cam-ngot-cua-toi",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 18,
+      "orderPlacedOffsetSeconds": 5
+    },
+    {
+      "n": 20,
+      "account": 20,
+      "date": "2026-07-08",
+      "time": "17:40:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "rung-na-uy",
+          "qty": 1
+        },
+        {
+          "slug": "ho-diep-va-kinh-ngu",
+          "qty": 2
+        },
+        {
+          "slug": "xu-tuyet",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": false,
+      "emailOffsetSeconds": null,
+      "orderPlacedOffsetSeconds": 1
+    },
+    {
+      "n": 21,
+      "account": 21,
+      "date": "2026-07-13",
+      "time": "18:57:00",
+      "status": "completed",
+      "payment_method": "bank_transfer",
+      "lines": [
+        {
+          "slug": "phia-sau-nghi-can-x",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 32,
+      "orderPlacedOffsetSeconds": 2
+    },
+    {
+      "n": 22,
+      "account": 22,
+      "date": "2026-07-18",
+      "time": "08:14:00",
+      "status": "completed",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "dieu-ky-dieu-cua-tiem-tap-hoa-namiya",
+          "qty": 1
+        },
+        {
+          "slug": "mat-biec",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 39,
+      "orderPlacedOffsetSeconds": 3
+    },
+    {
+      "n": 23,
+      "account": 23,
+      "date": "2026-07-23",
+      "time": "09:31:00",
+      "status": "shipped",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "toi-thay-hoa-vang-tren-co-xanh",
+          "qty": 2
+        },
+        {
+          "slug": "ke-toan-via-he",
+          "qty": 1
+        },
+        {
+          "slug": "cha-giau-cha-ngheo",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 7,
+      "orderPlacedOffsetSeconds": 4
+    },
+    {
+      "n": 24,
+      "account": 24,
+      "date": "2026-07-28",
+      "time": "10:48:00",
+      "status": "cancelled",
+      "payment_method": "bank_transfer",
+      "lines": [
+        {
+          "slug": "tam-ly-hoc-ve-tien",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 14,
+      "orderPlacedOffsetSeconds": 5
+    },
+    {
+      "n": 25,
+      "account": 25,
+      "date": "2026-08-03",
+      "time": "11:05:00",
+      "status": "shipped",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "tu-tot-den-vi-dai",
+          "qty": 2
+        },
+        {
+          "slug": "con-bo-tim",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 21,
+      "orderPlacedOffsetSeconds": 1
+    },
+    {
+      "n": 26,
+      "account": 1,
+      "date": "2026-08-08",
+      "time": "12:22:00",
+      "status": "shipped",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "khoi-nghiep-tinh-gon",
+          "qty": 1
+        },
+        {
+          "slug": "tu-khong-den-mot",
+          "qty": 2
+        },
+        {
+          "slug": "dac-nhan-tam",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 28,
+      "orderPlacedOffsetSeconds": 2
+    },
+    {
+      "n": 27,
+      "account": 2,
+      "date": "2026-08-13",
+      "time": "13:39:00",
+      "status": "shipped",
+      "payment_method": "bank_transfer",
+      "lines": [
+        {
+          "slug": "thoi-quen-nguyen-tu",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 35,
+      "orderPlacedOffsetSeconds": 3
+    },
+    {
+      "n": 28,
+      "account": 3,
+      "date": "2026-08-18",
+      "time": "14:56:00",
+      "status": "shipped",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "tuoi-tre-dang-gia-bao-nhieu",
+          "qty": 1
+        },
+        {
+          "slug": "con-duong-chang-may-ai-di",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 3,
+      "orderPlacedOffsetSeconds": 4
+    },
+    {
+      "n": 29,
+      "account": 4,
+      "date": "2026-08-23",
+      "time": "15:13:00",
+      "status": "cancelled",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "tu-duy-nhanh-va-cham",
+          "qty": 2
+        },
+        {
+          "slug": "phi-ly-tri",
+          "qty": 1
+        },
+        {
+          "slug": "hieu-ve-trai-tim",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 10,
+      "orderPlacedOffsetSeconds": 5
+    },
+    {
+      "n": 30,
+      "account": 5,
+      "date": "2026-08-28",
+      "time": "16:30:00",
+      "status": "processing",
+      "payment_method": "bank_transfer",
+      "lines": [
+        {
+          "slug": "sapiens-luoc-su-loai-nguoi",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": false,
+      "emailOffsetSeconds": null,
+      "orderPlacedOffsetSeconds": 1
+    },
+    {
+      "n": 31,
+      "account": 6,
+      "date": "2026-09-03",
+      "time": "17:47:00",
+      "status": "processing",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "homo-deus-luoc-su-tuong-lai",
+          "qty": 2
+        },
+        {
+          "slug": "sung-vi-trung-va-thep",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 24,
+      "orderPlacedOffsetSeconds": 2
+    },
+    {
+      "n": 32,
+      "account": 7,
+      "date": "2026-09-08",
+      "time": "18:04:00",
+      "status": "processing",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "luoc-su-thoi-gian",
+          "qty": 1
+        },
+        {
+          "slug": "vu-tru",
+          "qty": 2
+        },
+        {
+          "slug": "the-gioi-cua-sophie",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 31,
+      "orderPlacedOffsetSeconds": 3
+    },
+    {
+      "n": 33,
+      "account": 8,
+      "date": "2026-09-13",
+      "time": "08:21:00",
+      "status": "processing",
+      "payment_method": "bank_transfer",
+      "lines": [
+        {
+          "slug": "suy-tuong",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 38,
+      "orderPlacedOffsetSeconds": 4
+    },
+    {
+      "n": 34,
+      "account": 9,
+      "date": "2026-09-18",
+      "time": "09:38:00",
+      "status": "cancelled",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "dandadan-tap-1",
+          "qty": 1
+        },
+        {
+          "slug": "spy-x-family-tap-1",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 6,
+      "orderPlacedOffsetSeconds": 5
+    },
+    {
+      "n": 35,
+      "account": 10,
+      "date": "2026-09-23",
+      "time": "10:55:00",
+      "status": "processing",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "frieren-phap-su-tien-tang-tap-1",
+          "qty": 2
+        },
+        {
+          "slug": "van-hao-luu-lac-tap-1",
+          "qty": 1
+        },
+        {
+          "slug": "horimiya-tap-1",
+          "qty": 2
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 13,
+      "orderPlacedOffsetSeconds": 1
+    },
+    {
+      "n": 36,
+      "account": 11,
+      "date": "2026-09-28",
+      "time": "11:12:00",
+      "status": "pending",
+      "payment_method": "bank_transfer",
+      "lines": [
+        {
+          "slug": "overlord-tap-6",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 20,
+      "orderPlacedOffsetSeconds": 2
+    },
+    {
+      "n": 37,
+      "account": 12,
+      "date": "2026-10-01",
+      "time": "12:29:00",
+      "status": "pending",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "nha-gia-kim",
+          "qty": 1
+        },
+        {
+          "slug": "cay-cam-ngot-cua-toi",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 27,
+      "orderPlacedOffsetSeconds": 3
+    },
+    {
+      "n": 38,
+      "account": 13,
+      "date": "2026-10-02",
+      "time": "13:46:00",
+      "status": "pending",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "rung-na-uy",
+          "qty": 1
+        },
+        {
+          "slug": "ho-diep-va-kinh-ngu",
+          "qty": 1
+        },
+        {
+          "slug": "xu-tuyet",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 34,
+      "orderPlacedOffsetSeconds": 4
+    },
+    {
+      "n": 39,
+      "account": 14,
+      "date": "2026-10-03",
+      "time": "14:03:00",
+      "status": "cancelled",
+      "payment_method": "bank_transfer",
+      "lines": [
+        {
+          "slug": "phia-sau-nghi-can-x",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 2,
+      "orderPlacedOffsetSeconds": 5
+    },
+    {
+      "n": 40,
+      "account": 15,
+      "date": "2026-10-04",
+      "time": "15:20:00",
+      "status": "pending",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "dieu-ky-dieu-cua-tiem-tap-hoa-namiya",
+          "qty": 1
+        },
+        {
+          "slug": "mat-biec",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": false,
+      "emailOffsetSeconds": null,
+      "orderPlacedOffsetSeconds": 1
+    },
+    {
+      "n": 41,
+      "account": 16,
+      "date": "2026-10-05",
+      "time": "16:37:00",
+      "status": "pending",
+      "payment_method": "cod",
+      "lines": [
+        {
+          "slug": "toi-thay-hoa-vang-tren-co-xanh",
+          "qty": 1
+        },
+        {
+          "slug": "ke-toan-via-he",
+          "qty": 1
+        },
+        {
+          "slug": "cha-giau-cha-ngheo",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 16,
+      "orderPlacedOffsetSeconds": 2
+    },
+    {
+      "n": 42,
+      "account": 17,
+      "date": "2026-10-05",
+      "time": "17:54:00",
+      "status": "pending",
+      "payment_method": "bank_transfer",
+      "lines": [
+        {
+          "slug": "tam-ly-hoc-ve-tien",
+          "qty": 1
+        }
+      ],
+      "has_confirmation": true,
+      "emailOffsetSeconds": 23,
+      "orderPlacedOffsetSeconds": 3
+    }
+  ],
+  "expected": {
+    "ordersTotal": 42,
+    "ordersPerMonth": 6,
+    "byStatus": {
+      "pending": 6,
+      "processing": 5,
+      "shipped": 5,
+      "completed": 18,
+      "cancelled": 8
+    },
+    "paymentMethod": {
+      "cod": 28,
+      "bank_transfer": 14
+    },
+    "hasConfirmation": {
+      "true": 38,
+      "false": 4
+    },
+    "accounts": {
+      "count": 25,
+      "minOrdersPerAccount": 1,
+      "maxOrdersPerAccount": 4
+    },
+    "linesPerOrder": {
+      "min": 1,
+      "max": 3
+    },
+    "quantityPerLine": {
+      "min": 1,
+      "max": 2
+    },
+    "vector": {
+      "keys": 40,
+      "total": 835,
+      "zeros": 4
+    },
+    "sales": {
+      "maxUnitsPerBook": 5,
+      "reserveUnits": 1,
+      "distinctSlugsMin": 24,
+      "distinctSlugsInNonCancelledMin": 20,
+      "zeroSlugsAfterApply": 4,
+      "totalUnits": 120,
+      "unitsNonCancelled": 98,
+      "distinctSlugs": 36,
+      "distinctSlugsInNonCancelled": 36,
+      "slugsAtCap": 6
+    }
+  },
+  "events": {
+    "total": 1897,
+    "byType": {
+      "page_view": 1200,
+      "search": 360,
+      "add_to_cart": 150,
+      "checkout_started": 60,
+      "order_placed": 42,
+      "sign_up": 25,
+      "login": 60
+    },
+    "anonymousShareMin": {
+      "page_view": 0.75,
+      "search": 0.75,
+      "add_to_cart": 0.5
+    },
+    "sessionIdsDistinctMin": 300,
+    "metadataMaxBytes": 2048,
+    "seedRef": {
+      "format": "seed:<event_type>:<number>",
+      "order_placed": {
+        "from": 1,
+        "to": 42
+      },
+      "checkout_started_matched": {
+        "from": 1,
+        "to": 42
+      },
+      "checkout_started_abandoned": {
+        "from": 43,
+        "to": 60
+      }
+    },
+    "abandonedCart": {
+      "totalQuantityMin": 1,
+      "totalQuantityMax": 3
+    },
+    "search": {
+      "distinctKeywords": 20,
+      "zeroResultKeywordsMin": 2
+    }
+  }
+}
