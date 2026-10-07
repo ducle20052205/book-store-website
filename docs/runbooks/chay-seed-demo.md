@@ -1,6 +1,6 @@
 # Runbook — Chạy seed dữ liệu demo lên hosted
 
-Cập nhật lần cuối: 06/10/2026. Việc này là **việc tay của chủ dự án**: Claude Code không tạo hay đăng nhập tài khoản trên hosted Auth. Spec: `docs/specs/dot-seed-du-lieu-demo.md` (mục 8). Cách dùng script: `scripts/seed-demo/README.md`. Khuôn: `docs/runbooks/supabase-local.md`.
+Cập nhật lần cuối: 07/10/2026. Việc này là **việc tay của chủ dự án**: Claude Code không tạo hay đăng nhập tài khoản trên hosted Auth. Spec: `docs/specs/dot-seed-du-lieu-demo.md` (mục 8). Cách dùng script: `scripts/seed-demo/README.md`. Khuôn: `docs/runbooks/supabase-local.md`.
 
 ## Hai điều phải biết trước khi chạy
 
@@ -30,11 +30,13 @@ Lấy từ lần đo thật trên stack cục bộ ngày 06/10/2026 (psql trực
 | Đơn | 42 (6 `pending`, 5 `processing`, 5 `shipped`, 18 `completed`, 8 `cancelled`) |
 | Dòng hàng (`order_items`) | 84 |
 | Sự kiện | 1.897 (1200 / 360 / 150 / 60 / 42 / 25 / 60) |
-| Tổng tồn kho | 737 (835 trừ 98 đơn vị bán ở đơn không hủy) |
+| Tổng tồn kho | 737 — SAU seed (835 là mốc TRƯỚC seed; cách tính ngay dưới bảng) |
 | Sách tồn kho 0 | 4: `bach-da-hanh`, `ban-co-the-dam-phan-bat-cu-dieu-gi`, `mindset-tam-ly-hoc-thanh-cong`, `tham-tu-lung-danh-conan-tap-1` |
 | Giỏ hàng của tài khoản demo | 0 |
 
 Sau `--teardown`: tồn kho 835, 4 slug ở mức 0, các mục còn lại 0.
+
+**Mốc nền tồn kho: 835 là TRƯỚC seed demo, 737 là SAU.** Phép tính để tự kiểm: `scripts/seed-demo/plan.json` có 42 đơn / 84 dòng hàng / 120 đơn vị, trong đó 8 đơn `cancelled` giữ 22 đơn vị. Đơn không hủy bán 120 − 22 = 98 đơn vị, nên 835 − (120 − 22) = **737**. Con số 737 không chỉ là tổng tồn: nó chỉ đúng khi trigger `orders_status_guard` hoàn tồn kho lúc đơn bị hủy. Nếu trigger không hoàn, 22 đơn vị của 8 đơn hủy vẫn bị trừ và tổng là 835 − 120 = 715. Vì vậy `--verify` in `835 − sum(stock) = 98 vs tổng quantity đơn không hủy = 98` (TC-S.9): hai vế bằng nhau là bằng chứng trigger đã hoàn đúng.
 
 ## Lưu ý riêng cho hosted
 
