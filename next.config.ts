@@ -6,19 +6,9 @@ const nextConfig: NextConfig = {
   // <Suspense>, phần còn lại prerender thành shell tĩnh. Xem components/Header.tsx.
   cacheComponents: true,
 
-  async redirects() {
-    return [
-      // Đợt 4 (spec FR-B4.6): /tai-khoan chưa có trang riêng, nhưng menu tài khoản trỏ vào đó ("Hồ sơ của
-      // bạn") nên trước đây là 404. Chuyển tạm sang danh sách đơn. Khi đợt 2D dựng trang hồ sơ thì BỎ
-      // chuyển hướng này. `redirects` của next.config chạy trước proxy, nên người chưa đăng nhập đi tiếp
-      // /tai-khoan → /tai-khoan/don-hang → proxy → /dang-nhap?next=…; và đây là 307 thật, không phải
-      // `redirect()` trong <Suspense> (mã HTTP 200). Chỉ đúng đường dẫn này, không `:path*`.
-      { source: "/tai-khoan", destination: "/tai-khoan/don-hang", permanent: false },
-      // Đợt 6 (spec FR-D.1): đã BỎ chuyển hướng /admin → /admin/don-hang của đợt 5A; `/admin` nay là trang
-      // thống kê (app/admin/page.tsx). Người chưa đăng nhập vào /admin được proxy.ts (matcher `/admin/:path*`)
-      // chuyển tới /dang-nhap?next=%2Fadmin.
-    ];
-  },
+  // Đợt 8 (spec FR-A.4): đã BỎ chuyển hướng /tai-khoan → /tai-khoan/don-hang của đợt 4 — `/tai-khoan` nay là trang hồ sơ
+  // (app/tai-khoan/page.tsx). Người chưa đăng nhập vào /tai-khoan được proxy.ts (`isUnder(pathname, "/tai-khoan")` khớp cả
+  // đúng đường dẫn này) chuyển tới /dang-nhap?next=%2Ftai-khoan. Đợt 6 cũng đã bỏ chuyển hướng /admin (app/admin/page.tsx).
 };
 
 export default nextConfig;
