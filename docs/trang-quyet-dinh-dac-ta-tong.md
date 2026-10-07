@@ -2,9 +2,9 @@
 
 > **Vai trò của file này:** nơi lưu những gì đã **thực sự chốt**, không phải nơi đưa ra quyết định mới. Project này đóng vai trò "chỉ huy": mọi quyết định về kiến trúc, thiết kế, tính năng và spec cho Claude Code được thảo luận và chốt trong các chat của project, sau đó cập nhật vào đây. Đọc file này trước khi trả lời để không hỏi lại hoặc mâu thuẫn với quyết định cũ — nhưng đừng coi mục "còn mở" là đã có hướng đi.
 >
-> **Ai được sửa phần nào.** Bản gốc là bản trong Claude.ai Project; file `docs/trang-quyet-dinh-dac-ta-tong.md` trong repo là bản đồng bộ. Claude Code **được sửa mục 7** (bảng tiến độ, số đo, số commit/PR) vì nó biết chính xác hơn. **Mọi mục khác chỉ chủ dự án ghi**, vì chúng chốt trong chat mà Claude Code không đọc được; thấy lệch thì báo cáo, không tự sửa. Mọi lần sửa file này là **commit riêng**, không gộp vào commit mã. Trong file chỉ ghi sự kiện và số đo kèm số mẫu — không có câu tự thuật tiến độ, không có đánh giá chất lượng công việc; file này sẽ nằm trong portfolio.
+> **Ai được sửa phần nào.** Bản gốc là bản trong Claude.ai Project; file `docs/trang-quyet-dinh-dac-ta-tong.md` trong repo là bản đồng bộ. Claude Code **được sửa mục 7** (bảng tiến độ, số đo, số commit/PR) vì nó biết chính xác hơn. **Mục 1–6, 8, 9 do Claude Code ghi theo prompt đóng đợt**, với nội dung chủ dự án đã chốt trong chat; thấy một khẳng định lệch mã thì báo cáo, không tự sửa. Mọi lần sửa file này là **commit riêng**, không gộp vào commit mã. Trong file chỉ ghi sự kiện và số đo kèm số mẫu — không có câu tự thuật tiến độ, không có đánh giá chất lượng công việc; file này sẽ nằm trong portfolio.
 >
-> **Hướng đồng bộ.** Bản gốc này giữ mục 1–6, 8, 9. **Mục 7 chỉ nằm ở repo**, do Claude Code ghi — bản gốc không giữ bản sao của nó. Khi dán bản gốc đè lên repo, phải nối lại mục 7 của repo bằng cách cắt–dán theo dòng, không viết lại. **`docs/SRS.md` chỉ nằm ở repo** — Project knowledge không giữ bản sao nào. Bản sao ở đó không có chủ sở hữu và đã lệch thật (v1.3 trong Project knowledge so với v1.5 trong repo, phát hiện 02/10). Cần đọc SRS thì gắn repo vào chat và đọc `docs/SRS.md`.
+> **Hướng đồng bộ — một chiều, chốt 07/10/2026.** **Repo là bản gốc của MỌI mục.** Claude Code ghi thẳng vào `docs/trang-quyet-dinh-dac-ta-tong.md`, kể cả mục 1–6, 8, 9; quyết định chốt trong chat đi vào repo qua prompt đóng đợt, không ai sửa tay bản Project knowledge. Bản trong Claude.ai Project được **sinh lại từ repo** sau mỗi đợt, bằng cách thay mục 7 bằng stub — không bao giờ sửa tay. Luật cũ (Project knowledge là bản gốc của mục 1–6, 8, 9) đã làm hai bản trôi khỏi nhau hai lần trong hai ngày (06/10 và 07/10), vì bên sửa được bản này thì không sửa được bản kia. **`docs/SRS.md` chỉ nằm ở repo** — Project knowledge không giữ bản sao nào. Bản sao ở đó không có chủ sở hữu và đã lệch thật (v1.3 trong Project knowledge so với v1.5 trong repo, phát hiện 02/10). Cần đọc SRS thì gắn repo vào chat và đọc `docs/SRS.md`.
 >
 > **Cập nhật lần cuối:** 07/10/2026
 > **Nguồn chân lý:** repo `github.com/ducle20052205/book-store-website`. Các file `docs/SRS.md`, `docs/specs/*`, `CLAUDE.md` trong repo là bản gốc; file này là bản tóm tắt cấp quyết định.
@@ -67,11 +67,13 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 
 **Đợt seed dữ liệu demo đã xong** (PR #23, squash `6257f0e`, 06/10/2026; số đo ở mục 7.11).
 
+**Đợt 6 dashboard thống kê đã xong** (PR #24, squash `8e43c16`, 06/10/2026; 10/10 tiêu chí đạt; migration `20261006164939_admin_dashboard_stats` đã áp lên hosted, 20 → 21; số đo ở mục 7.12).
+
 **Đợt 7 README cho nhà tuyển dụng đã xong** (PR #25, 07/10/2026; 6/6 tiêu chí đạt; số đo ở mục 7.13).
 
 - **Tạm dừng toàn bộ giao diện và chức năng cho mobile (chốt 06/10/2026).** Từ thời điểm này mọi đợt chỉ xây và chỉ đo cho máy tính. Mã mobile đã có — sheet của `AccountMenu` dưới 768px, thanh thao tác đáy dưới 1024px, các lớp responsive — **giữ nguyên, không gỡ**: gỡ là việc phải làm thêm, không phải tiết kiệm. Điều thay đổi: không xây giao diện mobile mới, không đặt tiêu chí nghiệm thu ở 390px, không chụp ảnh duyệt ở 390px, và mọi phát hiện chỉ xuất hiện ở bề rộng mobile (ví dụ 9/302 vùng chạm dưới 44px ở 390px, mục 9) chuyển sang danh sách sau thay vì sửa trong đợt. Yêu cầu accessibility KHÔNG được nới theo: tương phản, `aria-label`, bàn phím, trạng thái focus vẫn đo ở mọi đợt, chỉ bỏ phần đo theo bề rộng mobile. **Mobile là một GIAI ĐOẠN SAU KHI SẢN PHẨM HOÀN THÀNH, không phải một đợt trong danh sách còn lại.** Nó không nằm trong định nghĩa "xong" (bảy bước ở mục này) và không chen vào thứ tự các đợt đang chờ (dashboard, README, 5C, 2C, 2D, đợt 1.6, accessibility, chatbot). Chỉ khi toàn bộ phần máy tính đã xong — bao gồm cả README cho nhà tuyển dụng và đợt accessibility — mới mở giai đoạn mobile.
 
-**Thứ tự còn lại:** dashboard thống kê → 5C scenario Make.com → 2C quên mật khẩu → 2D trang hồ sơ → đợt 1.6 → sửa accessibility → chatbot.
+**Thứ tự còn lại:** 5C scenario Make.com → 2C quên mật khẩu → 2D trang hồ sơ → đợt 1.6 → sửa accessibility → chatbot.
 
 **Đợt seed dữ liệu demo: 7 FR, 10 tiêu chí nghiệm thu (5 trong đó là đối chứng).** Spec ở `docs/specs/dot-seed-du-lieu-demo.md` (v1.8, đóng băng). 25 tài khoản `@example.com`, 42 đơn trải 6 tháng đầy đủ + tháng hiện tại, 1.897 dòng `events` hình phễu, tồn kho sau khi chạy 737. Kết quả: **9/10 tiêu chí đạt**; TC-S.10 **trượt** vì điều khoản của chính nó không khả thi (xem mục 8). Dựng và đo toàn bộ trên stack cục bộ; **chưa chạy lên hosted** — đó là việc tay của chủ dự án theo `docs/runbooks/chay-seed-demo.md`.
 
@@ -94,7 +96,6 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 ### Điểm nhấn (chưa làm)
 
 1. **Chatbot trợ lý** dùng Gemini API: gợi ý sách theo mô tả tự nhiên dựa trên metadata catalog + trả lời FAQ tĩnh. Không thao tác giỏ hàng/đơn hàng, không truy cập dữ liệu cá nhân. API key qua backend proxy, cần rate limit. **System prompt: chưa soạn.**
-2. **Dashboard thống kê nâng cao cho admin:** doanh thu theo thời gian, sách bán chạy theo danh mục, phễu chuyển đổi (dùng bảng `events`).
 
 ## 5. Kiến trúc kỹ thuật (đã chốt)
 
@@ -117,6 +118,9 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
   - **Chưa xác minh** gói Make miễn phí có cho webhook chạy tức thì hay ép chu kỳ tối thiểu. Ngưỡng chốt trước: email chậm hơn 2 phút ở 3 lần thử thì bỏ Make khỏi đường đó.
 - **Hủy đơn làm bằng hàm `cancel_order` SECURITY DEFINER, KHÔNG bằng policy UPDATE cho khách (chốt 03/10, đợt lịch sử đơn).** Lý do: RLS không giới hạn được theo cột, nên một policy "chỉ được đặt `cancelled`" vẫn cho khách sửa kèm `total_amount` trong cùng câu `UPDATE`. Một hàm gom cả đổi trạng thái và chặn cột vào một chỗ. Hàm khoá dòng bằng `SELECT … FOR UPDATE`; thiếu khoá thì hai lời gọi đồng thời cộng trả kho hai lần (đo được: hàm ngây thơ sai 12/12 ở cửa sổ 50 ms). Khách vẫn **không có policy `INSERT` hay `UPDATE` nào** trên `orders`: đơn chỉ sinh qua `place_order`, chỉ hủy qua `cancel_order`.
 - **Luồng trạng thái đơn và việc cộng trả kho do MỘT trigger `BEFORE UPDATE` trên `orders` đảm nhiệm (chốt 03/10, đợt 5A).** Trigger vừa chặn chuyển trạng thái sai (chỉ 6 chuyển hợp lệ trong `pending → processing → shipped → completed`, và `→ cancelled` từ mọi trạng thái trước `completed`), vừa cộng trả kho khi sang `cancelled` — cho **mọi đường đi**: khách hủy, admin đổi, và cả sửa tay trong Supabase Dashboard. Vì vậy `cancel_order` đã **bỏ vòng cộng kho** của chính nó; để cả hai thì kho cộng hai lần. Mệnh đề `WHEN (OLD.status IS DISTINCT FROM NEW.status)` làm trigger tự idempotent — hai lệnh hủy đồng thời chỉ cộng trả một lần (đo 30/30); bỏ mệnh đề đó thì cộng thừa 12/12. Điều này khép lại việc mở của FR-6.4.
+- **Dashboard thống kê đọc qua MỘT hàm `admin_dashboard_stats()` (chốt 06/10, đợt 6).** `SECURITY INVOKER`, không `SECURITY DEFINER`: RLS của `orders` và `events` đã chỉ cho admin đọc nên không cần hàm vượt rào; hàm tự chặn thêm bằng `if not public.is_admin() then raise exception 'KHONG_PHAI_ADMIN'`. Thu hồi `execute` khỏi `public` và `anon`, cấp cho `authenticated`. Trả `jsonb` năm khoá (`kpi`, `revenue_by_month`, `top_books`, `category_sales`, `funnel`); trang gọi đúng một lần. Gộp tháng bằng `at time zone 'Asia/Ho_Chi_Minh'`. Chốt chặn đã kiểm trên hosted: gọi bằng vai `postgres` (không có `auth.uid()`) ném `KHONG_PHAI_ADMIN`.
+- **Biểu đồ vẽ bằng SVG viết tay, không thêm dependency.** Repo giữ đúng 5 dependency production. Lý do không dùng thư viện biểu đồ: ràng buộc gói miễn phí ở mục 1, và thư viện mặc định trông đúng kiểu "giao diện do AI sinh" mà mục 8 bảo phải chặn.
+- **Header đọc `profiles.role` để biết có phải admin không.** `AccountItem` vốn chỉ dùng `getClaims()` (không round-trip), nay thêm một truy vấn khoá chính cho người đã đăng nhập, trong `<Suspense>` sẵn có — đo cục bộ 1 → 2 truy vấn `/rest/v1/`, TTFB 68,4 → 66,1 ms (10 lượt mỗi phía, nằm trong nhiễu); chi phí hosted ước tính một vòng PostgREST ≈ 12,5 ms, là ước lượng chứ không phải số đo. KHÔNG dùng Custom Access Token Hook của Supabase: đó là thiết lập trên dashboard chưa ai kiểm được bằng lệnh, đúng loại rủi ro đã làm "Confirm email" sai suốt nhiều tuần. Hook là đường nâng cấp nếu phép đo sau này cho thấy truy vấn đó đáng kể.
 - Cloud/DevOps nâng cao (CI/CD): gác lại, chỉ làm nếu còn thời gian sau MVP.
 
 ### 5.1 Auth và rendering (chốt ở đợt 2A/2B/2B.1/2B.2/3A)
@@ -177,7 +181,7 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 - **Tài khoản thử trên hosted phải xoá sau mỗi đợt kiểm** (tiêu chí dọn dẹp). Quy trình: SELECT trước và in ra, xoá `events` của tài khoản đó trước (khoá ngoại NO ACTION), rồi xoá `auth.users` bằng id tường minh trong một transaction có chốt số dòng.
 - **Ảnh mockup phải là bản xuất từ canvas ở 2×, không phải ảnh chụp màn hình** — ảnh chụp mang theo giao diện công cụ, không đạt chuẩn cho repo public. Lưu ở `docs/mockups/buoc-N/`, kèm README ghi quyết định thiết kế và phạm vi.
 
-## 7. Tiến độ (06/10/2026)
+## 7. Tiến độ (07/10/2026)
 
 | Hạng mục | Trạng thái |
 |---|---|
@@ -743,6 +747,7 @@ Spec `docs/specs/dot-7-readme-nha-tuyen-dung.md` v1.1 (6 FR, 6 tiêu chí; sửa
 - **Tiêu chí phải đặt sau khi chốt kiến trúc, không phải trước.**
 - **Tiêu chí cho đợt tính năng là assertion chức năng, không phải đo timing.** Giỏ hàng và checkout hỏng vì logic (merge sai, trừ kho sai, tổng tiền sai), không vì timing.
 - Với mỗi tiêu chí, trả lời trước một câu: *"lệnh nào cho ra con số này?"* Không trả lời được thì đó chưa phải tiêu chí.
+- **Phép đo trong một khung cố định không thấy phần nằm ngoài khung.** CLS của đợt 6 đo trong khung 900px nên chân trang bị đẩy ra ngoài tầm bộ đo và không được tính; "CLS = 0" khi đó là kết quả của khung, không phải của trang. Cách chữa: đặt chiều cao khung theo chiều cao THẬT đo được của trang (2368 / 2275 / 1904 / 1913 px ở bốn khổ), rồi mới đo.
 - **Tiêu chí về phạm vi thay đổi phải tính tới quy trình đóng đợt.** TC-S.10 của đợt seed cấm sửa mọi file có sẵn trừ `.env.local.example`, nhưng quy trình đóng đợt BẮT BUỘC sửa mục 7 của chính file quyết định — nên tiêu chí đó không đạt được ở bất kỳ đợt nào, kể cả một đợt hoàn hảo. Đã giữ nguyên kết quả TRƯỢT thay vì sửa tiêu chí sau khi đã thấy kết quả; bốn phép đo thực chất bên trong nó (grep khoá trong `scripts/`, grep `.next/static` so với mốc, 0 file trong đường dẫn cấm, 19 migration) đều đạt, hai lệnh grep có đối chứng file giả.
 
 **Về cách đọc số đo**
@@ -800,6 +805,7 @@ Spec `docs/specs/dot-7-readme-nha-tuyen-dung.md` v1.1 (6 FR, 6 tiêu chí; sửa
 - Không tạo vùng cuộn riêng (`overflow-y: auto`) cho cột lọc; thà bỏ `sticky` còn hơn.
 - Giao diện do AI sinh có dấu hiệu nhận biết rõ: nhãn viết hoa trên mỗi khối, mũi tên gắn sau link, mọi thẻ chung một bo góc và một khoảng cách. Spec phải chặn từng dấu hiệu bằng tên gọi cụ thể.
 - **Thiếu hụt thị giác của site không nằm ở thẩm mỹ mà ở lớp hình ảnh.** Chính sách không dùng bìa bản quyền khiến toàn trang không có một pixel ảnh nào, nên 40 ô màu phẳng đọc ra là placeholder. Các đợt nâng cấp trước chữa bằng typography và layout nên luôn hụt. Cách chữa đúng là thêm một lớp ảnh atmosphere giấy phép mở, không phải gõ lại font.
+- **Một tính năng chỉ vào được bằng cách gõ URL thì chưa coi là đã làm xong.** Khu quản trị chạy đủ từ đợt 5A và 5B, nhưng admin đăng nhập xong không có liên kết nào dẫn vào — phải gõ `/admin/don-hang` lên thanh địa chỉ. Lỗi lộ ra khi chủ dự án dùng thật, không lộ ra ở bất kỳ tiêu chí nào của hai đợt đó. Từ nay mỗi đợt thêm trang mới phải trả lời một câu trước khi đóng: *người dùng vào trang này bằng đường nào, và đường đó có nằm trong tiêu chí không?*
 - **Một artboard cố định bằng đúng kích thước màn hình bị đọc là "toàn bộ trang".** Mockup mobile 390×844 không vẽ footer vì footer nằm dưới fold, và điều đó đã bị hiểu là "trang này không có footer". Khung một màn hình phải được ghi rõ trong README của thư mục mockup.
 
 **Từ đợt 5B**
