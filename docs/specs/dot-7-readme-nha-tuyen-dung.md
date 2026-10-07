@@ -1,15 +1,16 @@
 # Đợt 7 — README cho nhà tuyển dụng
 
-Phiên bản 1.0 · 07/10/2026 · Viết `README.md` ở gốc repo (hiện đúng 1 dòng). Đây là **bước 7 và là bước cuối** của định nghĩa "xong" ở mục 4 file quyết định.
-Nhánh: chưa tạo. Một chặng, một PR. Đợt này **không sửa một dòng mã nào**: chỉ `README.md`, cộng hai dòng ghi nhận ở file quyết định khi đóng đợt.
+Phiên bản 1.1 · 07/10/2026 · Viết `README.md` ở gốc repo (hiện đúng 1 dòng). Đây là **bước 7 và là bước cuối** của định nghĩa "xong" ở mục 4 file quyết định.
+**Đổi so với 1.0** (lần sửa duy nhất, Claude Code chứng minh bốn khẳng định sai so với repo): (1) FR-R.4 bỏ "Storage" khỏi bảng công nghệ — repo không dùng Supabase Storage (0 tham chiếu `storage` trong `app/`, `components/`, `lib/`, 0 trong `supabase/migrations/`); (2) "số đo 12 đợt" ở mục 2 và FR-R.6 đổi thành "số đo ở mục 7" — mục 7 có 12 mục `7.x`, trong đó một mục là rà soát accessibility chứ không phải đợt, nên không phải 12 đợt; (3) "22 file" ở phần tài liệu tham chiếu bỏ con số — thư mục `docs/specs/` có 23 file sau khi commit chính spec này, và số đó do README đếm; (4) TC-R.6 không thể đạt nguyên văn: đợt phải commit chính spec này vào `docs/specs/`, nên `git diff` có 2 file chứ không phải 1 — nguyên văn 1.0 là "đúng 1 file đổi (`README.md`); 0 file trong ... `docs/specs/` ..."; sửa thành hai file có tên.
+Nhánh: `dot-7-readme`. Một chặng, một PR. Đợt này **không sửa một dòng mã nào**: chỉ `README.md`, cộng hai dòng ghi nhận ở file quyết định khi đóng đợt.
 
 **Giới hạn sửa spec: MỘT lần**, và chỉ khi Claude Code chứng minh một khẳng định trong spec sai so với repo.
 
 **Lệch có chủ ý so với các spec trước:** đợt này KHÔNG có Use Case diagram và User Stories. README là tài liệu, không phải tính năng — không có actor thao tác, không có luồng hệ thống. Thay vào đó: dàn ý nội dung bắt buộc (mục 2) và tiêu chí đo được (mục 4). Ghi rõ ở đây để người đọc sau không tưởng là thiếu sót.
 
 Tài liệu tham chiếu, KHÔNG chép nội dung vào README:
-- `docs/trang-quyet-dinh-dac-ta-tong.md` mục 1 (bối cảnh, ràng buộc gói miễn phí), mục 2 (định vị), mục 3 (nhận diện, hệ layout), mục 4 (định nghĩa "xong", thứ tự còn lại, tạm dừng mobile), mục 5 và 5.1, 5.2 (kiến trúc, số đo vùng), mục 6 (dữ liệu mẫu, nguyên tắc trung thực), **mục 7 (số đo 12 đợt)**, mục 8 (bài học), mục 9 (việc còn mở).
-- `docs/SRS.md` (64 FR), `docs/specs/*` (22 file), `docs/runbooks/*` (6 file).
+- `docs/trang-quyet-dinh-dac-ta-tong.md` mục 1 (bối cảnh, ràng buộc gói miễn phí), mục 2 (định vị), mục 3 (nhận diện, hệ layout), mục 4 (định nghĩa "xong", thứ tự còn lại, tạm dừng mobile), mục 5 và 5.1, 5.2 (kiến trúc, số đo vùng), mục 6 (dữ liệu mẫu, nguyên tắc trung thực), **mục 7 (số đo từng đợt)**, mục 8 (bài học), mục 9 (việc còn mở).
+- `docs/SRS.md` (64 FR), `docs/specs/*`, `docs/runbooks/*`.
 
 ---
 
@@ -71,7 +72,7 @@ Sáu quyết định bắt buộc (không thay, không thêm):
 ### FR-R.4 — Kiến trúc, một sơ đồ
 
 - Một sơ đồ ASCII trong khối mã: trình duyệt → Vercel (`hnd1`) → Supabase (`ap-northeast-1`), kèm Brevo cho email.
-- Một bảng công nghệ: Next.js 16 App Router, React 19.2, Tailwind v4, Supabase (Postgres + Auth + Storage), Vercel, Brevo HTTP API.
+- Một bảng công nghệ: Next.js 16 App Router, React 19.2, Tailwind v4, Supabase (Postgres + Auth), Vercel, Brevo HTTP API.
 - **Số liệu quy mô, Claude Code phải ĐẾM từ repo, không chép từ spec này:** số route, số migration, số dependency production, số bảng, số FR trong SRS, số file spec, số file runbook.
 - Một câu về ba lớp bảo vệ: `proxy.ts` chặn sớm → kiểm quyền trong Server Component → RLS và trigger ở database. Nói rõ `proxy.ts` không phải hàng rào duy nhất, và vì sao (CVE-2025-29927).
 
@@ -90,7 +91,7 @@ Danh sách thẳng thắn, mỗi dòng một món, **kèm lý do**, không bào 
 - **Chạy cục bộ:** các bước thật từ `docs/runbooks/supabase-local.md`, rút gọn, kèm danh sách TÊN biến môi trường cần có (chỉ tên, không giá trị) và câu trỏ tới `.env.local.example`.
 - **Bản đồ tài liệu:** bảng ngắn — tài liệu nào trả lời câu hỏi nào, kèm đường dẫn:
   · `docs/SRS.md` — yêu cầu chức năng và phi chức năng
-  · `docs/trang-quyet-dinh-dac-ta-tong.md` — mọi quyết định đã chốt và **số đo 12 đợt** (mục 7)
+  · `docs/trang-quyet-dinh-dac-ta-tong.md` — mọi quyết định đã chốt và **số đo từng đợt** (mục 7)
   · `docs/specs/*` — đặc tả từng đợt kèm tiêu chí nghiệm thu
   · `docs/runbooks/*` — việc vận hành
   · `docs/mockups/*` — mockup và quyết định thiết kế
@@ -117,7 +118,7 @@ Danh sách thẳng thắn, mỗi dòng một món, **kèm lý do**, không bào 
 | **TC-R.3** | **Đối chứng — mọi liên kết mở được.** Mọi liên kết trong README: link demo, link repo, và mọi đường dẫn file nội bộ. | `curl -o /dev/null -w "%{http_code}"` cho link ngoài; `test -f` cho đường dẫn nội bộ | Link ngoài **2xx** hoặc 3xx hợp lệ; **100%** đường dẫn nội bộ tồn tại. **Đối chứng:** thêm một đường dẫn giả, phép kiểm phải báo thiếu |
 | **TC-R.4** | Không rò dữ liệu cá nhân. | `grep -nE "gmail\.com\|[0-9]{9,11}"` trên README; đọc tay một lượt | **0** email cá nhân; **0** số điện thoại thật; email duy nhất là `admin-demo@example.com`; mật khẩu công bố KHÔNG trùng `SEED_DEMO_PASSWORD` |
 | **TC-R.5** | Độ dài trong ngưỡng. | Đếm từ bằng lệnh | Toàn file ≤ **2.500 từ**; ba phần lướt (R.1, R.2, R.5) trong khoảng **500–900 từ** |
-| **TC-R.6** | Không phình phạm vi. | `git diff --stat origin/main...HEAD` | Đúng **1** file đổi (`README.md`); **0** file trong `app/`, `components/`, `lib/`, `supabase/`, `docs/specs/`, `docs/SRS.md`; `package.json` không đổi |
+| **TC-R.6** | Không phình phạm vi. | `git diff --stat origin/main...HEAD` | Đúng **2** file đổi: `README.md` và chính `docs/specs/dot-7-readme-nha-tuyen-dung.md`; **0** file trong `app/`, `components/`, `lib/`, `supabase/`, `docs/SRS.md`, **0** file khác trong `docs/specs/`; `package.json` không đổi |
 
 **Cách báo cáo.** Hai tiêu chí có đối chứng ghi **cả hai phía** — phía đối chứng cũng "đạt" nghĩa là phép kiểm hỏng, phải nói ra thay vì báo đạt.
 
