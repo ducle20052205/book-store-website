@@ -155,7 +155,7 @@ Hai khối cạnh nhau, xếp dọc dưới 1024px:
 Vấn đề: admin đăng nhập xong không có đường nào vào `/admin` ngoài gõ URL.
 
 - `AccountItem` trong `components/Header.tsx` hiện đọc người dùng bằng `getClaims()`, KHÔNG truy vấn `profiles`, nên không biết `role`. Thêm **MỘT** truy vấn `select role from profiles where id = <uid>` trong `AccountItem` — nó đã nằm trong `<Suspense>` sẵn có, và chỉ chạy cho người đã đăng nhập. `getClaims()` giữ nguyên; cập nhật câu chú thích của `AccountItem` đang ghi "không truy vấn `profiles`".
-- **KHÔNG dùng Custom Access Token Hook của Supabase:** đó là một thiết lập trên dashboard chưa ai kiểm được bằng lệnh, đúng loại rủi ro đã làm "Confirm email" sai suốt nhiều tuần. Phương án hook ghi ở mục 7 làm đường nâng cấp.
+- **KHÔNG dùng Custom Access Token Hook của Supabase:** đó là một thiết lập trên dashboard chưa ai kiểm được bằng lệnh, đúng loại rủi ro đã làm "Confirm email" sai suốt chín ngày. Phương án hook ghi ở mục 7 làm đường nâng cấp.
 - `AccountMenu` (`components/AccountMenu.tsx`) nhận thêm prop `isAdmin: boolean`. Khi `true`, thêm **MỘT** mục "Khu quản trị" trỏ `/admin`, đặt **NGAY TRÊN** "Đăng xuất", có đường kẻ ngăn. Phải thêm ở **CẢ HAI**: dropdown (từ 768px) và sheet (dưới 768px). Hai panel cùng nằm trong DOM khi menu mở (CSS chọn cái hiển thị), nên mục xuất hiện hai lần.
 - Dùng lại `panelItemClass` và `sheetItemClass` đã có. Biểu tượng: thêm một icon vào `HeaderIcons.tsx` cùng kiểu nét với các icon hiện có.
 - Người không phải admin: mục này **KHÔNG được render**, không chỉ ẩn bằng CSS.
@@ -247,7 +247,7 @@ Năm bước đếm **số dòng sự kiện**, không lần theo cùng một `s
 
 ### 7.4 Đường nâng cấp: Custom Access Token Hook
 
-FR-D.8 biết `role` bằng một truy vấn `profiles` trong `AccountItem`. Đường nâng cấp là Custom Access Token Hook của Supabase đưa `role` vào claim của JWT, để `getClaims()` đọc được mà không cần truy vấn. Không làm ở đợt này: đó là một thiết lập trên dashboard chưa ai kiểm được bằng lệnh, đúng loại rủi ro đã làm "Confirm email" bật sai suốt nhiều tuần (file quyết định, mục 8). Làm khi có cách kiểm bằng lệnh.
+FR-D.8 biết `role` bằng một truy vấn `profiles` trong `AccountItem`. Đường nâng cấp là Custom Access Token Hook của Supabase đưa `role` vào claim của JWT, để `getClaims()` đọc được mà không cần truy vấn. Không làm ở đợt này: đó là một thiết lập trên dashboard chưa ai kiểm được bằng lệnh, đúng loại rủi ro đã làm "Confirm email" bật sai suốt chín ngày (file quyết định, mục 8). Làm khi có cách kiểm bằng lệnh.
 
 ---
 
