@@ -1,6 +1,6 @@
 # Runbook — Cấu hình gửi email xác thực (custom SMTP)
 
-Cập nhật lần cuối: 30/09/2026. Trạng thái: đã chạy, đã kiểm chứng.
+Cập nhật lần cuối: 07/10/2026. Trạng thái: đã chạy, đã kiểm chứng.
 
 ## Vì sao cần
 
@@ -64,12 +64,13 @@ của Supabase.
 Amazon SES. Cả hai hạn chế trên biến mất. Tiện thể gắn domain vào Vercel để
 thay `book-store-website-dun.vercel.app`.
 
-## Việc còn lại ở đợt 2C
+## Đã làm ở đợt 8 (07/10/2026): template email đặt lại mật khẩu
 
-- Viết lại template email bằng tiếng Việt theo giọng NA Books. Template mặc
-  định đang là tiếng Anh, Gmail phải tự dịch và hiện banner "Đã dịch" giữa thư
-  — trái với NFR-3.4.
-- Đổi template sang chiến lược `token_hash` thay cho `{{ .ConfirmationURL }}`
-  mặc định. Lý do: Supabase dùng PKCE, code verifier lưu ở trình duyệt khởi
-  tạo luồng; người dùng bấm "Quên mật khẩu" trên máy tính rồi mở mail trên
-  điện thoại sẽ hỏng. Đã tái hiện được tình huống này khi test ngày 30/09.
+Hai việc từng ghi là "còn lại ở đợt 2C" đã làm xong, mỗi việc kiểm bằng TC-A.2 của đợt 8 (số đo ở mục 7.14 của `docs/trang-quyet-dinh-dac-ta-tong.md`):
+
+- **Template viết lại bằng tiếng Việt** theo giọng NA Books. Lý do ban đầu: template mặc định bằng tiếng Anh, Gmail phải tự dịch và hiện banner "Đã dịch" giữa thư — trái với NFR-3.4.
+- **Đổi sang chiến lược `token_hash`** thay cho `{{ .ConfirmationURL }}` mặc định. Lý do ban đầu: Supabase dùng PKCE, code verifier lưu ở trình duyệt khởi tạo luồng; người dùng bấm "Quên mật khẩu" trên máy tính rồi mở mail trên điện thoại sẽ hỏng (đã tái hiện khi test ngày 30/09).
+
+**File nguồn:** `supabase/templates/recovery.html` (dùng cho stack cục bộ qua `supabase/config.toml`). **Trên hosted** template được dán tay vào Supabase Dashboard → Authentication → Email Templates → Reset Password, lấy từ file này. Đã dán và kiểm bằng TC-A.2 (hosted) ngày 07/10/2026: 3/3 đặt lại được, tiêu đề tiếng Việt đúng, chữ đủ dấu, link chứa `token_hash` và `type=recovery`, 0 lần chứa `ConfirmationURL`.
+
+**Cạm bẫy khi dán lại template (đã xảy ra một lần):** phải dán bằng clipboard UTF-8, tức là lấy nội dung bằng `Get-Content -Raw -Encoding UTF8 supabase/templates/recovery.html | Set-Clipboard`. Thiếu `-Encoding UTF8` thì PowerShell 5.1 đọc file theo bảng mã ANSI và toàn bộ chữ có dấu bị hỏng. Sau mỗi lần dán lại, gửi một thư thử và đọc tiêu đề lẫn thân thư có đủ dấu.
