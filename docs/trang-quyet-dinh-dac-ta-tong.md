@@ -6,7 +6,7 @@
 >
 > **Hướng đồng bộ.** Bản gốc này giữ mục 1–6, 8, 9. **Mục 7 chỉ nằm ở repo**, do Claude Code ghi — bản gốc không giữ bản sao của nó. Khi dán bản gốc đè lên repo, phải nối lại mục 7 của repo bằng cách cắt–dán theo dòng, không viết lại. **`docs/SRS.md` chỉ nằm ở repo** — Project knowledge không giữ bản sao nào. Bản sao ở đó không có chủ sở hữu và đã lệch thật (v1.3 trong Project knowledge so với v1.5 trong repo, phát hiện 02/10). Cần đọc SRS thì gắn repo vào chat và đọc `docs/SRS.md`.
 >
-> **Cập nhật lần cuối:** 06/10/2026
+> **Cập nhật lần cuối:** 07/10/2026
 > **Nguồn chân lý:** repo `github.com/ducle20052205/book-store-website`. Các file `docs/SRS.md`, `docs/specs/*`, `CLAUDE.md` trong repo là bản gốc; file này là bản tóm tắt cấp quyết định.
 
 ## 1. Bối cảnh & mục tiêu (đã chốt)
@@ -199,6 +199,7 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 | Đợt 5B chặng 1: ràng buộc dữ liệu cho `books` (ba CHECK, CHECK slug, hai `NOT NULL`) | Xong, đã merge (PR #21, `4b08d44`); migration `20261004090859` đã áp lên hosted ngày 04/10/2026 |
 | Đợt 5B chặng 2: quản lý sách (`/admin/sach*`, form thêm/sửa, xoá có chặn) và làm mới cache bằng `updateTag` | PR #22 (commit mã `b491dee`); merge `622ea35`; 108 phép kiểm cục bộ (không tính TC-15), 15/15 lượt trên Vercel preview và 6/6 lượt trên production (nút "Đặt tồn kho về 0" chỉ kiểm ở cục bộ và preview), xem 7.10 |
 | Đợt 6: dashboard thống kê (`/admin`, RPC `admin_dashboard_stats()`, mục "Khu quản trị" trong menu) | PR #24; 10 tiêu chí đo trên cục bộ, hai phép đo yếu hơn tiêu chí gốc (TC-D.3, CLS), xem 7.12 |
+| Đợt 7: README cho nhà tuyển dụng | Xong, đã merge (PR #25, `eaddf67`); 6/6 tiêu chí đạt (TC-R.6 theo spec v1.1), xem 7.13 |
 | 5C scenario Make.com · Chatbot | Chưa bắt đầu (admin đơn hàng xong ở 5A, admin sách ở 5B) |
 | README cho nhà tuyển dụng · Logo | Chưa bắt đầu |
 
@@ -683,6 +684,45 @@ Spec `docs/specs/dot-6-dashboard-thong-ke.md` v1.1 (8 FR, 10 tiêu chí). Hai ch
 - **Chưa dựng được ảnh `/admin` khi DB không có đơn** (phải xoá dữ liệu mẫu): trạng thái rỗng chưa được quan sát, chỉ có mã.
 - **Một lỗi thật được bắt trong lúc đo:** ở 390px, `/admin` rộng 498px vì một cột lưới `auto` bị tên sách dài kéo giãn; sửa bằng `grid-cols-1`, đo lại thấy 390px.
 - **Tác dụng phụ của bộ đo:** đăng nhập admin và `nguoi-dung-01` qua giao diện ghi sự kiện `login` thật (35 dòng qua hai lần dọn, 28 + 7); đã xoá, bảng `events` về 1200 / 360 / 150 / 60 / 42 / 25 / 60.
+
+### 7.13 Đợt 7 — README cho nhà tuyển dụng (07/10/2026)
+
+Spec `docs/specs/dot-7-readme-nha-tuyen-dung.md` v1.1 (6 FR, 6 tiêu chí; sửa một lần, xem dưới). Một chặng, nhánh `dot-7-readme`, PR #25, squash `eaddf67`. Không đổi mã ứng dụng, không migration, không thêm dependency (`package.json` và `package-lock.json` không đổi). Commit trên nhánh (đã xoá sau squash): spec v1.0 `85e7006`, spec v1.1 `f9048d4`, README `b498314`. File đổi: `README.md` (từ 20 byte lên 13.882 byte), `docs/specs/dot-7-readme-nha-tuyen-dung.md` (mới).
+
+**Điều kiện đo:** không Docker, không đăng nhập hosted. Hai script kiểm (`check_readme.py` cho TC-R.2, `check_links.py` cho TC-R.3) nằm ngoài repo và không commit. Số liệu dữ liệu demo trên hosted (25 tài khoản, 42 đơn trải 7 tháng, 1.897 sự kiện) do chủ dự án cung cấp, README không đo lại chúng.
+
+| Tiêu chí | Số lượt, cỡ mẫu | Kết quả |
+|---|---|---|
+| TC-R.1 đủ bảy phần, đúng thứ tự | 1 lượt đếm `^## ` | 7/7 (Đây là gì, Thử trong 2 phút, Vì sao từng quyết định, Kiến trúc, Chưa làm gì và vì sao, Chạy cục bộ, Bản đồ tài liệu); 0 phần thừa; 1 tiêu đề `#` |
+| TC-R.2 mọi con số có nguồn | 1 lượt; 50 claim | 50/50 claim khớp nguồn; 0 chữ số không có claim |
+| TC-R.3 mọi liên kết mở được | 10 liên kết ngoài, 11 đường dẫn nội bộ, 1 lượt | liên kết ngoài: 7 trả 200, 3 trả 307 về `/dang-nhap` (`/admin`, `/tai-khoan/don-hang`, `/thanh-toan`, cần phiên); đường dẫn nội bộ 11/11 tồn tại |
+| TC-R.4 không rò dữ liệu cá nhân | 1 lượt mỗi phép | `grep -nE "gmail\.com\|[0-9]{9,11}"` (bản đã sửa): 0 dòng; email duy nhất `admin-demo@example.com`; 0 số điện thoại; mật khẩu công bố không trùng mật khẩu seed cục bộ |
+| TC-R.5 độ dài | `wc -w`, 1 lượt | toàn file 2.067 từ (ngưỡng ≤ 2.500); ba phần lướt 735 từ (R.1 152, R.2 317, R.5 266; ngưỡng 500–900); sáu quyết định 109–140 từ mỗi mục (ngưỡng 80–150) |
+| TC-R.6 không phình phạm vi | `git diff --stat origin/main...HEAD`, 1 lượt | 2 file (`README.md` và spec đợt 7); 0 file trong `app/`, `components/`, `lib/`, `supabase/`, `docs/SRS.md`, `package.json`, `package-lock.json`. Đạt theo v1.1; trượt theo nguyên văn v1.0 ("đúng 1 file") |
+
+**Đối chứng, kết quả cả hai phía:**
+- **TC-R.2:** README thật 50/50 claim, 0 số không nguồn. Ba bản cố ý sai, mỗi bản 1 lượt: `20 migration` → `21 migration` ra LỆCH (đếm repo ra 20); `30/30` → `31/31` ra THIẾU và 1 số không nguồn; thêm `99 người dùng` ra 1 số không nguồn. Bắt 3/3. Hash README trước và sau khi hoàn lại giống nhau.
+- **TC-R.3:** README thật 0 lỗi. Bản thêm 1 URL 404 (`/khong-co-trang-nay`) và 1 đường dẫn giả (`docs/runbooks/khong-ton-tai.md`) ra 2 lỗi, cả hai bị báo. Hash README trước và sau khi hoàn lại giống nhau.
+
+**Bảng con số quy mô đếm từ repo (nguồn của TC-R.2):**
+
+| Con số | Giá trị | Lệnh |
+|---|---|---|
+| Trang | 18 | `find app -name page.tsx \| wc -l` |
+| Route handler | 1 | `find app -name route.ts \| wc -l` |
+| Migration | 20 | `ls supabase/migrations/*.sql \| wc -l` |
+| Bảng (đều bật RLS) | 11 | `create table` và `enable row level security` trong `supabase/migrations/`, hai tập trùng nhau |
+| Dependency production | 5 | số khoá của `dependencies` trong `package.json` |
+| Yêu cầu chức năng | 64 | `grep -c '^- \*\*FR-' docs/SRS.md` |
+| File spec | 23 | `ls docs/specs \| wc -l` (đã tính spec của chính đợt này) |
+| File runbook | 6 | `ls docs/runbooks \| wc -l` |
+
+**Chỗ phải ghi trung thực:**
+- **Spec v1.0 có bốn khẳng định sai so với repo**, đã sửa bằng đúng một lần sửa spec cho phép, lên v1.1 (`f9048d4`): (1) bảng công nghệ ghi Supabase Storage, repo dùng 0 lần (0 tham chiếu `storage` trong `app/`, `components/`, `lib/`, 0 trong `supabase/migrations/`); (2) "số đo 12 đợt": mục 7 có 12 mục `7.x`, trong đó một mục là rà soát accessibility, không phải đợt; (3) "22 file spec": `docs/specs/` có 23 file sau khi commit chính spec này; (4) TC-R.6 "đúng 1 file đổi" không đạt được, vì đợt phải commit chính spec của nó vào `docs/specs/`.
+- **TC-R.6 lặp lại cùng loại lỗi với TC-S.10 của đợt seed (mục 7.11):** tiêu chí phạm vi không tính tới quy trình đóng đợt. Khác biệt: lần này phát hiện TRƯỚC khi đo và trước khi đóng đợt, nên sửa được tiêu chí (nguyên văn v1.0 và bản v1.1 đều ghi trong spec); ở đợt seed phát hiện sau khi đã có kết quả, nên giữ nguyên là trượt.
+- **Lệnh grep của TC-R.4 trong spec là phép đo hỏng.** `\|` trong ERE là ký tự `|` theo nghĩa đen, nên bản cố ý nhiễm `abc@gmail.com` và một số điện thoại vẫn ra 0 dòng (đối chứng). Thay bằng `|`: bản nhiễm ra 1 dòng, README thật ra 0 dòng.
+- **Ba chỗ README nói khác spec, đều theo hướng chính xác hơn:** FR-R.4 đòi "ba lớp bảo vệ" nhưng SRS FR-7.1 và mục 5.1 ghi "hai lớp", nên README nêu ba tầng theo tên và không đếm lớp; FR-R.3 ghi "kiểm được bằng test trong repo" nhưng repo chỉ có script `scripts/send-test-confirmation.mjs`, nên README ghi "script"; phép so mật khẩu công bố với `SEED_DEMO_PASSWORD` yếu hơn tiêu chí gốc, vì biến đó của hosted không có trên máy: chỉ so được với mật khẩu seed cục bộ (không trùng, so sánh không in), mật khẩu hosted chưa so.
+- **Số từ phụ thuộc cách đếm:** `wc -w` ra 2.067, đếm bằng tách khoảng trắng trong Python ra 2.005; cả hai nằm dưới ngưỡng, bảng trên dùng `wc -w` như spec đòi.
 
 ## 8. Bài học đã rút ra (giữ lại để không lặp)
 
