@@ -6,7 +6,6 @@ import {
   type FormEvent,
   type ReactNode,
   type Ref,
-  type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
   useEffect,
   useId,
@@ -14,6 +13,7 @@ import {
   useState,
 } from "react";
 import { type PlaceOrderFailure, placeOrder } from "@/app/actions/checkout";
+import { AddressPicker } from "@/components/address/AddressPicker";
 import { AuthAlert } from "@/components/AuthAlert";
 import { FieldFrame, TextField } from "@/components/AuthFields";
 import { BottomBarGate } from "@/components/BottomBarGate";
@@ -96,8 +96,6 @@ const FIELD_LABELS: Record<CheckoutField, string> = {
   note: "Ghi chú cho đơn hàng",
 };
 
-type WardsState = "idle" | "loading" | "error";
-
 function withoutErrors(errors: CheckoutErrors, fields: CheckoutField[]): CheckoutErrors {
   return Object.fromEntries(Object.entries(errors).filter(([key]) => !fields.includes(key as CheckoutField)));
 }
@@ -120,11 +118,6 @@ export function CheckoutView({ lines, totalQuantity, total, provinces, initialWa
   const [submitError, setSubmitError] = useState<{ attempt: number; message: ReactNode } | null>(null);
   const [pending, setPending] = useState(false);
   const [idempotencyKey] = useState(newIdempotencyKey);
-
-  const [wards, setWards] = useState<WardOption[]>(initialWards);
-  const [wardsState, setWardsState] = useState<WardsState>("idle");
-  const wardCache = useRef(new Map<string, WardOption[]>());
-  const wardsRequest = useRef(0);
 
   const summaryRef = useRef<HTMLDivElement>(null);
   const recipientNameRef = useRef<HTMLInputElement>(null);
@@ -149,11 +142,6 @@ export function CheckoutView({ lines, totalQuantity, total, provinces, initialWa
     target.current?.focus();
   }
 
-  // Danh sách phường/xã của tỉnh trong hồ sơ do server đưa sẵn: nhớ lại để chọn đi chọn lại không gọi mạng.
-  useEffect(() => {
-    if (initial.provinceCode && initialWards.length > 0) wardCache.current.set(initial.provinceCode, initialWards);
-  }, [initial.provinceCode, initialWards]);
-
   // Submit sai: đưa focus về khối tóm tắt lỗi ở đầu form (WCAG 3.3.1).
   useEffect(() => {
     if (attempt > 0) summaryRef.current?.focus();
@@ -164,41 +152,17 @@ export function CheckoutView({ lines, totalQuantity, total, provinces, initialWa
     setErrors((current) => (current[field] ? withoutErrors(current, [field]) : current));
   }
 
-  async function loadWards(provinceCode: string) {
-    const cached = wardCache.current.get(provinceCode);
-    if (cached) {
-      setWards(cached);
-      setWardsState("idle");
+  /**
+   * `AddressPicker` (đợt 8, FR-A.7) giữ phần nạp phường/xã; ở đây chỉ cập nhật giá trị. Đổi tỉnh thì xoá lỗi của cả
+   * hai ô (phường/xã cũ thuộc tỉnh cũ); chỉ đổi phường/xã thì xoá lỗi của chính nó — đúng như trước khi trích.
+   */
+  function handleAddressChange(next: { provinceCode: string; wardCode: string }) {
+    if (next.provinceCode !== fields.provinceCode) {
+      setFields((current) => ({ ...current, provinceCode: next.provinceCode, wardCode: next.wardCode }));
+      setErrors((current) => withoutErrors(current, ["provinceCode", "wardCode"]));
       return;
     }
-    const request = ++wardsRequest.current;
-    setWards([]);
-    setWardsState("loading");
-    try {
-      const response = await fetch(`/api/dia-chi/phuong-xa?tinh=${encodeURIComponent(provinceCode)}`);
-      if (!response.ok) throw new Error(String(response.status));
-      const list = (await response.json()) as WardOption[];
-      if (request !== wardsRequest.current) return; // đã chọn tỉnh khác trong lúc chờ
-      wardCache.current.set(provinceCode, list);
-      setWards(list);
-      setWardsState("idle");
-    } catch {
-      if (request !== wardsRequest.current) return;
-      setWardsState("error");
-    }
-  }
-
-  function handleProvinceChange(code: string) {
-    // Đổi tỉnh thì xoá phường/xã đã chọn (nó thuộc tỉnh cũ).
-    setFields((current) => ({ ...current, provinceCode: code, wardCode: "" }));
-    setErrors((current) => withoutErrors(current, ["provinceCode", "wardCode"]));
-    if (code === "") {
-      wardsRequest.current += 1;
-      setWards([]);
-      setWardsState("idle");
-      return;
-    }
-    void loadWards(code);
+    setField("wardCode", next.wardCode);
   }
 
   function failValidation(next: CheckoutErrors) {
@@ -263,8 +227,6 @@ export function CheckoutView({ lines, totalQuantity, total, provinces, initialWa
   }
 
   const errorEntries = CHECKOUT_FIELD_ORDER.filter((field) => errors[field]);
-  const wardPlaceholder =
-    fields.provinceCode === "" ? "Chọn tỉnh/thành phố trước" : wardsState === "loading" ? "Đang tải danh sách…" : "Chọn phường / xã";
 
   const submitLabel = pending ? "Đang đặt hàng…" : "Đặt hàng";
   const submitButton = (
@@ -362,43 +324,18 @@ export function CheckoutView({ lines, totalQuantity, total, provinces, initialWa
             <h2 id="checkout-address" className={sectionTitleClass}>
               Địa chỉ giao hàng
             </h2>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <SelectField
-                ref={provinceCodeRef}
-                label={FIELD_LABELS.provinceCode}
-                name="provinceCode"
-                autoComplete="address-level1"
-                required
-                value={fields.provinceCode}
-                error={errors.provinceCode}
-                onChange={(event) => handleProvinceChange(event.target.value)}
-              >
-                <option value="">Chọn tỉnh / thành phố</option>
-                {provinces.map((province) => (
-                  <option key={province.code} value={province.code}>
-                    {province.name}
-                  </option>
-                ))}
-              </SelectField>
-              <SelectField
-                ref={wardCodeRef}
-                label={FIELD_LABELS.wardCode}
-                name="wardCode"
-                autoComplete="address-level2"
-                required
-                disabled={fields.provinceCode === "" || wardsState === "loading"}
-                value={fields.wardCode}
-                error={errors.wardCode ?? (wardsState === "error" ? "Chúng mình chưa tải được danh sách phường/xã. Bạn chọn lại tỉnh để thử lần nữa nhé." : undefined)}
-                onChange={(event) => setField("wardCode", event.target.value)}
-              >
-                <option value="">{wardPlaceholder}</option>
-                {wards.map((ward) => (
-                  <option key={ward.code} value={ward.code}>
-                    {ward.name}
-                  </option>
-                ))}
-              </SelectField>
-            </div>
+            <AddressPicker
+              provinces={provinces}
+              initialProvinceCode={initial.provinceCode}
+              initialWards={initialWards}
+              provinceCode={fields.provinceCode}
+              wardCode={fields.wardCode}
+              provinceError={errors.provinceCode}
+              wardError={errors.wardCode}
+              provinceRef={provinceCodeRef}
+              wardRef={wardCodeRef}
+              onChange={handleAddressChange}
+            />
             <div className="mt-4">
               <TextField
                 ref={addressLineRef}
@@ -546,37 +483,6 @@ export function CheckoutView({ lines, totalQuantity, total, provinces, initialWa
         </div>
       </BottomBarGate>
     </div>
-  );
-}
-
-/** <select> cùng khung nhãn/lỗi/gợi ý với TextField (components/AuthFields.tsx). */
-function SelectField({
-  label,
-  error,
-  hint,
-  children,
-  ref,
-  ...selectProps
-}: {
-  label: string;
-  error?: ReactNode;
-  hint?: ReactNode;
-  children: ReactNode;
-  ref?: Ref<HTMLSelectElement>;
-} & Omit<SelectHTMLAttributes<HTMLSelectElement>, "id" | "className">) {
-  const id = useId();
-  return (
-    <FieldFrame
-      id={id}
-      label={label}
-      hint={hint}
-      error={error}
-      renderInput={(frame) => (
-        <select {...selectProps} {...frame} ref={ref}>
-          {children}
-        </select>
-      )}
-    />
   );
 }
 

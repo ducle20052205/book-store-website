@@ -245,6 +245,13 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# Đợt 8 (FR-A.8): template "Reset password" bằng tiếng Việt, chiến lược token_hash (KHÔNG dùng {{ .ConfirmationURL }}).
+# File template là NGUỒN DUY NHẤT: stack cục bộ đọc file này; với hosted, chủ dự án dán ĐÚNG nội dung file vào
+# Supabase Dashboard (Authentication > Email Templates > Reset password). Hai nơi, một nguồn.
+[auth.email.template.recovery]
+subject = "Đặt lại mật khẩu NA Books"
+content_path = "./supabase/templates/recovery.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"

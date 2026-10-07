@@ -1,13 +1,15 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { trackServer } from "@/lib/analytics.server";
 import { type AuthErrorKind, classifyAuthError } from "@/lib/authErrors";
-import { FULL_NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/lib/authRules";
+import { EMAIL_PATTERN, FULL_NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/lib/authRules";
 import { mergeGuestCart } from "@/lib/cart/mergeGuestCart";
 import { safeNextPath } from "@/lib/nextParam";
+import { resolveSiteOrigin } from "@/lib/siteOrigin";
 import { createClient } from "@/lib/supabase/server";
-import { withWelcomeParam } from "@/lib/welcome";
+import { withPasswordChangedParam, withWelcomeParam } from "@/lib/welcome";
 
 /**
  * Kết quả trả về cho form khi thất bại: chỉ có `kind` (không có thông báo gốc).
@@ -129,4 +131,69 @@ export async function signUp(input: {
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut({ scope: "local" });
+}
+
+/**
+ * Yêu cầu link đặt lại mật khẩu (đợt 8, FR-A.1, FR-5.4).
+ *
+ * PHẢN HỒI KHÔNG ĐƯỢC PHÂN BIỆT email có tài khoản với email không có (NFR-A.3), kể cả bằng thời gian. Ba chỗ giữ
+ * điều đó:
+ *   1. Chỉ trả `invalid_email` khi chuỗi nhập sai ĐỊNH DẠNG — kết luận đó không phụ thuộc email có trong hệ thống.
+ *   2. Mọi lỗi từ Supabase (kể cả giới hạn tần suất theo từng địa chỉ — Supabase chỉ áp nó cho email CÓ tài khoản,
+ *      nên trả riêng lỗi đó là một cách dò email) đều được ghi log kèm mã rồi trả cùng kết quả thành công.
+ *   3. Việc gọi Supabase chạy trong `after()`, SAU khi phản hồi đã gửi: gửi thư tốn thời gian chỉ ở nhánh email có
+ *      thật, nên nếu `await` ở đây thì thời gian phản hồi cho lộ ra email nào có tài khoản (trên hosted, SMTP chậm
+ *      hơn nhiều so với stack cục bộ). Cùng cách dùng `after()` của thông báo đơn mới (app/actions/checkout.ts).
+ *
+ * Client được tạo TRƯỚC `after()` vì `cookies()` chỉ đọc được trong phạm vi request. Không ghi email vào log (NFR-A.5).
+ */
+export type PasswordResetResult = { ok: true } | { ok: false; kind: "invalid_email" };
+
+export async function requestPasswordReset(input: { email: string }): Promise<PasswordResetResult> {
+  const email = typeof input?.email === "string" ? input.email.trim() : "";
+  if (!EMAIL_PATTERN.test(email)) return { ok: false, kind: "invalid_email" };
+
+  const supabase = await createClient();
+  const origin = resolveSiteOrigin();
+  after(async () => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, origin ? { redirectTo: `${origin}/auth/callback` } : undefined);
+      if (error) {
+        console.error("[auth] yêu cầu đặt lại mật khẩu thất bại:", error.code ?? error.status ?? "không có mã", "-", error.message);
+      }
+    } catch (error) {
+      console.error("[auth] yêu cầu đặt lại mật khẩu ném lỗi:", error instanceof Error ? error.name : "lỗi không rõ");
+    }
+  });
+
+  return { ok: true };
+}
+
+/**
+ * Đặt mật khẩu mới sau khi đã mở link trong email (đợt 8, FR-A.3). Cần phiên recovery do `/auth/callback` tạo bằng
+ * `verifyOtp`: không có phiên thì chuyển về `/quen-mat-khau` kèm cờ, KHÔNG gọi `updateUser`. Phiên đọc bằng `getUser()`
+ * (hỏi Auth server, như proxy.ts) vì đây là hàng rào bảo vệ chứ không phải hiển thị.
+ *
+ * Luật mật khẩu dùng lại `PASSWORD_MIN_LENGTH`, kiểm lại ở server dù form đã chặn. Không có ô nhập lại mật khẩu
+ * (nút Hiện/Ẩn thay cho nó, mục 5.1). Đúng thì `redirect()` về `/tai-khoan` kèm cờ `?mk=1`, và không `revalidatePath`
+ * (cùng lý do với `signIn`: đổi cookie phiên đã đủ để Next đánh dấu action là đã revalidate). Không ghi mật khẩu vào log.
+ */
+export async function setNewPassword(input: { password: string }): Promise<AuthFailure> {
+  const password = typeof input?.password === "string" ? input.password : "";
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/quen-mat-khau?loi=phien");
+
+  if (password.length < PASSWORD_MIN_LENGTH) return { ok: false, kind: "weak_password" };
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    console.error("[auth] đặt mật khẩu mới thất bại:", error.code ?? error.status ?? "không có mã", "-", error.message);
+    return { ok: false, kind: classifyAuthError(error) };
+  }
+
+  redirect(withPasswordChangedParam("/tai-khoan"));
 }

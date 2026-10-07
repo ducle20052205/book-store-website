@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { AccountNav } from "@/components/account/AccountNav";
 import { EmptyState } from "@/components/EmptyState";
 import { OrderStatusChip } from "@/components/order/OrderStatusChip";
 import { PageTitle } from "@/components/PageTitle";
@@ -31,6 +32,7 @@ export default function DonHangPage() {
       <Suspense
         fallback={
           <>
+            <AccountNav current="orders" />
             <PageTitle title="Đơn hàng của tôi" />
             <div aria-busy="true" className={`${cardClass} mt-6 min-h-48`} />
           </>
@@ -70,6 +72,7 @@ async function OrderList() {
   if (error) {
     return (
       <>
+        <AccountNav current="orders" />
         <PageTitle title="Đơn hàng của tôi" />
         <p role="alert" className="mt-6 text-body text-ink-600">
           Chúng mình chưa tải được danh sách đơn hàng lúc này. Bạn thử tải lại trang sau ít phút nhé.
@@ -84,6 +87,7 @@ async function OrderList() {
   if (rows.length === 0) {
     return (
       <>
+        <AccountNav current="orders" />
         <PageTitle title="Đơn hàng của tôi" />
         <EmptyState
           title="Bạn chưa có đơn hàng nào"
@@ -100,6 +104,7 @@ async function OrderList() {
 
   return (
     <>
+      <AccountNav current="orders" />
       <PageTitle title="Đơn hàng của tôi" count={total} unit="đơn" />
       {/* Mỗi dòng là một lưới riêng, nên cột chip phải CỐ ĐỊNH chiều rộng ở md (7rem): để `auto` thì nhãn dài
           ngắn khác nhau ("Hoàn tất" so với "Đang xử lý") làm các cột ngày và tổng tiền xê dịch giữa các dòng. */}

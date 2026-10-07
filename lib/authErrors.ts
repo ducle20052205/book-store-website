@@ -11,6 +11,7 @@ export type AuthErrorKind =
   | "rate_limit"
   | "weak_password"
   | "invalid_email"
+  | "same_password"
   | "unknown";
 
 /** Phần của AuthError mà hàm này cần — khai báo cục bộ để không phụ thuộc kiểu nội bộ của thư viện. */
@@ -42,6 +43,8 @@ export function classifyAuthError(error: AuthErrorLike): AuthErrorKind {
     return "rate_limit";
   }
   if (code === "weak_password") return "weak_password";
+  // Đợt 8 (đặt lại mật khẩu): Supabase từ chối khi mật khẩu mới trùng mật khẩu đang dùng.
+  if (code === "same_password") return "same_password";
   if (code === "email_address_invalid") return "invalid_email";
   return "unknown";
 }

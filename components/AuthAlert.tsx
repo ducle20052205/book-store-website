@@ -61,6 +61,8 @@ export function AuthErrorMessage({ kind }: { kind: AuthErrorKind }) {
       return <>Mật khẩu cần tối thiểu 8 ký tự. Bạn thử lại giúp chúng mình nhé.</>;
     case "invalid_email":
       return <>Email này chưa đúng định dạng. Bạn kiểm tra lại giúp chúng mình nhé.</>;
+    case "same_password":
+      return <>Mật khẩu mới đang trùng mật khẩu cũ. Bạn chọn một mật khẩu khác giúp chúng mình nhé.</>;
     case "unknown":
       return <>Có gì đó chưa ổn ở phía chúng mình. Bạn thử lại sau ít phút nhé.</>;
   }
