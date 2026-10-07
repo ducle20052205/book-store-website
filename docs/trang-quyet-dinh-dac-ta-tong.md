@@ -67,13 +67,17 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 
 **Đợt seed dữ liệu demo đã xong** (PR #23, squash `6257f0e`, 06/10/2026; số đo ở mục 7.11).
 
+**Đợt 7 README cho nhà tuyển dụng đã xong** (PR #25, 07/10/2026; 6/6 tiêu chí đạt; số đo ở mục 7.13).
+
 - **Tạm dừng toàn bộ giao diện và chức năng cho mobile (chốt 06/10/2026).** Từ thời điểm này mọi đợt chỉ xây và chỉ đo cho máy tính. Mã mobile đã có — sheet của `AccountMenu` dưới 768px, thanh thao tác đáy dưới 1024px, các lớp responsive — **giữ nguyên, không gỡ**: gỡ là việc phải làm thêm, không phải tiết kiệm. Điều thay đổi: không xây giao diện mobile mới, không đặt tiêu chí nghiệm thu ở 390px, không chụp ảnh duyệt ở 390px, và mọi phát hiện chỉ xuất hiện ở bề rộng mobile (ví dụ 9/302 vùng chạm dưới 44px ở 390px, mục 9) chuyển sang danh sách sau thay vì sửa trong đợt. Yêu cầu accessibility KHÔNG được nới theo: tương phản, `aria-label`, bàn phím, trạng thái focus vẫn đo ở mọi đợt, chỉ bỏ phần đo theo bề rộng mobile. **Mobile là một GIAI ĐOẠN SAU KHI SẢN PHẨM HOÀN THÀNH, không phải một đợt trong danh sách còn lại.** Nó không nằm trong định nghĩa "xong" (bảy bước ở mục này) và không chen vào thứ tự các đợt đang chờ (dashboard, README, 5C, 2C, 2D, đợt 1.6, accessibility, chatbot). Chỉ khi toàn bộ phần máy tính đã xong — bao gồm cả README cho nhà tuyển dụng và đợt accessibility — mới mở giai đoạn mobile.
 
-**Thứ tự còn lại:** dashboard thống kê → README cho nhà tuyển dụng → 5C scenario Make.com → 2C quên mật khẩu → 2D trang hồ sơ → đợt 1.6 → sửa accessibility → chatbot.
+**Thứ tự còn lại:** dashboard thống kê → 5C scenario Make.com → 2C quên mật khẩu → 2D trang hồ sơ → đợt 1.6 → sửa accessibility → chatbot.
 
 **Đợt seed dữ liệu demo: 7 FR, 10 tiêu chí nghiệm thu (5 trong đó là đối chứng).** Spec ở `docs/specs/dot-seed-du-lieu-demo.md` (v1.8, đóng băng). 25 tài khoản `@example.com`, 42 đơn trải 6 tháng đầy đủ + tháng hiện tại, 1.897 dòng `events` hình phễu, tồn kho sau khi chạy 737. Kết quả: **9/10 tiêu chí đạt**; TC-S.10 **trượt** vì điều khoản của chính nó không khả thi (xem mục 8). Dựng và đo toàn bộ trên stack cục bộ; **chưa chạy lên hosted** — đó là việc tay của chủ dự án theo `docs/runbooks/chay-seed-demo.md`.
 
 **Lý do đổi:** thứ tự cũ xếp hai việc tùy chọn (5C Make.com, chatbot) trước ba việc nằm trong định nghĩa "xong" (seed là nền cho bước 1–6, dashboard là bước 6, README là bước 7). Seed đứng trước dashboard vì hosted chỉ có 2 đơn và 3 người dùng, dashboard sẽ vẽ biểu đồ của số 0.
+
+**Bảy bước của định nghĩa "xong" đã đủ, chốt 07/10/2026.** Bước 1–5 xong từ đợt 4; bước 6 xong khi đợt 6 lên production và tài khoản `admin-demo@example.com` được công bố; bước 7 xong với đợt 7. Dữ liệu demo đã chạy lên hosted ngày 07/10: 25 tài khoản, 42 đơn trải 7 tháng, 1.897 sự kiện seed. Mọi việc còn lại — 5C Make.com, 2C quên mật khẩu, 2D trang hồ sơ, đợt sửa lỗi giao diện tồn đọng, accessibility, chatbot, và giai đoạn mobile — đều là TÙY CHỌN, không phải điều kiện hoàn thành.
 
 **Định nghĩa "xong"** — bảy bước một người lạ phải làm được, viết trước để không bị dời:
 
