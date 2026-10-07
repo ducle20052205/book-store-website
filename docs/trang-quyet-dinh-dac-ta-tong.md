@@ -58,7 +58,7 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 - **Ghi log sự kiện** vào bảng `events`: `page_view`, `search`, `add_to_cart`, `checkout_started`, `order_placed`, và từ 2A thêm `sign_up`, `login` (7 loại). Quyết định ghi log **ngay từ đầu** thay vì đợi đến khi làm dashboard, để dashboard có dữ liệu thật.
 - **Mô tả danh mục:** 5 danh mục cha có `categories.description`, hiển thị ở trang catalog khi lọc theo danh mục cha; danh mục con để trống.
 - **Chip thông tin trên thẻ sách:** nhãn danh mục con và chip "Trong tủ sách", chỉ dùng dữ liệu có thật.
-- **Trang tạm cho giai đoạn sau.** Khuôn đã dùng hai lần: trả 200, có header và footer như mọi trang, nói thẳng rằng tính năng thuộc đợt sau, kèm liên kết quay lại. `/gio-hang` tạm (2B.1) đã được thay bằng trang thật ở 3A; `/thanh-toan` tạm (3A) sẽ được thay ở 3B.
+- **Trang tạm cho giai đoạn sau.** Khuôn đã dùng hai lần: trả 200, có header và footer như mọi trang, nói thẳng rằng tính năng thuộc đợt sau, kèm liên kết quay lại. `/gio-hang` tạm (2B.1) đã được thay bằng trang thật ở 3A; `/thanh-toan` tạm (3A) đã được thay bằng trang thật ở 3B (PR #14).
 - **Bước 3 tách làm đôi:** 3A giỏ hàng, 3B checkout. Gộp lại là 15+ FR trong một đợt — đúng cách đã làm phần auth phình thành bốn lần.
 
 ### Thứ tự còn lại và định nghĩa "xong" (chốt 02/10; thứ tự đổi 06/10)
@@ -75,11 +75,11 @@ Catalog + tìm kiếm/lọc · Trang chi tiết sách · Giỏ hàng · Checkout
 
 **Thứ tự còn lại sau đợt 8 (07/10/2026):** đợt sửa accessibility → đợt 1.6 → front-of-house (trang tĩnh, robots/sitemap/Open Graph) → email trạng thái đơn → giai đoạn mobile. **Chưa xếp đợt:** đổi email (kể cả xác nhận hai đầu) và quyết định `ON DELETE` của `events.user_id`/`orders.user_id` — phần còn lại của 2D; 2C đã xong ở đợt 8. *(Thứ tự cũ, đổi 06/10, giữ làm dấu vết: 5C scenario Make.com → 2C quên mật khẩu → 2D trang hồ sơ → đợt 1.6 → sửa accessibility → chatbot. 5C Make.com và chatbot không có trong thứ tự mới; chưa xếp đợt.)*
 
-**Đợt seed dữ liệu demo: 7 FR, 10 tiêu chí nghiệm thu (5 trong đó là đối chứng).** Spec ở `docs/specs/dot-seed-du-lieu-demo.md` (v1.8, đóng băng). 25 tài khoản `@example.com`, 42 đơn trải 6 tháng đầy đủ + tháng hiện tại, 1.897 dòng `events` hình phễu, tồn kho sau khi chạy 737. Kết quả: **9/10 tiêu chí đạt**; TC-S.10 **trượt** vì điều khoản của chính nó không khả thi (xem mục 8). Dựng và đo toàn bộ trên stack cục bộ; **chưa chạy lên hosted** — đó là việc tay của chủ dự án theo `docs/runbooks/chay-seed-demo.md`.
+**Đợt seed dữ liệu demo: 7 FR, 10 tiêu chí nghiệm thu (5 trong đó là đối chứng).** Spec ở `docs/specs/dot-seed-du-lieu-demo.md` (v1.8, đóng băng). 25 tài khoản `@example.com`, 42 đơn trải 6 tháng đầy đủ + tháng hiện tại, 1.897 dòng `events` hình phễu, tồn kho sau khi chạy 737. Kết quả: **9/10 tiêu chí đạt**; TC-S.10 **trượt** vì điều khoản của chính nó không khả thi (xem mục 8). Dựng và đo toàn bộ trên stack cục bộ; **lúc đóng đợt chưa chạy lên hosted** (đã chạy ngày 07/10, xem đoạn "Bảy bước" ngay dưới) — đó là việc tay của chủ dự án theo `docs/runbooks/chay-seed-demo.md`.
 
 **Lý do đổi:** thứ tự cũ xếp hai việc tùy chọn (5C Make.com, chatbot) trước ba việc nằm trong định nghĩa "xong" (seed là nền cho bước 1–6, dashboard là bước 6, README là bước 7). Seed đứng trước dashboard vì hosted chỉ có 2 đơn và 3 người dùng, dashboard sẽ vẽ biểu đồ của số 0.
 
-**Bảy bước của định nghĩa "xong" đã đủ, chốt 07/10/2026.** Bước 1–5 xong từ đợt 4; bước 6 xong khi đợt 6 lên production và tài khoản `admin-demo@example.com` được công bố; bước 7 xong với đợt 7. Dữ liệu demo đã chạy lên hosted ngày 07/10: 25 tài khoản, 42 đơn trải 7 tháng, 1.897 sự kiện seed. Mọi việc còn lại — 5C Make.com, phần còn lại của 2D (đổi email, quyết định `ON DELETE`; 2C và phần còn lại của 2D ngoài hai việc đó đã xong ở đợt 8, 07/10), đợt sửa lỗi giao diện tồn đọng, accessibility, chatbot, và giai đoạn mobile — đều là TÙY CHỌN, không phải điều kiện hoàn thành.
+**Bảy bước của định nghĩa "xong" đã đủ, chốt 07/10/2026.** Bước 1–5 xong từ đợt 4; bước 6 xong khi đợt 6 lên production và tài khoản `admin-demo@example.com` được công bố; bước 7 xong với đợt 7. Dữ liệu demo đã chạy lên hosted ngày 07/10: 25 tài khoản, 42 đơn trải 7 tháng, 1.897 sự kiện seed. Mọi việc còn lại — 5C Make.com, đổi email và quyết định `ON DELETE` (hai việc còn dở của 2D; 2C đã xong ở đợt 8), đợt sửa lỗi giao diện tồn đọng, accessibility, chatbot, và giai đoạn mobile — đều là TÙY CHỌN, không phải điều kiện hoàn thành.
 
 **Định nghĩa "xong"** — bảy bước một người lạ phải làm được, viết trước để không bị dời:
 
@@ -102,7 +102,7 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 | Lớp | Công nghệ |
 |---|---|
 | Frontend | Next.js 16 (App Router) + React 19.2 + Tailwind CSS v4 (không có config file) |
-| Backend | Supabase — Postgres + Auth + Storage + Edge Functions |
+| Backend | Supabase — Postgres + Auth (Storage và Edge Functions chưa dùng: 0 lời gọi trong `app/`, `components/`, `lib/`; không có `supabase/functions/`) |
 | Automation | Make.com — lớp vận hành back-office (sổ đơn hàng, báo đơn mới, digest kho); làm ở đợt admin, **không gửi email cho khách** |
 | Deploy | Vercel, nhánh `main` là production |
 
@@ -143,7 +143,7 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 - **Có ô "Nhập lại email"** vì đã tắt xác nhận email: gõ sai mật khẩu thì thấy được, gõ sai email thì không, và sẽ không lấy lại được mật khẩu. *Đang xem xét thay bằng gợi ý typo domain — xem mục 9.*
 - **Xác nhận email: TẮT.** Phát hiện 30/09 là thiết lập này vốn đang **BẬT** trên hosted, trái FR-5.1, và chưa ai từng kiểm. Đã tắt. Cũng đã nâng Minimum password length 6 → 8.
 - **SMTP: Brevo free** (300 email/ngày). Hai hạn chế đã chấp nhận và ghi trong runbook: địa chỉ gửi bị viết lại thành `@…brevosend.com` (domain mail miễn phí không ký DKIM được), và không tắt được click tracking cho email giao dịch.
-- **Địa chỉ Việt Nam 2 cấp** (từ 01/07/2025: 34 tỉnh, không còn quận/huyện): số nhà/đường → phường/xã → tỉnh/thành. `profiles` sẽ có `province_code`, `ward_code`, `address_line` với khoá ngoại ghép `(ward_code, province_code)` → `wards(code, province_code)` dùng **MATCH FULL** (MATCH SIMPLE sẽ bỏ qua kiểm tra khi một cột NULL). Làm ở đợt 3B, trong form checkout, không tách thành đợt riêng — nó là dependency của ô địa chỉ giao hàng.
+- **Địa chỉ Việt Nam 2 cấp** (từ 01/07/2025: 34 tỉnh, không còn quận/huyện): số nhà/đường → phường/xã → tỉnh/thành. `profiles` có `province_code`, `ward_code`, `address_line` với khoá ngoại ghép `(ward_code, province_code)` → `wards(code, province_code)` dùng **MATCH FULL** (MATCH SIMPLE sẽ bỏ qua kiểm tra khi một cột NULL). Làm ở đợt 3B, trong form checkout, không tách thành đợt riêng — nó là dependency của ô địa chỉ giao hàng.
 
 ### 5.2 Vùng hạ tầng (chốt 30/09, đo xác nhận 01/10/2026)
 
@@ -164,7 +164,7 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 - **Supabase cục bộ (dựng lại 06/10/2026):** CLI 2.118.0, bản tải thẳng (không qua npm), đặt ở `D:\tools\supabase-cli\supabase.exe` và **không nằm trên PATH** — mọi lệnh gọi bằng đường dẫn đầy đủ. Cấu hình ở `supabase/config.toml`. Cổng host: Kong 54321, Postgres 54322, Mailpit 54324, app cục bộ 3100 (dev trỏ hosted vẫn 3000). Container Postgres tên `supabase_db_book-store-website`; trong container Postgres nghe 5432, còn 54322 là cổng host — `docker exec … psql` dùng 5432. Biến môi trường ở `.env.supabase-local` (git-ignore). Khoá ký JWT cục bộ đặt **ES256** để khớp hosted.
 - **`supabase start` trơn dựng 12 container và kéo ~7,97 GB image**, không phải 5 container như runbook mô tả — cờ `-x` của runbook là thứ cắt xuống 5. Lần dựng lại 06/10 chạy trơn, nên con số thật hiện tại là 12.
 - **Dữ liệu Docker nằm ở ổ E**, không phải ổ C: Docker Desktop → Settings → Resources → Advanced → Disk image location trỏ `E:\DockerData\DockerDesktopWSL`. File `.vhdx` **không tự co lại** khi xoá image; đo 06/10 là 10,2 GB.
-- **Mốc kiểm sau mỗi lần dựng lại stack:** `books` = 40, tồn kho 0 = 4 cuốn, `sum(stock_quantity)` = 835, migration = 19 file `.sql`. Khác bất kỳ con số nào thì dừng, đừng tự chữa.
+- **Mốc kiểm sau mỗi lần dựng lại stack:** `books` = 40, tồn kho 0 = 4 cuốn, `sum(stock_quantity)` = 835 (737 sau khi chạy seed demo), migration = 20 file `.sql` (19 trước migration `admin_dashboard_stats` của đợt 6). Khác bất kỳ con số nào thì dừng, đừng tự chữa.
 - **Vai `postgres` của stack cục bộ xoá được `auth.users`** (kiểm 06/10 bằng `begin; delete … where id = '00000000-…'; rollback;` — 0 dòng, không bị từ chối vì quyền).
 - **Lý do phải có stack cục bộ:** Claude Code không tạo/đăng nhập tài khoản trên hosted Auth (ranh giới an toàn của chính nó). Mọi kiểm thử cần phiên thật đều chạy trên `127.0.0.1`.
 - **Cục bộ chạy HTTP/1.1 (giới hạn 6 kết nối mỗi origin), hosted chạy HTTP/2** (xác nhận: Edge nhận `h2` ở 36/36 response của preview; `curl` trên máy đó không hỗ trợ h2 nên báo nhầm HTTP/1.1). Khác biệt này tạo ra một hiện tượng chỉ có ở local — xem mục 7.1.
@@ -206,11 +206,12 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 | Rà soát accessibility (một lần đo, không phải đợt sửa) | Xong: 23 phát hiện, 9 đóng, 14 mở (3 Trung bình, 11 Thấp, 0 Cao); `docs/specs/dot-accessibility-ra-soat.md` bản 1.4 (`f796d05`: đo thêm 12 route chưa đo, chỉ ở 1280px, không đo NFR-6.2 và 390px; A11Y-23 chưa kết luận); bản 1.3 (`7cfe9ff`); SRS lên 1.9 (`2580589`) |
 | Đợt 5B chặng 1: ràng buộc dữ liệu cho `books` (ba CHECK, CHECK slug, hai `NOT NULL`) | Xong, đã merge (PR #21, `4b08d44`); migration `20261004090859` đã áp lên hosted ngày 04/10/2026 |
 | Đợt 5B chặng 2: quản lý sách (`/admin/sach*`, form thêm/sửa, xoá có chặn) và làm mới cache bằng `updateTag` | PR #22 (commit mã `b491dee`); merge `622ea35`; 108 phép kiểm cục bộ (không tính TC-15), 15/15 lượt trên Vercel preview và 6/6 lượt trên production (nút "Đặt tồn kho về 0" chỉ kiểm ở cục bộ và preview), xem 7.10 |
-| Đợt 6: dashboard thống kê (`/admin`, RPC `admin_dashboard_stats()`, mục "Khu quản trị" trong menu) | PR #24; 10 tiêu chí đo trên cục bộ, hai phép đo yếu hơn tiêu chí gốc (TC-D.3, CLS), xem 7.12 |
+| Đợt seed dữ liệu demo (25 tài khoản, 42 đơn, 1.897 sự kiện) | Xong, đã merge (PR #23, `6257f0e`); 9/10 tiêu chí đạt, TC-S.10 trượt và giữ nguyên là trượt; đã chạy lên hosted ngày 07/10/2026, xem 7.11 |
+| Đợt 6: dashboard thống kê (`/admin`, RPC `admin_dashboard_stats()`, mục "Khu quản trị" trong menu) | Xong, đã merge (PR #24, `8e43c16`); 10 tiêu chí đo trên cục bộ, hai phép đo yếu hơn tiêu chí gốc (TC-D.3, CLS), xem 7.12 |
 | Đợt 7: README cho nhà tuyển dụng | Xong, đã merge (PR #25, `eaddf67`); 6/6 tiêu chí đạt (TC-R.6 theo spec v1.1), xem 7.13 |
 | Đợt 8: tài khoản hoàn chỉnh (quên/đặt lại mật khẩu, `/tai-khoan`, đổi mật khẩu) | Xong, đã merge (PR #26, `8e54621`); 10 tiêu chí TC-A, TC-A.8 đo bằng phép thay thế, chín chỗ lệch spec, xem 7.14 |
-| 5C scenario Make.com · Chatbot | Chưa bắt đầu (admin đơn hàng xong ở 5A, admin sách ở 5B) |
-| README cho nhà tuyển dụng · Logo | Chưa bắt đầu |
+| 5C scenario Make.com · Chatbot | Chưa bắt đầu, chưa xếp đợt (admin đơn hàng xong ở 5A, admin sách ở 5B) |
+| README cho nhà tuyển dụng · Logo | Xong một phần: README xong ở đợt 7 (PR #25, `eaddf67`); Logo chưa bắt đầu |
 
 **Quy trình làm việc đã định hình:** mockup (Claude Design) → spec trong `docs/specs/` kèm tiêu chí nghiệm thu đo được → Claude Code làm theo từng đợt, mỗi hạng mục một commit và một lần đo → báo cáo kèm số đo → kiểm tay trên preview Vercel (những gì Claude Code không làm được) → PR → merge. Mỗi đợt một nhánh riêng.
 
@@ -877,10 +878,10 @@ Spec `docs/specs/dot-8-tai-khoan-hoan-chinh.md` v1.1 (FR-A.1 → FR-A.7, TC-A.1 
 - **Tách database cho preview (đợt 1.6).** Preview và production dùng chung một database hosted (`xnqfswvtrgfokkhsrmkx`), nên mọi lần ghi khi đo ở preview nằm trong database mà production cũng đọc, với cache 60 giây; ghi chi tiết ở mục 7.10. Chưa làm.
 - **`BookForm` gắn bằng `onSubmit` phía client (đợt 1.6).** Form admin không có progressive enhancement: bấm Lưu trước khi trang hydrate xong thì form gửi kiểu GET tới chính URL, không lưu gì và đẩy giá trị các ô lên URL. Cần chọn giữa `<form action={serverAction}>` và vô hiệu nút Lưu tới khi hydrate xong; ghi chi tiết ở mục 7.10. Chưa làm.
 - **Lớp ảnh atmosphere** — chọn nguồn, số lượng, đặt ở những trang nào. Gom vào đợt 1.6 mở rộng.
-- **Repo có 19 file migration `.sql`, hosted báo 20.** Chênh 1 chưa giải thích được; mục 7 chỉ ghi dãy 17→18→19. Không chặn đợt nào vì mọi phép đo của đợt seed chạy trên local. Kiểm khi làm đợt 1.6 (tách database preview), bằng cách liệt kê migration hosted ở chế độ chỉ đọc.
+- **Repo có 20 file migration `.sql`; hosted báo 21 (theo mục 7.12, sau đợt 6; trước đó 19 và 20).** Chênh 1 chưa giải thích được; mục 7 chỉ ghi dãy 17→18→19. Không chặn đợt nào vì mọi phép đo của đợt seed chạy trên local. Kiểm khi làm đợt 1.6 (tách database preview), bằng cách liệt kê migration hosted ở chế độ chỉ đọc.
 - Persona chính trong 18–30.
 - Logo chính thức.
 - System prompt cho chatbot.
-- Nội dung README cho nhà tuyển dụng.
-- **11 việc accessibility còn mở** (3 Trung bình, 8 Thấp, 0 Cao) — danh sách và số đo ở `docs/specs/dot-accessibility-ra-soat.md`, sửa ở đợt accessibility. Không còn nợ mockup cho admin: khu quản trị lắp từ hệ layout đóng băng, đó chính là lý do hệ đó tồn tại.
+- Nội dung README cho nhà tuyển dụng (đã xong ở đợt 7; còn lại ở đây chỉ như dấu vết của danh sách).
+- **14 việc accessibility còn mở** (3 Trung bình, 11 Thấp, 0 Cao; bản 1.4, trong đó A11Y-23 chưa kết luận) — danh sách và số đo ở `docs/specs/dot-accessibility-ra-soat.md`, sửa ở đợt accessibility. Không còn nợ mockup cho admin: khu quản trị lắp từ hệ layout đóng băng, đó chính là lý do hệ đó tồn tại.
 - Viết lại mô tả 3 tủ sách bằng giọng của chủ dự án (nội dung hiện tại do AI viết).
