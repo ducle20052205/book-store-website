@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { ChangePasswordForm } from "@/components/account/ChangePasswordForm";
 import { ProfileForm } from "@/components/account/ProfileForm";
 import { PageTitle } from "@/components/PageTitle";
 import { requireUser } from "@/lib/account/requireUser";
@@ -88,6 +89,9 @@ async function ProfileContent() {
     <>
       <PageTitle title="Hồ sơ của bạn" />
       <ProfileForm initial={initial} provinces={provinces} initialWards={initialWards} />
+      <div className="mt-6">
+        <ChangePasswordForm />
+      </div>
     </>
   );
 }
