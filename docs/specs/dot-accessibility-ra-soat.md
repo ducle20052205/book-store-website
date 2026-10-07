@@ -1,6 +1,6 @@
 # Rà soát accessibility toàn site — danh sách phát hiện
 
-Phiên bản 1.3 · 03/10/2026 · **Chỉ đo, không sửa.** Đợt sửa là đợt riêng. Tài liệu này không thay đổi mã nào.
+Phiên bản 1.4 · 07/10/2026 · **Chỉ đo, không sửa.** Đợt sửa là đợt riêng. Tài liệu này không thay đổi mã nào. **Bản 1.4 thêm một lượt đo cho 12 route chưa từng được đo** (phương pháp ở mục 1, đoạn "Lượt đo bản 1.4"; kết quả ở mục 3.2); toàn bộ nội dung bản 1.3 (03/10/2026) được giữ nguyên bên dưới, kể cả các đoạn giữ làm dấu vết.
 
 **Quyết định của chủ dự án, 03/10/2026 (bản 1.1, 1.2 và 1.3):**
 1. A11Y-11 (chữ dưới 14px) **đã giải quyết bằng sửa chuẩn**: SRS lên bản 1.9, NFR-6.6 viết lại (ghi chú ở A11Y-11).
@@ -9,7 +9,7 @@ Phiên bản 1.3 · 03/10/2026 · **Chỉ đo, không sửa.** Đợt sửa là 
 4. A11Y-14 (chữ in trên bìa dưới 12px): **miễn trừ khỏi NFR-6.6 có điều kiện** (bản 1.2). Chữ in trên bìa là chất liệu của ảnh bìa do `BookCover` sinh ra, không phải chữ giao diện; nâng sàn của `clamp` lên 12px là sửa ảnh để phục vụ một quy tắc viết cho chữ giao diện, và làm méo tỉ lệ bìa ở cỡ nhỏ. **Điều kiện:** ở mọi nơi dùng `BookCover`, tên sách và tên tác giả có mặt dưới dạng chữ thật bên cạnh bìa. **Điều kiện đã kiểm (mục 3.1): chưa đạt** — 6 nơi thiếu, nên A11Y-14 **chưa đóng** và mỗi nơi thiếu là một phát hiện Trung bình riêng (A11Y-15 → A11Y-20). A11Y-14 đóng khi sáu phát hiện này được sửa và kiểm lại. **[Điều kiện nêu ở điểm này đã bị thay ở bản 1.3 — xem điểm 5 ngay dưới; nguyên văn được giữ lại làm dấu vết, không xoá.]**
 5. **Điều kiện của miễn trừ A11Y-14 bị thay (bản 1.3).** Điều kiện của bản 1.2 ("tên sách và tác giả là chữ thật bên cạnh bìa") do chủ dự án viết và đã được nhận là **sai**: nó bỏ qua `alt`/tên khả truy cập của bìa, mà đó chính là thứ làm cho miễn trừ có cơ sở — bìa không phải ảnh câm, nó mang tên sách tới công nghệ hỗ trợ. **Điều kiện mới, hai phần.** (a) Mọi bìa phải mang tên sách tới công nghệ hỗ trợ — qua `alt`, chữ nhìn thấy, hoặc tên khả truy cập của liên kết bọc nó; bìa thuần trang trí thì phải `aria-hidden` và không được là nơi duy nhất mang thông tin. (b) Tên tác giả chỉ bắt buộc là chữ ở những chỗ người dùng phải **chọn giữa nhiều cuốn mà không điều hướng đi đâu**: thẻ sách ở lưới catalog và ở các dải trang chủ, và dòng trong giỏ hàng; những chỗ khác (hero, thẻ tủ sách, khối "Có trong tủ", dòng đơn hàng, bìa editorial) chỉ cần tên sách, vì tác giả nằm ở trang chi tiết mà bìa dẫn tới. **Đo lại cả 219 bìa theo điều kiện mới: 219/219 đạt** (mục 3.1). A11Y-14 và sáu phát hiện A11Y-15 → A11Y-20 **đóng vì điều kiện bị sửa, không vì mã được sửa** (mã không đổi).
 
-Tình trạng: 20 phát hiện — 9 đã đóng (A11Y-02, A11Y-11, A11Y-14, A11Y-15 → A11Y-20), 11 còn mở (3 Trung bình, 8 Thấp, 0 Cao).
+Tình trạng (bản 1.4): **22 phát hiện** — 9 đã đóng (A11Y-02, A11Y-11, A11Y-14, A11Y-15 → A11Y-20), **13 còn mở (3 Trung bình, 10 Thấp, 0 Cao)**. Bản 1.4 thêm A11Y-21 và A11Y-22 (cả hai Thấp) từ lượt đo 12 route mới; 0 phát hiện Cao hoặc Trung bình mới. *(Tình trạng của bản 1.3, giữ làm dấu vết: 20 phát hiện — 9 đã đóng (A11Y-02, A11Y-11, A11Y-14, A11Y-15 → A11Y-20), 11 còn mở (3 Trung bình, 8 Thấp, 0 Cao).)*
 
 Tham chiếu: `docs/SRS.md` NFR-6.1 → NFR-6.7 (tương phản AA, vùng chạm 44×44px trên mobile, focus nhìn thấy và điều hướng bàn phím, `alt` ảnh bìa và `aria-hidden` icon trang trí, không truyền đạt thông tin chỉ bằng màu, chữ nội dung tối thiểu 14px, kiểm lại cặp màu sau mỗi lần đổi token). Mã được đo: `main` tại `bbdf305` cộng nhánh `perf/n1-trang-chu` (không đổi giao diện).
 
@@ -35,6 +35,33 @@ Tham chiếu: `docs/SRS.md` NFR-6.1 → NFR-6.7 (tương phản AA, vùng chạm
 
 **Mức độ.** *Cao*: chặn hoàn thành tác vụ hoặc vi phạm rõ NFR ở nội dung/điều khiển chính trên nhiều trang. *Trung bình*: vi phạm NFR ở nội dung/điều khiển phụ, hoặc một nhóm người dùng bị ảnh hưởng nhưng có đường vòng. *Thấp*: ngoại lệ của chuẩn (WCAG) mà SRS không nêu, biên sát ngưỡng, hoặc ngoài NFR-6.x.
 
+#### Lượt đo bản 1.4 — 12 route chưa từng đo (phương pháp)
+
+**Vì sao.** Bản 1.3 đo `bbdf305`: 8 route, 12 trạng thái. `main` có 21 route (`app/**/page.tsx`); trừ 9 route đã đo (8 route của bản 1.3 và `/admin/don-hang/[order_code]`, đo như một trạng thái của `/admin/don-hang`) còn **12 route chưa từng đo** (yêu cầu của chủ dự án ghi "13"; đếm lại từ mã ra 12 và danh sách chủ dự án nêu cũng có 12 mục). Nặng nhất là `/admin` (dashboard đợt 6, vào `main` ở `8e43c16` sau lượt đo bản 1.3) và ba trang của đợt 8 (`/tai-khoan`, `/quen-mat-khau`, `/dat-lai-mat-khau`).
+
+**Mã được đo: `8e54621`** (`main` sau đợt 8). **Chỉ 1280×900.** **KHÔNG đo NFR-6.2** (vùng chạm là việc của mobile, đang tạm dừng) và bỏ 390px. Đo 6 NFR: 6.1, 6.3, 6.4, 6.5, 6.6, 6.7.
+
+**Điều kiện.** Stack Supabase cục bộ, bản production (`next build` rồi `next start`, cổng 3100), Edge headless qua CDP; dữ liệu seed demo (26 tài khoản gồm `admin-demo`, 40 sách, 42 đơn, 3 tủ sách). **Mốc nền kiểm trước khi đo: 40 sách / 4 sách tồn kho 0 / tổng tồn kho 737 / 20 migration** (đúng bằng mốc sau seed; 835 là mốc TRƯỚC seed. Kiểm chéo từ dữ liệu: 120 đơn vị trong 42 đơn, 8 đơn đã hủy giữ 22 đơn vị, 835 − (120 − 22) = 737). Bộ đo (`a11y_lib.js` chạy trong trang, `a11y.mjs` điều khiển CDP) **không nằm trong repo**, dựng lại cho lượt này vì bộ đo của bản 1.3 không còn.
+
+**Các trạng thái đo (20 trạng thái của 12 route, theo thứ tự ưu tiên):** (1) `/admin` thống kê; (2) `/tai-khoan` (bình thường; có lỗi form; sau khi lưu), `/quen-mat-khau` (bình thường; link hết hạn; đã gửi), `/dat-lai-mat-khau` (phiên đặt lại thật, tạo qua thư ở Mailpit; có lỗi); (3) `/dang-nhap` (bình thường; sai mật khẩu), `/dang-ky` (bình thường; gửi form trống); (4) `/admin/sach`, `/admin/sach/moi` (bình thường; gửi form trống), `/admin/sach/[slug]`; (5) `/tu-sach/[slug]`, `/thanh-toan/hoan-tat/[code]`, `/tai-khoan/don-hang/[code]`. **Đủ 12/12 route, không có route nào chưa kịp đo.** Mỗi trạng thái đếm là một lượt đo riêng, nên các con số tổng bên dưới là số lượt, không phải số phần tử duy nhất.
+
+**Cách đo từng NFR (cùng ngưỡng với bảng ở trên):**
+- **6.1 / 6.6 / 6.7:** mọi phần tử nhìn thấy có chữ trực tiếp (kể cả `<text>` của SVG, nên gồm nhãn trục và số trên cột của biểu đồ): màu chữ (kể cả `opacity` và độ trong suốt của tổ tiên, và `fill-opacity` của SVG) hợp lên nền hiệu dụng hợp từ gốc xuống; tỉ lệ WCAG, ngưỡng 4,5:1 (3:1 nếu ≥ 18px); gom theo (chữ, nền, cỡ, đậm); thành phần vô hiệu hoá tách riêng (miễn trừ theo WCAG 1.4.3, như A11Y-02). Thêm `::placeholder` của mọi ô nhập và **chữ giá trị bên trong ô nhập** (không phải nút văn bản nên bộ đo chữ không thấy; bản 1.3 chưa đo). 6.6: `font-size` tính toán, đếm dưới 14px và dưới 12px; theo NFR-6.6 bản 1.9 chữ phụ 12–13px không là vi phạm nếu đạt 4,5:1.
+- **6.3:** duyệt `Tab` thật bằng sự kiện bàn phím CDP, **bắt đầu từ phần tử tương tác cuối cùng** rồi `Tab` vòng về đầu (để điểm khởi đầu duyệt phím không lệch sau khi gửi form); đo có tới được không (so với danh sách phần tử tương tác nhìn thấy), chỉ báo focus (`outline`, vòng `box-shadow` kể cả `inset`) và tỉ lệ của nó với nền, ngưỡng 3:1 (WCAG 1.4.11). Tắt `transition` khi đo (bài học của bản 1.3, mục 5).
+- **6.4:** mọi `<svg>` nhìn thấy (`aria-hidden`, hoặc `role=img` có nhãn), mọi `<img>` (`alt`), mọi `[role=img]` (nhãn); cây accessibility của trình duyệt (CDP `Accessibility.getFullAXTree`): phần tử tương tác không bị bỏ qua mà không có tên.
+- **6.5:** (a) liên kết nằm giữa câu (có chữ thường cùng khối): gạch chân, hoặc tỉ lệ màu với chữ quanh ≥ 3:1; (b) **biểu đồ**: mỗi dấu (`<rect>` có `fill`) phải có chữ đi kèm trong biểu đồ; một biểu đồ có nhiều màu mà số chữ ít hơn số dấu là chuỗi dữ liệu chỉ khác màu (`onlyColor`); (c) lỗi form có chữ và `aria-describedby` (đã đo ở đợt 8).
+
+**Đối chứng của bộ đo (bắt buộc).** Chèn vi phạm tổng hợp vào DOM trong bộ nhớ (trang `/dang-nhap`, một khối `#a11y-ctl`), bộ đo phải bắt đúng từng cái và KHÔNG bắt các bản "tốt" đi kèm. Kết quả **8/8**:
+  1. 6.1: nút xám ~3:1 bị bắt, nút đậm 7:1 không bị bắt — **bắt đúng**.
+  2. 6.1 placeholder: placeholder #bbb bị bắt — **bắt đúng**.
+  3. 6.4 svg: svg thiếu aria-hidden bị bắt — **bắt đúng**.
+  4. 6.4 ô nhập không nhãn: ô không nhãn bị bắt (cây accessibility) — **bắt đúng**.
+  5. 6.3 focus: phần tử outline:none không vòng bị bắt, phần tử có vòng 4px chàm không bị bắt — **bắt đúng**.
+  6. 6.5 biểu đồ chỉ khác màu: hai cột đỏ/xanh không chữ bị bắt onlyColor — **bắt đúng**.
+  7. 6.5 liên kết trong dòng: liên kết không gạch ~2,8:1 bị bắt, liên kết có gạch không bị bắt — **bắt đúng**.
+  8. 6.6: chữ 11px bị bắt dưới 12px — **bắt đúng**.
+Ca 6.3 gồm ba phần tử: một nút `outline: none` không vòng (phải bị bắt), một nút có vòng 4px (phải không bị bắt) và một nút có vòng `inset` 2px (phải không bị bắt; thêm sau khi bắt được một dương tính giả thật, mục 5 bản 1.4). Lần chạy đầu của đối chứng 6.3 chỉ đạt 7/8 vì chính phép thử (mục 5, bản 1.4); sau khi sửa: 8/8, và 8/8 ở lần chạy cuối.
+
 ## 2. Tổng hợp
 
 | NFR | Kết quả | Số phát hiện |
@@ -50,6 +77,20 @@ Tham chiếu: `docs/SRS.md` NFR-6.1 → NFR-6.7 (tương phản AA, vùng chạm
 | Ngoài NFR-6.x | không có liên kết bỏ qua; viền ô nhập; `title` admin | 3 Thấp |
 
 Không có phát hiện mức *Cao*. Còn mở: A11Y-01, A11Y-05, A11Y-10 (Trung bình); A11Y-03, 04, 06, 07, 08, 09, 12, 13 (Thấp). Đã đóng: A11Y-02 và A11Y-11 (quyết định của chủ dự án); A11Y-14 (miễn trừ, điều kiện bản 1.3 đạt); A11Y-15 → A11Y-20 (**vì điều kiện miễn trừ bị sửa, không vì mã được sửa**).
+
+### Tổng hợp lượt đo bản 1.4 (12 route mới, 1280px, mã `8e54621`, không đo 6.2)
+
+| NFR | Kết quả (20 trạng thái của 12 route) | Số phát hiện |
+|---|---|---|
+| 6.1 tương phản | **0/1018** nút văn bản dưới ngưỡng (0 vi phạm), gồm chữ trong biểu đồ của `/admin` (cặp thấp nhất 5,92:1 ở 12px); 20 `::placeholder` đều ≥ 4,5:1 (0 vi phạm); chữ giá trị trong ô nhập (108 lượt đo ô): 3 lượt là một ô vô hiệu hoá **4,45:1** (email chỉ đọc ở `/tai-khoan`, 3 trạng thái), mọi lượt còn lại ≥ 4,5:1 | 1 Thấp (A11Y-21) |
+| 6.3 focus và bàn phím | **545/545** phần tử tương tác tới được bằng `Tab` (0 không tới được); 0 thiếu chỉ báo focus; 0 chỉ báo dưới 3:1, chỉ báo yếu nhất 7,14:1. Một dương tính giả ban đầu (20 liên kết hàng ở `/admin/sach`, chỉ báo `inset`) đã bị bắt và sửa trong bộ đo (mục 5) | 0 |
+| 6.4 `alt`, icon, tên | **0/130** `<svg>` thiếu `aria-hidden` hoặc nhãn; 19 `[role=img]` đều có nhãn (3 biểu đồ của `/admin`); 0 `<img>`; **0/1111** phần tử tương tác không tên (cây accessibility) | 0 |
+| 6.5 không chỉ bằng màu | **3/3 biểu đồ của `/admin` không có chuỗi chỉ khác màu**: cột doanh thu 7 dấu · 1 màu · 7 nhãn; cột danh mục 5 dấu · 5 màu · 5 nhãn; phễu 5 dấu · 1 màu (đổi độ đậm) · 15 chữ; 9 liên kết giữa câu, 0 vi phạm | 0 |
+| 6.6 cỡ chữ | 204/1018 nút văn bản dưới 14px, **0** dưới 4,5:1 trong số đó (theo NFR-6.6 bản 1.9 không là vi phạm); **0** dưới 12px | 0 |
+| 6.7 cặp token | **27** cặp chữ/nền gộp từ 20 trạng thái, **0** dưới 4,5:1; **2** trong 4,5–5,0:1, đều là cặp của A11Y-04 | 0 mới (mở rộng phạm vi A11Y-04) |
+| Ngoài NFR-6.x | `<title>` chung "NA Books" ở `/tu-sach/[slug]` (3/3 tủ sách); `/admin` và 3 route `/admin/sach*` cùng "NA Books" (cố ý, A11Y-13) | 1 Thấp (A11Y-22) |
+
+Không có phát hiện mức *Cao* hay *Trung bình* mới. Còn mở sau bản 1.4: A11Y-01, A11Y-05, A11Y-10 (Trung bình); A11Y-03, 04, 06, 07, 08, 09, 12, 13, **21, 22** (Thấp).
 
 ## 3. Danh sách phát hiện
 
@@ -75,6 +116,8 @@ Không có phát hiện mức *Cao*. Còn mở: A11Y-01, A11Y-05, A11Y-10 (Trung
 | A11Y-18 | 6.6 / 6.4 (điều kiện miễn trừ A11Y-14) | Trung bình (bản 1.2) → **đã đóng (bản 1.3)** | `/thanh-toan` · tóm tắt đơn · `ul.space-y-4 > li.grid` (`OrderLines`; ở 390px nằm trong `<details>` gập) | Điều kiện cũ: 0/2 ở cả 1280 và 390px (4/4 lượt thiếu): tên sách có (2/2), tên tác giả thiếu (0/2). **Điều kiện mới: (a) 4/4** — nhãn bìa = tên sách, và tên sách còn là chữ thật cạnh bìa (4/4); **(b) không bắt buộc** ở dòng đơn hàng | **Đóng vì điều kiện miễn trừ bị sửa (bản 1.3), không vì mã được sửa:** mã không đổi. Tên tác giả vẫn không có trên `/thanh-toan`; điều kiện mới không đòi (đối chứng: ở giỏ hàng, nơi (b) bắt buộc, tác giả là chữ thật 4/4). Ghi nhận, không phải phát hiện |
 | A11Y-19 | 6.6 / 6.4 (điều kiện miễn trừ A11Y-14) | Trung bình (bản 1.2) → **đã đóng (bản 1.3)** | 390px · `/thanh-toan/hoan-tat/[code]`, `/tai-khoan/don-hang/[code]`, `/admin/don-hang/[code]` · `ul.mt-4.space-y-4 > li.grid` (`OrderSummary`): dòng tác giả `p.hidden.md:block` | Điều kiện cũ: 0/9 ở 390px (3 trang × 3 dòng) và 9/9 ở 1280px (tác giả). **Điều kiện mới: (a) 18/18** (9 dòng × 2 khung) — nhãn bìa = tên sách, và tên sách còn là chữ thật cạnh bìa (18/18); **(b) không bắt buộc** ở dòng đơn hàng | **Đóng vì điều kiện miễn trừ bị sửa (bản 1.3), không vì mã được sửa:** mã không đổi. Dòng tác giả vẫn mang `hidden … md:block` nên ẩn dưới `md`; điều kiện mới không đòi tác giả ở đây. Ghi nhận, không phải phát hiện |
 | A11Y-20 | 6.6 / 6.4 (điều kiện miễn trừ A11Y-14) | Trung bình (bản 1.2) → **đã đóng (bản 1.3)** | `/dang-nhap` · `aside` editorial (bìa của một cuốn; chỉ có ở md trở lên) · không nằm trong danh sách trang của đợt rà soát, được phép đo này thêm vào vì `BookCover` có mặt ở đó | Điều kiện cũ: 0/1 ở 1280px; ở 390px không có bìa nhìn thấy (khối bìa mang `hidden … md:flex`: 0/0). **Điều kiện mới: (a) 1/1** — nhãn bìa = tên sách; **(b) không bắt buộc** (bìa editorial); ở 390px bìa ẩn bằng CSS nên không có đối tượng | **Đóng vì điều kiện miễn trừ bị sửa (bản 1.3), không vì mã được sửa:** mã không đổi. Bìa không nằm trong liên kết nào (0/1) và tên sách không có ở chữ nào khác trên trang đăng nhập; tới công nghệ hỗ trợ chỉ qua nhãn của bìa, điều kiện mới coi đó là đạt (a) |
+| A11Y-21 | 6.1 (bản 1.4) | Thấp | `/tai-khoan` · ô email chỉ đọc (`input` `disabled`, 16px; `inputClass` có `disabled:opacity-60`) | chữ giá trị **4,45:1** trên nền ô (ngưỡng 4,5:1); 3/3 trạng thái của trang, đo 3 lượt | **Còn mở (bản 1.4).** Thành phần vô hiệu hoá được miễn trừ bởi chính WCAG 1.4.3 (như A11Y-02), nên không là vi phạm theo chuẩn; ghi vì đây là ô **mang thông tin** (địa chỉ email của người dùng), không chỉ là điều khiển bị khoá, và nằm sát ngưỡng (thiếu 0,05). Cách sửa nếu muốn: dùng `readOnly` thay `disabled` và bỏ `opacity` của ô này (chữ `ink-900` đạt cao hơn nhiều), hoặc hiện email thành chữ thường kèm nhãn. Chữ giá trị trong ô nhập chưa được đo ở bản 1.3 nên không có số đối chiếu cũ |
+| A11Y-22 | ngoài NFR (WCAG 2.4.2) (bản 1.4) | Thấp | `/tu-sach/[slug]` · `<title>` | **3/3** tủ sách có `<title>` chung "NA Books" (`hanh-trang-nam-dau-di-lam`, `van-hoc-nhat-cho-nguoi-moi-bat-dau`, `hieu-minh-truoc-khi-hieu-doi`); `/tu-sach` và `/sach/[slug]` có tiêu đề riêng | **Còn mở (bản 1.4).** Trang không có `metadata` hay `generateMetadata`, nên mọi tủ sách trùng tiêu đề với nhau và với trang chủ; người dùng trình đọc màn hình và tab trình duyệt không phân biệt được. Khác A11Y-13 (admin, cố ý do spec 5A). Cách sửa: `generateMetadata` lấy tên tủ sách. Ghi nhận thêm: A11Y-13 mở rộng sang `/admin` và 3 route `/admin/sach*` (cùng "NA Books", cố ý) |
 
 ### 3.1 Kiểm điều kiện miễn trừ A11Y-14 — mọi nơi dùng `BookCover`
 
@@ -137,6 +180,58 @@ Mã `BookCover` được gọi ở 11 chỗ trong 9 file (`components/BookCard.t
 
 **Phép đo này không đo:** mắt đọc có thấy tên sách và tác giả hay không (chữ in trên bìa của bìa typographic vẫn hiện, nên người nhìn thấy được chữ trên bìa; điều kiện của chủ dự án đòi chữ *thật*, cho người dùng trình đọc màn hình và để chữ phóng được); bìa ảnh thật (`alt={title}`; dữ liệu cục bộ không có ảnh thật nên 219 bìa đều là bìa typographic).
 
+### 3.2 Lượt đo bản 1.4 — 12 route chưa từng đo (1280px, mã `8e54621`)
+
+Phương pháp ở mục 1 (đoạn "Lượt đo bản 1.4"). **Chỉ đo, không sửa.** Không đo NFR-6.2.
+
+| Trạng thái | Route | Nút văn bản · nhóm | Dưới ngưỡng 6.1 | <14px (và <4,5:1) · <12px | Cặp thấp nhất | `<svg>` (thiếu `aria-hidden`) · `[role=img]` | Phần tử tương tác không tên | Tab: điểm dừng / tương tác · không tới được · thiếu chỉ báo · chỉ báo <3:1 · chỉ báo yếu nhất |
+|---|---|---|---|---|---|---|---|---|
+| admin-thong-ke | `/admin` | 123 · 20 | 0 | 67 (0) · 0 | 5,92:1 (12px) | 22 (0) · 3 | 0/30 | 30/30 · 0 · 0 · 0 · 7,14:1 |
+| admin-sach-danh-sach | `/admin/sach` | 141 · 21 | 0 | 31 (0) · 0 | 5,79:1 (14px) | 5 (0) · 0 | 0/70 | 47/47 · 0 · 0 · 0 · 7,14:1 |
+| admin-sach-moi | `/admin/sach/moi` | 62 · 22 | 0 | 10 (0) · 0 | 4,77:1 (14px) | 5 (0) · 1 | 0/56 | 38/38 · 0 · 0 · 0 · 7,14:1 |
+| admin-sach-moi-co-loi | `/admin/sach/moi` | 78 · 25 | 0 | 10 (0) · 0 | 4,77:1 (14px) | 5 (0) · 1 | 0/61 | 43/43 · 0 · 0 · 0 · 7,14:1 |
+| admin-sach-slug | `/admin/sach/[slug]` | 66 · 24 | 0 | 10 (0) · 0 | 4,77:1 (14px) | 5 (0) · 1 | 0/57 | 39/39 · 0 · 0 · 0 · 7,14:1 |
+| quen-mat-khau | `/quen-mat-khau` | 25 · 15 | 0 | 1 (0) · 0 | 8,16:1 (14px) | 4 (0) · 0 | 0/20 | 20/20 · 0 · 0 · 0 · 8,86:1 |
+| quen-mat-khau-het-han | `/quen-mat-khau` | 26 · 16 | 0 | 1 (0) · 0 | 8,16:1 (14px) | 5 (0) · 0 | 0/20 | 20/20 · 0 · 0 · 0 · 8,86:1 |
+| quen-mat-khau-da-gui | `/quen-mat-khau` | 26 · 16 | 0 | 1 (0) · 0 | 8,16:1 (14px) | 6 (0) · 0 | 0/21 | 21/21 · 0 · 0 · 0 · 7,62:1 |
+| dang-nhap | `/dang-nhap` | 30 · 18 | 0 | 3 (0) · 0 | 7,19:1 (13px) | 5 (0) · 1 | 0/24 | 24/24 · 0 · 0 · 0 · 8,86:1 |
+| dang-nhap-co-loi | `/dang-nhap` | 32 · 20 | 0 | 3 (0) · 0 | 7,19:1 (13px) | 6 (0) · 1 | 0/25 | 25/25 · 0 · 0 · 0 · 8,86:1 |
+| dang-ky | `/dang-ky` | 34 · 17 | 0 | 3 (0) · 0 | 8,16:1 (14px) | 8 (0) · 0 | 0/24 | 24/24 · 0 · 0 · 0 · 8,86:1 |
+| dang-ky-co-loi | `/dang-ky` | 37 · 18 | 0 | 3 (0) · 0 | 5,45:1 (14px) | 8 (0) · 0 | 0/24 | 24/24 · 0 · 0 · 0 · 8,86:1 |
+| tu-sach-slug | `/tu-sach/[slug]` | 67 · 25 | 0 | 27 (0) · 0 | 4,66:1 (17px) | 9 (0) · 5 | 0/22 | 22/22 · 0 · 0 · 0 · 7,14:1 |
+| tai-khoan | `/tai-khoan` | 40 · 15 | 0 | 4 (0) · 0 | 8,16:1 (13px) | 5 (0) · 0 | 0/193 | 30/30 · 0 · 0 · 0 · 7,14:1 |
+| tai-khoan-co-loi | `/tai-khoan` | 41 · 16 | 0 | 4 (0) · 0 | 5,45:1 (14px) | 5 (0) · 0 | 0/193 | 30/30 · 0 · 0 · 0 · 7,14:1 |
+| tai-khoan-da-luu | `/tai-khoan` | 41 · 16 | 0 | 4 (0) · 0 | 8,16:1 (13px) | 7 (0) · 0 | 0/194 | 31/31 · 0 · 0 · 0 · 7,14:1 |
+| hoan-tat-don | `/thanh-toan/hoan-tat/[code]` | 49 · 24 | 0 | 9 (0) · 0 | 6,58:1 (16px) | 5 (0) · 3 | 0/19 | 19/19 · 0 · 0 · 0 · 7,14:1 |
+| don-hang-chi-tiet | `/tai-khoan/don-hang/[code]` | 47 · 21 | 0 | 9 (0) · 0 | 6,58:1 (14px) | 5 (0) · 3 | 0/18 | 18/18 · 0 · 0 · 0 · 7,14:1 |
+| dat-lai-mat-khau | `/dat-lai-mat-khau` | 25 · 15 | 0 | 1 (0) · 0 | 8,16:1 (14px) | 5 (0) · 0 | 0/20 | 20/20 · 0 · 0 · 0 · 8,86:1 |
+| dat-lai-mat-khau-co-loi | `/dat-lai-mat-khau` | 28 · 16 | 0 | 3 (0) · 0 | 5,45:1 (14px) | 5 (0) · 0 | 0/20 | 20/20 · 0 · 0 · 0 · 8,86:1 |
+
+Cột "Cặp thấp nhất" là cặp chữ/nền có tỉ lệ nhỏ nhất của trạng thái đó. Cột Tab: điểm dừng bằng đúng số phần tử tương tác nhìn thấy nghĩa là 0 phần tử không tới được. **Tổng:** 1018 nút văn bản (20 lượt đo; mỗi trạng thái đếm riêng), 545/545 điểm dừng `Tab`, 130 `<svg>`, 1111 phần tử tương tác trong cây accessibility (gồm các `<option>` của ô chọn phường/xã ở `/tai-khoan`).
+
+**Bảng cặp token gộp (6.7)**, 20 trạng thái: 27 cặp, 0 dưới 4,5:1. Tám cặp thấp nhất:
+
+| Chữ | Nền | Tỉ lệ | Cỡ | Mẫu | Trạng thái |
+|---|---|---|---|---|---|
+| `#bd3125` | `#ede6d9` | 4,66:1 | 17px | 85.000 ₫ | tu-sach-slug |
+| `#5f6379` | `#ede6d9` | 4,77:1 | 14px | / | admin-sach-moi |
+| `#c2362b` | `#ffffff` | 5,45:1 | 14px | * | admin-sach-moi |
+| `#bd3125` | `#ffffff` | 5,79:1 | 14px | 69.000 ₫ | admin-sach-danh-sach |
+| `#5f6379` | `#ffffff` | 5,92:1 | 12px | Doanh thu | admin-thong-ke |
+| `#4a4e66` | `#ede6d9` | 6,58:1 | 14px | Số lượt, không phải số p | admin-thong-ke |
+| `#d9a33a` | `#171d40` | 7,19:1 | 13px | Văn học Nhật cho người m | dang-nhap |
+| `#1a1c2e` | `#d9a33a` | 7,4:1 | 12px | -22% | tu-sach-slug |
+
+Hai cặp trong 4,5–5,0:1 là `sale` trên `paper` (4,66:1; giá ở `/tu-sach/[slug]`) và `ink-400` trên `paper` (4,77:1; dấu phân cách và gợi ý ở form admin) — đúng hai cặp của **A11Y-04**, nay thấy thêm ở các route mới; không là phát hiện mới.
+
+**`/admin` — biểu đồ riêng.**
+- **6.5:** cả ba biểu đồ **không** có chuỗi dữ liệu chỉ phân biệt bằng màu. Doanh thu theo tháng: 7 cột, 1 màu, 7 nhãn trong SVG (giá trị trên cột) và 7 nhãn tháng. Số bản theo danh mục: 5 cột, 5 màu (mỗi danh mục một màu), 5 số trong SVG và 5 tên danh mục bằng chữ cạnh cột. Phễu: 5 cột cùng một màu, độ đậm giảm dần, kèm 15 đoạn chữ (tên bước, số lượt, phần trăm). Phép đo `onlyColor` bắt đúng ca tổng hợp (hai cột đỏ/xanh không chữ): đối chứng 8/8.
+- **6.1 / 6.6:** chữ trong biểu đồ nằm trong số nút văn bản đã đo: cặp thấp nhất của cả trang là `ink-400` trên trắng 5,92:1 ở 12px (nhãn KPI và chữ chú thích); 67 nút dưới 14px, 0 dưới 4,5:1, 0 dưới 12px.
+- **6.4:** ba biểu đồ là `role="img"` có `aria-label` (117, 165, 100 ký tự). Cây accessibility của Edge vẫn cho thấy các nút chữ con của biểu đồ (14, 10 và 50 nút); chưa kiểm bằng trình đọc màn hình thật xem chúng có được đọc không. **Ghi nhận, không phải phát hiện:** `aria-label` của biểu đồ doanh thu chỉ nêu tháng cao nhất, tháng thấp nhất và tổng (không có từng tháng), và của phễu chỉ nêu bước đầu, bước cuối và tỉ lệ; giá trị từng tháng và các bước giữa (360, 150, 60 lượt) không có ở chữ nào ngoài biểu đồ. Nếu công nghệ hỗ trợ không đọc nút con của `role="img"` thì đó là thiếu thông tin thật; điều này không đo được ở đây.
+- **6.3:** 30/30 phần tử tương tác của `/admin` tới được bằng `Tab`, 0 thiếu chỉ báo, chỉ báo yếu nhất 7,14:1.
+
+**Ghi nhận ngoài NFR:** A11Y-08 (không có liên kết "bỏ qua tới nội dung") áp dụng nguyên cho 12 route mới (cùng `Header`); không đo lại số điểm dừng trước `<main>`. 20/20 trạng thái có đúng một `h1` và `lang="vi"`.
+
 ## 4. Đã đạt (đối chứng: phép đo không rỗng)
 
 - **Chỉ báo focus:** 311 phần tử qua `Tab`; 308 vòng `box-shadow` (trắng 2px rồi chàm 4px), 2 outline mặc định của ô chọn, 0 thiếu. Ảnh chụp một thẻ sách và một thẻ tủ sách `hover-lift` (lớp có transition) cho thấy vòng nhìn thấy; thẻ danh mục và nút "Xem tủ sách" được đối chiếu bằng `box-shadow` tính toán (cùng hai lớp trắng 2px và chàm 4px).
@@ -147,6 +242,8 @@ Mã `BookCover` được gọi ở 11 chỗ trong 9 file (`components/BookCard.t
 - **Icon và ảnh:** 108/108 `<svg>` có `aria-hidden`; bìa typographic `role="img"` có `aria-label` = tên sách (134/134 lượt); mã dùng `alt={title}` cho ảnh bìa thật (đo ở bản 1.3 bằng ảnh SVG tạm trên 26 bìa: 22 `<img alt>` đúng tên sách, 4 trang trí; xem mục 3.1).
 - **Tên sách của bìa tới công nghệ hỗ trợ** (điều kiện miễn trừ A11Y-14, bản 1.3): 219/219 bìa; 215 qua nhãn của bìa (cây accessibility: vai trò `image`, tên = tên sách), 4 trang trí `aria-hidden` có tên sách là chữ thật cạnh bìa; 0 bìa thiếu cả `alt`, tên và `aria-hidden`. Tên tác giả là chữ ở nơi bắt buộc: 158/158. Đối chứng: 6/6 bìa tổng hợp bị bộ đo phân loại đúng (4 trượt, 2 đạt); xem mục 3.1.
 - **Giảm chuyển động:** có `@media (prefers-reduced-motion: reduce)` (`globals.css`); vùng thông báo `Toast` có `aria-live`/`role` (đọc mã, chưa đo bằng trình đọc màn hình).
+
+**Đã đạt ở lượt đo bản 1.4 (12 route mới, đối chứng 8/8):** 1018 nút văn bản, 0 dưới ngưỡng 6.1; 20 placeholder, 0 dưới 4,5:1; 545/545 phần tử tương tác tới được bằng `Tab`, 0 thiếu chỉ báo focus, 0 dưới 3:1; 130 `<svg>`, 0 thiếu `aria-hidden` hay nhãn; 0/1111 phần tử tương tác không tên; 3/3 biểu đồ của `/admin` có nhãn và không chỉ khác màu; 0 nút dưới 12px; 27 cặp token, 0 dưới 4,5:1. Các form của đợt 8 và của `/admin/sach*`: 0 ô thiếu nhãn (đo ở đợt 8 và bằng cây accessibility ở lượt này).
 
 ## 5. Giới hạn và phép đo hỏng của chính bộ kiểm
 
@@ -175,6 +272,15 @@ Mã `BookCover` được gọi ở 11 chỗ trong 9 file (`components/BookCard.t
 - Kiểm điều kiện miễn trừ A11Y-14 (cả hai bản): dữ liệu cục bộ (3 tủ sách, 1 khách có giỏ 2 dòng, 1 admin, 1 đơn 3 dòng); trang chủ ở trạng thái mặc định và tab Bán chạy; không đo hosted; `/dang-ky` và các trang `/tai-khoan/...` khác chưa được dò bằng đo (chỉ bằng `grep`: không dùng `BookCover`). **Ảnh bìa thật chưa đo**: dữ liệu cục bộ không có `cover_image_url`; nhánh `<Image alt={title}>` (`components/BookCover.tsx` dòng 157) được đo bằng một ảnh SVG tạm (`/file.svg`) gán cho 3 cuốn, ở 6 nơi và 26 bìa (mục 3.1), không phải ảnh JPEG/PNG đi qua trình tối ưu ảnh của Next; không có bìa ảnh nào ở trang chủ. Tên khả truy cập đọc từ cây accessibility của Edge, không phải trình đọc màn hình thật.
 - Đo ở một máy, Edge headless; `min-height`/`vùng chạm` đo bằng hộp bao, không đo vùng bấm thực của liên kết nhiều dòng.
 
+**Phép đo hỏng của chính bộ kiểm ở lượt đo bản 1.4 (bắt được, sửa, đo lại toàn bộ):**
+- **Dương tính giả 6.3:** lần chạy đầu báo 20 liên kết hàng ở `/admin/sach` "không có chỉ báo focus". Nguyên nhân: bộ đo bỏ qua bóng đổ `inset` (`focus-visible:ring-inset` của Tailwind tạo `box-shadow` `inset`). Kiểm bằng đọc `box-shadow` tính toán khi focus (`rgb(58, 69, 133) 0 0 0 2px inset`, `cham-600`) và sửa bộ đo (tính cả lớp `inset`, so với nền của chính phần tử); thêm ca đối chứng `inset`. Sau khi sửa: 0 phần tử thiếu chỉ báo. Hệ quả cho bản 1.3: bản 1.3 báo "0/311 thiếu chỉ báo", nên không bị ảnh hưởng theo chiều dương tính giả; không biết bộ đo cũ có cùng lỗ hổng `inset` hay không.
+- **Điểm bắt đầu duyệt `Tab`:** sau khi gửi form, `Tab` tiếp tục từ chỗ focus cũ nên đi nửa trang (19/30 điểm dừng, "11 không tới được") — phép đo hỏng, không phải lỗi của trang. Sửa: bắt đầu từ phần tử tương tác cuối cùng rồi `Tab` vòng về đầu; sau đó mọi trạng thái đủ 545/545.
+- **Lỗi của chính bộ đo:** phân tích màu liên kết sập khi gặp một giá trị màu không đọc được (đo dở dang ở nhóm trang ẩn danh); sửa bằng cách bỏ qua liên kết đó và ghi `unparsed`, rồi đo lại toàn bộ.
+- **Đối chứng 6.3 lần đầu:** 7/8, vì phép thử dùng `.focus()` bằng script nên `:focus` không áp dụng khi tài liệu chưa có focus (bìa "có vòng" bị báo "không vòng"). Sửa bằng phím `Tab` thật; 8/8.
+- **Một thao tác của chính lượt đo** làm đổi dữ liệu thử: trạng thái "đã lưu" của `/tai-khoan` lưu số điện thoại của một tài khoản seed. Đã khôi phục từ số điện thoại ghi trên đơn seed của tài khoản đó và xoá các sự kiện `login` do bộ đo tạo; mốc nền DB sau lượt đo: 40/4/737/20, 26 tài khoản, 42 đơn, 1.897 sự kiện (đúng mốc seed).
+
+**Chưa đo / không đo được ở lượt bản 1.4:** NFR-6.2 và 390px (mobile tạm dừng, theo yêu cầu); hover và active; trạng thái mở của mọi hộp thoại xác nhận trong `/admin/sach/[slug]` (xoá, đặt tồn kho về 0) và menu Tài khoản trên các trang mới; trang `/dang-ky` ngoài hai trạng thái đo; ảnh bìa thật; trình đọc màn hình thật (chỉ cây accessibility của Edge); hosted; "bên cạnh" và chữ trên bìa không đo lại (không có `BookCover` mới ngoài `/tu-sach/[slug]`, `/thanh-toan/hoan-tat/[code]` và `/tai-khoan/don-hang/[code]`, nơi 6.4 đo `role=img` có nhãn); chữ trong biểu đồ đo theo `<text>` SVG, không đo bằng ảnh chụp. Đo ở một máy, Edge headless.
+
 ## 6. Quyết định đã có và việc còn lại
 
 **Đã quyết (03/10/2026):**
@@ -185,3 +291,5 @@ Mã `BookCover` được gọi ở 11 chỗ trong 9 file (`components/BookCard.t
 5. **Điều kiện của miễn trừ A11Y-14 bị thay (bản 1.3).** Điều kiện cũ viết sai vì bỏ qua `alt`/tên khả truy cập của bìa. Điều kiện mới: (a) mọi bìa mang tên sách tới công nghệ hỗ trợ (qua `alt`, chữ nhìn thấy hoặc tên khả truy cập của liên kết bọc; bìa trang trí thì `aria-hidden` và không là nơi duy nhất mang thông tin); (b) tên tác giả là chữ ở thẻ sách lưới catalog và dải trang chủ và ở dòng giỏ hàng, các chỗ khác chỉ cần tên sách. **Đo lại 219 bìa: 219/219 đạt.** A11Y-14 đóng; A11Y-15 → A11Y-20 đóng **vì điều kiện bị sửa, không vì mã được sửa**.
 
 **Còn lại cho đợt sửa accessibility:** thứ tự gợi ý theo tác động: A11Y-01, A11Y-10 và A11Y-05 (đã chốt là việc cần sửa); rồi A11Y-06 và A11Y-07 (ARIA), A11Y-09 (tên truy cập thẻ sách; theo phép đo bản 1.3, 182/215 bìa lộ nhãn lặp với chữ tên sách thật cạnh bìa), A11Y-08 (liên kết bỏ qua). Không còn việc sửa nào ở bìa: A11Y-14 và A11Y-15 → A11Y-20 đã đóng. Nếu sau này đổi `BookCover`, `Hero`, `OrderSummary` hay thẻ tủ sách, đo lại bằng phép đo ở mục 1 (kỳ vọng 219/219 và 6/6 đối chứng).
+
+**Bản 1.4 (07/10/2026), chưa có quyết định của chủ dự án:** A11Y-21 (email chỉ đọc 4,45:1) và A11Y-22 (tiêu đề chung của `/tu-sach/[slug]`) là hai phát hiện Thấp mới, chờ phân loại: A11Y-21 có thể xử lý như A11Y-02 (chấp nhận, miễn trừ của WCAG 1.4.3) hoặc sửa một class; A11Y-22 là sửa một hàm. **Việc còn lại cho đợt sửa accessibility:** như bản 1.3, cộng A11Y-21 và A11Y-22; nếu sau này đổi `BookForm`, trang hồ sơ, ba route đợt 8 hay biểu đồ của `/admin`, đo lại bằng phép đo mục 1 (kỳ vọng 0 dưới ngưỡng ở 20 trạng thái và 8/8 đối chứng).
