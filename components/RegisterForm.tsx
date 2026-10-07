@@ -6,13 +6,11 @@ import { AuthAlert, AuthErrorMessage } from "@/components/AuthAlert";
 import { PasswordField, TextField } from "@/components/AuthFields";
 import { PasswordStrength } from "@/components/PasswordStrength";
 import type { AuthErrorKind } from "@/lib/authErrors";
-import { FULL_NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/lib/authRules";
+import { EMAIL_PATTERN, FULL_NAME_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@/lib/authRules";
 import { isNextRedirect } from "@/lib/nextRedirect";
 
 type FieldName = "fullName" | "email" | "emailConfirm" | "password";
 type FieldErrors = Partial<Record<FieldName, ReactNode>>;
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Form đăng ký (đợt 2B, spec mục 6, FR-5.1). Bốn trường đúng thứ tự: họ tên,

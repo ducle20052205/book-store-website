@@ -7,5 +7,8 @@
 /** FR-5.1: tối thiểu 8 ký tự, KHÔNG áp đặt loại ký tự (NIST SP 800-63B). Khớp "Minimum password length" ở Supabase. */
 export const PASSWORD_MIN_LENGTH = 8;
 
+/** Kiểm tra định dạng email ở form (RegisterForm, ForgotPasswordForm) và ở Server Action quên mật khẩu — một bản duy nhất. */
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 /** Họ tên đi vào `user_metadata` rồi vào JWT (cookie mỗi request) — chặn độ dài để cookie không phình. */
 export const FULL_NAME_MAX_LENGTH = 100;
