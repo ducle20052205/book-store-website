@@ -93,17 +93,18 @@ Supabase ap-northeast-1          Brevo
 | Triển khai | Vercel, nhánh `main` là production |
 | Email giao dịch | Brevo HTTP API |
 
-Quy mô, đếm từ repo: 18 trang (`app/**/page.tsx`) và 1 route handler, 20 migration, 11 bảng đều bật RLS, 5 dependency production, 64 yêu cầu chức năng trong `docs/SRS.md`, 23 file trong `docs/specs/`, 6 file trong `docs/runbooks/`.
+Quy mô, đếm từ repo: 21 trang (`app/**/page.tsx`) và 2 route handler, 20 migration, 11 bảng đều bật RLS, 5 dependency production, 64 yêu cầu chức năng trong `docs/SRS.md`, 24 file trong `docs/specs/`, 6 file trong `docs/runbooks/`.
 
 Khu quản trị được kiểm quyền theo từng tầng: `proxy.ts` chặn sớm, rồi kiểm quyền admin trong Server Component, rồi RLS và trigger ở database. `proxy.ts` không phải hàng rào duy nhất, vì CVE-2025-29927 (lỗ hổng cho phép bỏ qua middleware của Next.js) cho thấy một lớp chặn ở rìa không đủ để tin; quyền thật được kiểm lại ở hai lớp sau.
 
 ## Chưa làm gì, và vì sao
 
 - **Giao diện mobile tạm dừng.** Mobile là một giai đoạn sau khi sản phẩm hoàn thành, không nằm trong định nghĩa "xong" và không chen vào thứ tự các đợt. Mã mobile đã có được giữ nguyên, không xây thêm và không đo thêm theo bề rộng mobile.
-- **11 phát hiện accessibility còn mở** (3 Trung bình, 8 Thấp, 0 Cao). Đã đo, chưa sửa; có đợt riêng cho việc này.
+- **14 phát hiện accessibility còn mở** (3 Trung bình, 11 Thấp, 0 Cao). Đã đo, chưa sửa; có đợt riêng cho việc này.
 - **URL động có dãy `%XX` hỏng hoặc `%25` trả HTTP 500.** Lỗi có từ trước mọi đợt, xảy ra trước khi tới mã trang, không lộ dữ liệu; gom vào đợt sửa lỗi giao diện tồn đọng.
 - **Preview và production dùng chung một database.** Mọi lần ghi khi thử ở preview nằm trong database mà production cũng đọc. Đợt sửa lỗi giao diện tồn đọng sẽ tách chúng.
-- **Chatbot, quên mật khẩu, trang hồ sơ, scenario Make.com.** Chưa làm, nằm trong thứ tự các đợt còn lại và ngoài định nghĩa "xong".
+- **Chatbot và scenario Make.com.** Chưa làm, chưa xếp đợt và ngoài định nghĩa "xong".
+- **Đổi email.** Quên mật khẩu và trang hồ sơ đã xong ở đợt 8 (sửa được họ tên, điện thoại, địa chỉ, đổi được mật khẩu), nhưng email của tài khoản chưa đổi được. Chưa xếp đợt, ngoài định nghĩa "xong".
 - **Một tiêu chí nghiệm thu đã trượt và được giữ nguyên là trượt.** TC-S.10 của đợt seed dữ liệu cấm sửa mọi file có sẵn, nhưng quy trình đóng đợt bắt buộc sửa mục 7 của chính file quyết định, nên tiêu chí đó không đạt được ở bất kỳ đợt nào. Kết quả trượt được giữ nguyên thay vì sửa tiêu chí sau khi đã thấy kết quả. Bốn phép đo thực chất bên trong tiêu chí đó đều đạt.
 
 ## Chạy cục bộ

@@ -1,6 +1,6 @@
 # Runbook — Supabase cục bộ (Docker) để kiểm các bước cần phiên thật
 
-Cập nhật lần cuối: 06/10/2026. Dựng và kiểm chứng ở đợt 2B bằng Supabase CLI 2.118.0; dựng lại và đo lại ngày 06/10/2026 (mục "Môi trường đã đo ngày 06/10/2026").
+Cập nhật lần cuối: 07/10/2026. Dựng và kiểm chứng ở đợt 2B bằng Supabase CLI 2.118.0; dựng lại và đo lại ngày 06/10/2026 (mục "Môi trường đã đo ngày 06/10/2026").
 
 ## Vì sao cần
 
@@ -34,8 +34,8 @@ Dựng lại stack sau khi dữ liệu Docker bị đặt lại. Các dữ kiệ
 - **Docker:** dữ liệu Docker Desktop ở `E:\DockerData\DockerDesktopWSL` (`CustomWslDistroDir` trong `%APPDATA%\Docker\settings-store.json`); `docker_data.vhdx` 10,148 GB sau khi dựng stack 12 container (đo trước khi nạp dữ liệu demo).
 - **Container Postgres:** `supabase_db_book-store-website`. Cổng host: API (Kong) `54321`, Postgres `54322`, Mailpit `54324`. Bên trong container Postgres nghe `5432` (`54322→5432`); `docker exec … psql` chạy trong container nên không dùng cổng host.
 - **`supabase start` trơn** (không cờ `-x`) dựng **12 container, image ~7,97 GB**; lệnh có `-x` ở mục "Dựng" cắt xuống 5 container.
-- **`start` có thể tái dùng volume cũ** (log "Starting database from backup..."): database mang trạng thái cũ, nên sau `start` phải chạy `supabase db reset` để áp lại 19 migration rồi `seed.sql` (`config.toml`: `[db.migrations]` và `[db.seed]` đều `enabled = true`).
-- **Mốc kiểm sau `db reset`:** `supabase migration list --local` ra 19 (khớp 19 file `.sql`), `books` 40, sách tồn kho 0 là 4, tổng tồn kho 835; `auth.users`, `orders`, `events` đều 0.
+- **`start` có thể tái dùng volume cũ** (log "Starting database from backup..."): database mang trạng thái cũ, nên sau `start` phải chạy `supabase db reset` để áp lại 20 migration rồi `seed.sql` (`config.toml`: `[db.migrations]` và `[db.seed]` đều `enabled = true`).
+- **Mốc kiểm sau `db reset`:** `supabase migration list --local` ra 20 (khớp 20 file `.sql`; 19 trước migration `admin_dashboard_stats` của đợt 6), `books` 40, sách tồn kho 0 là 4, tổng tồn kho 835; `auth.users`, `orders`, `events` đều 0.
 - **Quyền:** vai `postgres` (không phải superuser) xoá được `auth.users`: kiểm 06/10/2026 bằng `begin; delete from auth.users where id = '00000000-…'; rollback;` (`DELETE 0`, không bị từ chối vì quyền) và xoá thật 25 tài khoản demo trong một transaction có `rollback` (`DELETE 25`).
 
 ## Cấu hình khớp hosted
