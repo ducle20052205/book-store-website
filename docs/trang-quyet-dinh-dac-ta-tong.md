@@ -192,8 +192,8 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 | Bước 2B: Đăng nhập / đăng ký | Xong, đã merge (PR #9, `18016f8`) |
 | Bước 2B.1: Hiệu năng trên hosted | Xong, đã merge (PR #10, `d49ff1a`) |
 | Bước 2B.2: Nháy trạng thái header | Xong, đã merge (PR #11, `8f90eaf`) |
-| Bước 2C: Quên/đặt lại mật khẩu | Chưa bắt đầu |
-| Bước 2D: Trang hồ sơ, tỉnh/phường, đổi mật khẩu | Chưa bắt đầu |
+| Bước 2C: Quên/đặt lại mật khẩu | Xong ở đợt 8 (PR #26, `8e54621`, 07/10/2026): `/quen-mat-khau`, `/dat-lai-mat-khau`, template recovery tiếng Việt theo chiến lược `token_hash` (file nguồn `supabase/templates/recovery.html`, đã dán lên hosted); TC-A.1 → TC-A.3 và TC-A.2 (hosted) 3/3, xem 7.14. Chưa làm, đã ghi nhận ở mục 0 của spec đợt 8: giới hạn số lần yêu cầu đặt lại ở tầng ứng dụng |
+| Bước 2D: Trang hồ sơ, tỉnh/phường, đổi mật khẩu | Xong một phần ở đợt 8 (PR #26, `8e54621`, 07/10/2026): trang hồ sơ `/tai-khoan` (họ tên, điện thoại, địa chỉ ba trường chọn theo `provinces`/`wards`), đổi mật khẩu có xác minh mật khẩu hiện tại, `AccountNav`, đã bỏ chuyển hướng `/tai-khoan` → `/tai-khoan/don-hang` trong `next.config.ts`; TC-A.4 → TC-A.10, xem 7.14. **Chưa làm:** đổi email, kể cả hành vi xác nhận hai đầu (mục 11.1 ở 7.1) — ngoài phạm vi đợt 8 theo mục 0 của spec; quyết định `ON DELETE` của `events.user_id` và `orders.user_id` (mục 9) vẫn chờ chức năng xoá tài khoản |
 | Đợt 1.6: Sửa lỗi giao diện tồn đọng | Chưa bắt đầu |
 | Đợt 3A: Giỏ hàng | Xong, đã merge (PR #12, `8f05b91`) |
 | Đợt 3B chặng 1: tầng dữ liệu (địa chỉ hai cấp, schema đơn hàng, `place_order`) | Xong, đã merge (PR #13, `54e6a54`); 8 migration đã áp lên hosted ngày 02/10/2026 |
@@ -203,7 +203,7 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 | Đợt 5A chặng 1: trigger trạng thái đơn và cộng trả kho trong database | Xong, đã merge (PR #17, `35a7f32`); migration `20261003063859` đã áp lên hosted ngày 03/10/2026 |
 | Đợt 5A chặng 2: danh sách đơn, chi tiết đơn, đổi trạng thái (khu quản trị) | Xong, đã merge (PR #18, `3fc5c52`); 1 lần đổi trạng thái thật trên production ngày 03/10/2026 |
 | Đợt N+1: chữa chuỗi truy vấn tuần tự ở trang chủ | Xong, đã merge (PR #19, `424e96f`); không áp gì lên hosted |
-| Rà soát accessibility (một lần đo, không phải đợt sửa) | Xong: 20 phát hiện, 9 đóng, 11 mở (3 Trung bình, 8 Thấp, 0 Cao); `docs/specs/dot-accessibility-ra-soat.md` bản 1.3 (`7cfe9ff`); SRS lên 1.9 (`2580589`) |
+| Rà soát accessibility (một lần đo, không phải đợt sửa) | Xong: 23 phát hiện, 9 đóng, 14 mở (3 Trung bình, 11 Thấp, 0 Cao); `docs/specs/dot-accessibility-ra-soat.md` bản 1.4 (`f796d05`: đo thêm 12 route chưa đo, chỉ ở 1280px, không đo NFR-6.2 và 390px; A11Y-23 chưa kết luận); bản 1.3 (`7cfe9ff`); SRS lên 1.9 (`2580589`) |
 | Đợt 5B chặng 1: ràng buộc dữ liệu cho `books` (ba CHECK, CHECK slug, hai `NOT NULL`) | Xong, đã merge (PR #21, `4b08d44`); migration `20261004090859` đã áp lên hosted ngày 04/10/2026 |
 | Đợt 5B chặng 2: quản lý sách (`/admin/sach*`, form thêm/sửa, xoá có chặn) và làm mới cache bằng `updateTag` | PR #22 (commit mã `b491dee`); merge `622ea35`; 108 phép kiểm cục bộ (không tính TC-15), 15/15 lượt trên Vercel preview và 6/6 lượt trên production (nút "Đặt tồn kho về 0" chỉ kiểm ở cục bộ và preview), xem 7.10 |
 | Đợt 6: dashboard thống kê (`/admin`, RPC `admin_dashboard_stats()`, mục "Khu quản trị" trong menu) | PR #24; 10 tiêu chí đo trên cục bộ, hai phép đo yếu hơn tiêu chí gốc (TC-D.3, CLS), xem 7.12 |
