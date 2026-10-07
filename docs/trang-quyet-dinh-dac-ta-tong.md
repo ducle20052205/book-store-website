@@ -208,6 +208,7 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 | Đợt 5B chặng 2: quản lý sách (`/admin/sach*`, form thêm/sửa, xoá có chặn) và làm mới cache bằng `updateTag` | PR #22 (commit mã `b491dee`); merge `622ea35`; 108 phép kiểm cục bộ (không tính TC-15), 15/15 lượt trên Vercel preview và 6/6 lượt trên production (nút "Đặt tồn kho về 0" chỉ kiểm ở cục bộ và preview), xem 7.10 |
 | Đợt 6: dashboard thống kê (`/admin`, RPC `admin_dashboard_stats()`, mục "Khu quản trị" trong menu) | PR #24; 10 tiêu chí đo trên cục bộ, hai phép đo yếu hơn tiêu chí gốc (TC-D.3, CLS), xem 7.12 |
 | Đợt 7: README cho nhà tuyển dụng | Xong, đã merge (PR #25, `eaddf67`); 6/6 tiêu chí đạt (TC-R.6 theo spec v1.1), xem 7.13 |
+| Đợt 8: tài khoản hoàn chỉnh (quên/đặt lại mật khẩu, `/tai-khoan`, đổi mật khẩu) | Xong, đã merge (PR #26, `8e54621`); 10 tiêu chí TC-A, TC-A.8 đo bằng phép thay thế, chín chỗ lệch spec, xem 7.14 |
 | 5C scenario Make.com · Chatbot | Chưa bắt đầu (admin đơn hàng xong ở 5A, admin sách ở 5B) |
 | README cho nhà tuyển dụng · Logo | Chưa bắt đầu |
 
@@ -731,6 +732,53 @@ Spec `docs/specs/dot-7-readme-nha-tuyen-dung.md` v1.1 (6 FR, 6 tiêu chí; sửa
 - **Lệnh grep của TC-R.4 trong spec là phép đo hỏng.** `\|` trong ERE là ký tự `|` theo nghĩa đen, nên bản cố ý nhiễm `abc@gmail.com` và một số điện thoại vẫn ra 0 dòng (đối chứng). Thay bằng `|`: bản nhiễm ra 1 dòng, README thật ra 0 dòng.
 - **Ba chỗ README nói khác spec, đều theo hướng chính xác hơn:** FR-R.4 đòi "ba lớp bảo vệ" nhưng SRS FR-7.1 và mục 5.1 ghi "hai lớp", nên README nêu ba tầng theo tên và không đếm lớp; FR-R.3 ghi "kiểm được bằng test trong repo" nhưng repo chỉ có script `scripts/send-test-confirmation.mjs`, nên README ghi "script"; phép so mật khẩu công bố với `SEED_DEMO_PASSWORD` yếu hơn tiêu chí gốc, vì biến đó của hosted không có trên máy: chỉ so được với mật khẩu seed cục bộ (không trùng, so sánh không in), mật khẩu hosted chưa so.
 - **Số từ phụ thuộc cách đếm:** `wc -w` ra 2.067, đếm bằng tách khoảng trắng trong Python ra 2.005; cả hai nằm dưới ngưỡng, bảng trên dùng `wc -w` như spec đòi.
+
+### 7.14 Đợt 8 — tài khoản hoàn chỉnh (07/10/2026)
+
+Spec `docs/specs/dot-8-tai-khoan-hoan-chinh.md` v1.1 (FR-A.1 → FR-A.7, TC-A.1 → TC-A.10). Hai chặng, hai PR (chặng 1: quên/đặt lại mật khẩu và template email; chặng 2: trang `/tai-khoan`, đổi mật khẩu, `AddressPicker`), gộp vào `main` bằng squash `8e54621` (PR #26). Không migration mới, không thêm dependency.
+
+**Điều kiện đo:** stack Supabase cục bộ (127.0.0.1), bản production (`next build` rồi `next start`, cổng 3100), Edge headless qua CDP; riêng TC-A.2 (hosted) do chủ dự án chạy tay trên hosted. Bộ đo nằm ngoài repo, không commit.
+
+| Tiêu chí | Số lượt, cỡ mẫu | Kết quả |
+|---|---|---|
+| TC-A.1 không lộ email có/không tồn tại | 10 lượt xen kẽ (địa chỉ có thật / giả) | HTTP 200 cả hai phía; thân phản hồi 80 byte, cùng hash; banner và form cùng hash; trung vị 7 ms cả hai phía, chênh 0 ms |
+| TC-A.2 (cục bộ) link đặt lại qua `token_hash` | 3 lượt, hai hồ sơ Edge riêng | 3/3 đặt lại được; link chứa `token_hash` và `type=recovery`; 0/3 thư chứa `ConfirmationURL`; link dùng lại rơi vào `?loi=het-han` |
+| TC-A.2 (hosted) | 3 lượt, cửa sổ ẩn danh, chủ dự án chạy tay, 07/10/2026 | 3/3 đặt lại được; mật khẩu mới đăng nhập được, mật khẩu cũ bị từ chối; thư: tiêu đề tiếng Việt đúng, chữ đủ dấu, link chứa `token_hash` và `type=recovery`, 0 lần chứa `ConfirmationURL` |
+| TC-A.3 trang đặt lại không có phiên | 3 lượt `curl` không cookie | 3/3 HTTP **200** kèm `<meta refresh>` về `/quen-mat-khau?loi=phien`, 0 ô nhập mật khẩu (ghi rõ là 200, không phải 307) |
+| TC-A.4 đổi mật khẩu | 3 lượt mỗi nhánh | sai mật khẩu hiện tại: 3/3 bị từ chối, mật khẩu cũ vẫn đăng nhập được; đúng: 3/3 đổi được, cũ trả 400, mới trả 200, phiên còn nguyên |
+| TC-A.5 lưu hồ sơ | 3 lượt | 5/5 trường khớp sau khi lưu (trước khi lưu 0/5); gửi kèm `role` và `email` qua PostgREST thì `full_name` đổi, `role` và `email` giữ nguyên |
+| TC-A.6 RLS `profiles` | 3 lượt mỗi chiều | JWT người này sửa dòng người kia: 3/3 đổi 0 dòng; sửa dòng của chính mình: 3/3 đổi 1 dòng |
+| TC-A.7 địa chỉ ba ô cùng trống hoặc cùng có | 3 tổ hợp thiếu | 3/3 bị form chặn, 0 lần gọi action, DB trống cả ba; "chỉ phường" ở tầng DB trả HTTP 409 `23503`; dòng `profiles` nửa vời toàn bảng: 0/26 |
+| TC-A.8 `/thanh-toan` không đổi sau khi trích `AddressPicker` | 3 lượt mỗi phía (trước/sau) | **đo bằng phép thay thế, không phải "0 dòng khác nhau"** (xem lệch 3): hash vùng `<form id="checkout-form">` `469c1ec88713b275` trước và sau; hash DOM `<main>` sau hydrate `fe9095f42022978e` trước và sau |
+| TC-A.9 không phình phạm vi | 1 lượt | 0 file ngoài đường dẫn cho phép; dependency production 5; `package.json` và lock không đổi; 0 migration mới; `/tai-khoan/don-hang`: DOM trừ đúng `<nav>` bằng DOM trước (`7eb4d18c3bf80a44`) |
+| TC-A.10 accessibility và log | 1 lượt | 0/8 ô thiếu `<label>`; 2/2 lỗi gắn `aria-describedby`; dải "đã lưu hồ sơ" còn sau 12 giây; 6 cặp màu, thấp nhất 8,16:1; log server 8 dòng, 0 lần chứa email, số điện thoại, tên hay địa chỉ thử |
+
+**Đối chứng, kết quả cả hai phía:**
+- **TC-A.1:** Mailpit nhận 5 thư cho địa chỉ có thật, 0 cho địa chỉ giả. Gọi thẳng GoTrue `/recover`: 70 ms so với 28 ms, chứng minh bộ đo thấy được chênh lệch cỡ ms.
+- **TC-A.2 (cục bộ):** đổi template về `{{ .ConfirmationURL }}`: 0/3, trượt đúng như mong đợi.
+- **TC-A.2 (hosted):** 2/2 đối chứng — mở lại link đã dùng không vào được; sửa một ký tự trong `token_hash` không vào được.
+- **TC-A.8:** đổi "Xã" thành "Xả" ở nhãn `AddressPicker`: hash vùng form `1501d874ef3642c0`, hash DOM `cc766f664af9fe3c` — cả hai phép đo thấy khác, và chuỗi "Xả" có trong HTML. Hoàn nguyên khớp blob đã commit.
+- **TC-A.9:** bỏ `<li>` đầu thay vì `<nav>`: DOM khác; giữ nguyên `<nav>`: DOM khác.
+
+**Chín chỗ lệch so với spec hoặc prompt (ghi đủ):**
+1. **FR-A.3 tự mâu thuẫn:** viết "hai ô `PasswordField`" và "không có ô nhập lại". Mã làm một ô và nút Ẩn/Hiện, khớp quyết định mục 5.1 cho `/dang-ky`. Spec giữ nguyên chữ.
+2. **Mục 0.1 của spec xếp TC-A.4 vào chặng 1, nhưng TC-A.4 đo FR-A.5 (chặng 2).** Đo ở chặng 2. Lỗi bookkeeping của spec, lần thứ tư cùng loại trong các đợt gần đây.
+3. **TC-A.8 đo bằng phép thay thế vì HTML thô không tất định:** ba lượt tải cùng một bản dựng cho ba hash khác nhau do thứ tự stream của Suspense đổi. **Kiến thức dùng lại:** sha256 thô của cả trang KHÔNG phải phép đo dùng được cho BẤT KỲ trang Cache Components nào, không riêng `/thanh-toan`.
+4. **FR-A.4 viết "trang không đọc qua hàm `use cache` nào" là quá rộng.** Mã dùng `getProvinces` và `getWardsOfProvince` (`lib/address.ts`: `"use cache"` + `cacheLife("days")`, đọc bảng `provinces` qua `createPublicClient`, không nhận tham số người dùng). Không có đường rò. Chữ đúng phải là "không đọc DỮ LIỆU CỦA NGƯỜI DÙNG qua `use cache`".
+5. **Xác minh mật khẩu hiện tại dùng client công khai không giữ phiên, không phải client ghi cookie.** Bắt buộc phải thế: nếu không, `signInWithPassword` sinh phiên mới và ghi đè phiên hiện tại, phá chính yêu cầu "không đăng xuất phiên hiện tại" của FR-A.5. Hệ quả thêm: đường này bỏ qua `finishAuth` nên KHÔNG ghi event `login` và KHÔNG chạy `mergeGuestCart`, nên funnel của `admin_dashboard_stats` không bị phồng.
+6. **`updateUser({ data: { full_name } })` đồng bộ tên vào JWT là phần Claude Code tự thêm ngoài spec**, để Header (`getClaims`) không hiện tên cũ tới lần làm mới token kế tiếp. Đã kiểm: không trigger nào trên `auth.users` kích hoạt (`on_auth_user_created` là after INSERT, `on_auth_user_email_updated` là after update OF email). Fail-soft, `profiles` vẫn là nguồn.
+7. **Liên kết "Quên mật khẩu?" đã có sẵn ở `components/LoginForm.tsx` từ đợt 2B;** khẳng định ngược trong spec 6.5 đã sửa bằng `--amend` trước khi push.
+8. **Nhóm commit trong prompt chặng 1 bỏ sót `components/` và `lib/`,** nên 12 file ở đó vào `84d375c`. Vẫn nằm trong đường dẫn TC-A.9 cho phép.
+9. **Bước xác minh mật khẩu sinh một phiên GoTrue rồi bỏ:** `auth.sessions` có dòng dư mỗi lần đổi mật khẩu. GoTrue tự thu dọn phiên hết hạn. Không phải lỗi; ghi để sau này không ai tưởng là bug.
+
+**Các phép đo yếu, ghi nguyên trạng (không nâng thành "đã chứng minh"):**
+- **Mật khẩu không có trong log: kiểm bằng ĐỌC MÃ, không bằng `grep`.** Chuỗi mật khẩu thử là ngẫu nhiên và không giữ lại nên không có gì để `grep`; `profile.ts` và `auth.ts` chỉ log `error.code`/`error.message`.
+- **Ngưỡng 300 ms của TC-A.1 lớn hơn tín hiệu cục bộ (42 ms).** Tính chất "không rò rỉ thời gian" vì thế dựa vào cấu trúc `after()` chứ không dựa vào con số.
+- **Phép thử `ConfirmationURL` ở chặng 1 trượt vì link hạ cánh ở `/`** (`redirectTo` bị bỏ khi `next start` không có `SITE_URL`), KHÔNG đúng cơ chế mất code verifier của PKCE. Nó chỉ chứng minh phép đo phân biệt được hai loại template.
+
+**Con trỏ:** lượt đo accessibility cho 12 route chưa từng đo (có ba route của đợt 8) nằm ở `docs/specs/dot-accessibility-ra-soat.md` bản 1.4, commit `f796d05`; tài liệu đó tự đứng, mục này không chép lại.
+
+**Ghi nhận — địa chỉ email tác giả commit.** Trong 15 commit gần nhất của `main`, email tác giả gồm hai địa chỉ cá nhân: một địa chỉ email trường học (10 commit) và một địa chỉ Gmail (5 commit); số đếm 07/10/2026 bằng `git log main -15`. Điều này va vào luật "email cá nhân không bao giờ được commit". **Quyết định 07/10/2026:** chặn từ nay bằng tuỳ chọn "Keep my email addresses private" của GitHub; **KHÔNG viết lại lịch sử**, vì mục 7 tham chiếu theo hash commit và rewrite làm hỏng chính sổ đo. **Vì sao lọt:** luật được áp cho NỘI DUNG FILE (grep `gmail.com` trước khi commit thư mục tài liệu), không ai kiểm phần tác giả của commit. Mục này cố ý không chép địa chỉ nguyên văn, để tài liệu không lặp lại đúng điều nó ghi nhận. Số đếm thêm trên toàn bộ lịch sử `main` (125 commit, đếm 07/10/2026): 97 commit mang địa chỉ email trường học, 28 mang địa chỉ Gmail.
 
 ## 8. Bài học đã rút ra (giữ lại để không lặp)
 
