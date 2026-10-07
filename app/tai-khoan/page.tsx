@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { AccountNav } from "@/components/account/AccountNav";
 import { ChangePasswordForm } from "@/components/account/ChangePasswordForm";
 import { ProfileForm } from "@/components/account/ProfileForm";
 import { PageTitle } from "@/components/PageTitle";
@@ -29,6 +30,7 @@ export default function TaiKhoanPage() {
       <Suspense
         fallback={
           <>
+            <AccountNav current="profile" />
             <PageTitle title="Hồ sơ của bạn" />
             <div aria-busy="true" className={`${cardClass} mt-6 min-h-48`} />
           </>
@@ -53,6 +55,7 @@ async function ProfileContent() {
   if (error) {
     return (
       <>
+        <AccountNav current="profile" />
         <PageTitle title="Hồ sơ của bạn" />
         <p role="alert" className="mt-6 text-body text-ink-600">
           Chúng mình chưa tải được hồ sơ lúc này. Bạn thử tải lại trang sau ít phút nhé.
@@ -87,6 +90,7 @@ async function ProfileContent() {
 
   return (
     <>
+      <AccountNav current="profile" />
       <PageTitle title="Hồ sơ của bạn" />
       <ProfileForm initial={initial} provinces={provinces} initialWards={initialWards} />
       <div className="mt-6">
