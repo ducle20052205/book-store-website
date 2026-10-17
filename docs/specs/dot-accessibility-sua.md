@@ -1,6 +1,6 @@
 # Đợt sửa accessibility — đặc tả
 
-Phiên bản 1.0 · 16/10/2026 · 8 FR · 10 tiêu chí · 4 chặng.
+Phiên bản 1.1 · 16/10/2026 · 8 FR · 10 tiêu chí · 4 chặng. Bản 1.1 sửa TC-A.9 và TC-A.10 vì cả hai không đo được như viết ở bản 1.0 (lý do ở mục 2, ghi tại chỗ); FR và phạm vi không đổi.
 Nguồn phát hiện: `docs/specs/dot-accessibility-ra-soat.md` bản 1.4 (14 phát hiện còn mở).
 Số đo phạm vi: chặng 0 của đợt này, 16/10/2026, bộ đo `scripts/a11y/` tại `24b1af2`,
 36 trạng thái của 21 route, chỉ 1280×900.
@@ -90,6 +90,11 @@ Phần lớn mức tăng đến từ `/tu-sach/[slug]`, route chỉ được đo
    đầu của chặng 0 (placeholder `#949494` và `#5F6379`, hex tường minh) đều vượt ở bộ đo cũ
    trong khi bộ cũ vẫn bỏ sót đúng loại ô là gốc của nghi vấn — vì hex tường minh tính ra
    `rgb()`, không chạm nhánh `oklab()` bị hỏng. Ca phân biệt được là ca "ô ăn màu mặc định".
+3. **Một con số đếm trong repo có thể bị chính hành động của đợt làm sai.** Kỳ vọng "4 dòng"
+   của TC-A.10 được đo khi `docs/specs/dot-accessibility-sua.md` chưa tồn tại; viết file đó
+   xong là thành 7, vì nó chứa cả các cụm cần tìm lẫn câu lệnh tìm. Hệ quả: tiêu chí dạng đếm
+   phải đo SAU KHI mọi file của đợt đã có mặt, và một cổng quét cả repo phải TỰ LOẠI TRỪ tài
+   liệu của chính đợt.
 
 ## 1. Bốn chặng
 
@@ -144,8 +149,7 @@ không phải mã đạt.
 - **TC-A.9** (không hồi quy, chặng 4) — Đo lại **36 trạng thái**: 0 vi phạm NFR-6.1; mọi phần
   tử tương tác tới được bằng `Tab`, 0 thiếu chỉ báo focus, 0 chỉ báo dưới 3:1; 0 `<svg>` thiếu
   `aria-hidden` hoặc nhãn; 0 phần tử tương tác không tên; 0 cặp token dưới 4,5:1 (NFR-6.7, vì
-  đợt này đổi token màu placeholder). Điều kiện miễn trừ **A11Y-14** đo lại ở 1280px:
-  **108/108** bìa đạt (a), nơi bắt buộc đạt (b). Đối chứng của bộ đo **≥ 21/21**, gồm ca
+  đợt này đổi token màu placeholder). Điều kiện miễn trừ **A11Y-14** đo lại ở 1280px: **0 bìa trượt (a)**, và 0 nơi bắt buộc trượt (b); **số bìa đo được ghi lại làm số liệu, KHÔNG phải ngưỡng.** *Vì sao bản 1.0 sai:* nó đặt ngưỡng 108, là cột 1280px của bảng mục 3.1 bản 1.3 (108 + 111 = 219 qua hai khung). Bản 1.3 đo trên dữ liệu cục bộ khác (3 tủ sách, 1 khách có giỏ 2 dòng, 1 đơn 3 dòng), còn đợt này đo trên seed demo (40 sách, 42 đơn, 84 dòng `order_items`), nên số bìa ở `/gio-hang`, `OrderSummary` và các lưới `BookCard` không so sánh được giữa hai lượt. Tiêu chí giữ được tính không rỗng bằng đối chứng: **6/6** bìa tổng hợp phải bị phân loại đúng. Đối chứng của bộ đo **≥ 21/21**, gồm ca
   "màu mặc định". *Lệnh:* `node scripts/a11y/run.mjs` toàn bộ.
 - **TC-A.10** (đóng đợt, chặng 4) — Mọi tài liệu khớp hiện trạng: spec rà soát lên **bản 1.5**
   mang số đo sửa lại ở mục 0.5 và lý do lệch; mục 7.15 mới; mục 8 thêm hai luật ở mục 0.6;
@@ -153,8 +157,13 @@ không phải mã đạt.
   `supabase/migrations/README.md` làm lời giải; `README.md` dòng 103 đổi **14 → 6** phát hiện
   còn mở; `docs/runbooks/supabase-local.md` thêm mẹo `wsl --shutdown` trước khi mở Docker
   Desktop; `supabase/migrations/README.md` sửa "4 file đầu tiên" thành "3".
-  *Lệnh:* `grep -rn "14 phát hiện\|14 việc\|4 file đầu tiên\|chênh 1 migration" docs/ README.md`
-  ra **0** dòng.
+  *Lệnh (hai lệnh, hai chiều ngược nhau):*
+  (1) **Cụm cũ phải biến mất.** `grep -rn "14 phát hiện\|14 việc\|4 file đầu tiên\|Chênh 1 chưa giải thích được" docs/ README.md supabase/migrations/README.md --exclude=dot-accessibility-sua.md --exclude=dot-accessibility-ra-soat.md` — **đúng 4 dòng TRƯỚC khi sửa** (`README.md` dòng 103 · mục 9 dòng 881 · mục 9 dòng 886 · `supabase/migrations/README.md` dòng 8) và **0 dòng SAU khi sửa**.
+  (2) **Mẹo mới phải xuất hiện.** `grep -c "wsl --shutdown" docs/runbooks/supabase-local.md` — **0 TRƯỚC khi sửa**, **≥ 1 SAU khi sửa**.
+
+  *Vì sao hai file spec bị loại trừ — đây là một quyết định, không phải tiện tay:* `dot-accessibility-sua.md` và `dot-accessibility-ra-soat.md` là **bản ghi lịch sử**, có nhiệm vụ giữ nguyên câu chữ của trạng thái TRƯỚC đợt sửa (dòng nguồn "14 phát hiện còn mở", và bản 1.5 sẽ ghi lại cùng câu đó làm dấu vết). Năm chỗ còn lại là **tài liệu mô tả hiện trạng**, có nhiệm vụ khớp thực tế. Cổng chỉ soi loại thứ hai. Không loại trừ thì cổng **không bao giờ đạt được**, vì chính file spec chứa các cụm đó và chứa cả câu lệnh này.
+
+  *Vì sao bản 1.0 và bản 1.1-nháp đều sai:* bản 1.0 có cụm `chênh 1 migration` không khớp dòng nào (câu thật là "Chênh 1 chưa giải thích được") và cụm `4 file đầu tiên` nằm ngoài phạm vi `docs/ README.md` (nó ở `supabase/migrations/README.md`) — **cổng đạt rỗng**. Bản 1.1-nháp sửa hai lỗi đó nhưng đặt kỳ vọng 4 từ một phép đếm chạy KHI FILE SPEC CHƯA TỒN TẠI; file spec vừa viết thêm 3 dòng khớp, nên thành **cổng không đạt được**. Phép đếm TRƯỚC khi sửa, cộng với việc tự loại trừ tài liệu của chính đợt, là hai thứ giữ cho cổng không rỗng và không bất khả.
 
 ## 3. Sau đợt này
 **8 phát hiện đóng:** A11Y-01, 07, 08, 09, 10, 21, 22, 23 (A11Y-23 đóng là "đã sửa, chưa kết
