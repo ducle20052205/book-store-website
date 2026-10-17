@@ -1,6 +1,6 @@
 # Đợt 1.6 — Sửa lỗi giao diện
 
-Danh sách các lỗi và sai lệch đã biết (phát hiện ở bước 1 và trong các đợt bước 2), gom lại để xử lý trong đợt 1.6. Mỗi mục ghi hiện trạng đo được, điều SRS yêu cầu, và trạng thái.
+Danh sách các lỗi và sai lệch đã biết (phát hiện ở bước 1 và trong các đợt bước 2), gom lại để xử lý trong đợt 1.6. Mỗi mục ghi hiện trạng đo được, điều SRS yêu cầu, và trạng thái. *[17/10/2026: đợt 1.6 đã được tách theo người nhìn thấy thành 1.6a (gộp vào đợt front-of-house) và 1.6b (nợ tay nghề); xem mục 0 ngay dưới.]*
 
 ## 0. Phạm vi và cách tách (17/10/2026)
 

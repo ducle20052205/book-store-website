@@ -40,7 +40,7 @@ Sáu quyết định, mỗi quyết định theo thứ tự bối cảnh, chọn
 
 **Bối cảnh.** Một trang bán sách thiếu ảnh bìa trông trống, nhưng ảnh bìa là tài sản có bản quyền và repo này công khai.
 **Chọn gì.** Component `BookCover` sinh bìa từ `title`, `author` và `slug`: bốn biến thể bố cục chọn theo hash, mười hai màu trầm, có gáy sách và vân giấy. Cột `cover_image_url` vẫn nằm trong schema nhưng không được dùng. Đây là quyết định chính thức, không phải giải pháp tạm.
-**Đánh đổi.** Không một ảnh bìa nào là tệp ảnh, nên thẻ sách kém sinh động hơn một nhà sách thật. Lớp ảnh giấy, kệ sách từ nguồn giấy phép mở vẫn chưa làm.
+**Đánh đổi.** Không một ảnh bìa nào là tệp ảnh, nên thẻ sách kém sinh động hơn một nhà sách thật. Lớp ảnh giấy, kệ sách từ nguồn giấy phép mở vẫn chưa làm; chưa xếp đợt (việc thiết kế và nội dung, không phải lỗi; mục 9 của `docs/trang-quyet-dinh-dac-ta-tong.md`).
 
 ### Hủy đơn làm bằng hàm `cancel_order`, không bằng policy RLS
 
@@ -99,11 +99,11 @@ Khu quản trị được kiểm quyền theo từng tầng: `proxy.ts` chặn s
 
 ## Chưa làm gì, và vì sao
 
-- **Giao diện mobile tạm dừng.** Mobile là một giai đoạn sau khi sản phẩm hoàn thành, không nằm trong định nghĩa "xong" và không chen vào thứ tự các đợt. Mã mobile đã có được giữ nguyên, không xây thêm và không đo thêm theo bề rộng mobile.
+- **Giao diện mobile tạm dừng.** Mobile là một giai đoạn sau khi sản phẩm hoàn thành, không nằm trong định nghĩa "xong". Điều kiện mở giai đoạn đã đạt (17/10/2026); giai đoạn chờ chủ dự án xác nhận mở và đứng thứ ba trong thứ tự còn lại (mục 4 của `docs/trang-quyet-dinh-dac-ta-tong.md`). Mã mobile đã có được giữ nguyên, không xây thêm và không đo thêm theo bề rộng mobile.
 - **6 phát hiện accessibility còn mở** (1 Trung bình, 5 Thấp, 0 Cao) sau đợt sửa accessibility (8 phát hiện đã đóng, 17/23 tổng cộng). Sáu mục còn lại: vùng chạm và hộp thoại bộ lọc ở 390px (chờ giai đoạn mobile), viền ô nhập (quyết định thiết kế), và ba mục đã quyết không sửa hoặc chỉ ghi nhận (ký tự trang trí, tiêu đề trang admin, biên token). Chi tiết và số đo: `docs/specs/dot-accessibility-ra-soat.md` bản 1.5.
-- **URL động có dãy `%XX` hỏng hoặc `%25` trả HTTP 500.** Lỗi có từ trước mọi đợt, xảy ra trước khi tới mã trang, không lộ dữ liệu; gom vào đợt sửa lỗi giao diện tồn đọng.
-- **Preview và production dùng chung một database.** Mọi lần ghi khi thử ở preview nằm trong database mà production cũng đọc. Đợt sửa lỗi giao diện tồn đọng sẽ tách chúng.
-- **Chatbot và scenario Make.com.** Chưa làm, chưa xếp đợt và ngoài định nghĩa "xong".
+- **URL động có dãy `%XX` hỏng hoặc `%25` trả HTTP 500.** Lỗi có từ trước mọi đợt, xảy ra trước khi tới mã trang, không lộ dữ liệu; thuộc 1.6a, làm trong đợt front-of-house.
+- **Preview và production dùng chung một database.** Mọi lần ghi khi thử ở preview nằm trong database mà production cũng đọc. Sẽ được tách trong một đợt riêng, làm trước mọi đợt khác.
+- **Chatbot và scenario Make.com.** Chưa làm, chưa xếp đợt và ngoài định nghĩa "xong". Với chatbot có đề xuất KHÔNG làm, chờ chủ dự án quyết; lý lẽ ở mục 9 của `docs/trang-quyet-dinh-dac-ta-tong.md`.
 - **Đổi email.** Quên mật khẩu và trang hồ sơ đã xong ở đợt 8 (sửa được họ tên, điện thoại, địa chỉ, đổi được mật khẩu), nhưng email của tài khoản chưa đổi được. Chưa xếp đợt, ngoài định nghĩa "xong".
 - **Một tiêu chí nghiệm thu đã trượt và được giữ nguyên là trượt.** TC-S.10 của đợt seed dữ liệu cấm sửa mọi file có sẵn, nhưng quy trình đóng đợt bắt buộc sửa mục 7 của chính file quyết định, nên tiêu chí đó không đạt được ở bất kỳ đợt nào. Kết quả trượt được giữ nguyên thay vì sửa tiêu chí sau khi đã thấy kết quả. Bốn phép đo thực chất bên trong tiêu chí đó đều đạt.
 

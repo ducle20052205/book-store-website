@@ -86,6 +86,8 @@ Danh sách thẳng thắn, mỗi dòng một món, **kèm lý do**, không bào 
 - **Chatbot, quên mật khẩu, trang hồ sơ** — chưa làm, nằm trong thứ tự còn lại.
 - **Một tiêu chí nghiệm thu đã TRƯỢT và được giữ nguyên là trượt**: TC-S.10 của đợt seed cấm sửa mọi file có sẵn, nhưng quy trình đóng đợt bắt buộc sửa mục 7 của chính file quyết định, nên nó không đạt được ở bất kỳ đợt nào. **Đã giữ kết quả trượt thay vì sửa tiêu chí sau khi thấy kết quả.** Đây là mục quan trọng nhất của cả phần này — nó cho người đọc thấy kỷ luật đo của dự án.
 
+*[Cập nhật 17/10/2026: danh sách trên là nội dung README lúc đợt 7 và được giữ làm dấu vết. Nó đã lệch: đợt sửa accessibility xong (PR #29, còn 6 phát hiện mở), `%XX` thuộc 1.6a làm trong đợt front-of-house, tách database preview là đợt riêng làm trước mọi đợt khác, chatbot có đề xuất KHÔNG làm. Bản hiện hành: `README.md` mục "Chưa làm gì, và vì sao" và mục 4 và 9 của `docs/trang-quyet-dinh-dac-ta-tong.md`.]*
+
 ### FR-R.6 — Chạy cục bộ, và bản đồ tài liệu
 
 - **Chạy cục bộ:** các bước thật từ `docs/runbooks/supabase-local.md`, rút gọn, kèm danh sách TÊN biến môi trường cần có (chỉ tên, không giá trị) và câu trỏ tới `.env.local.example`.
