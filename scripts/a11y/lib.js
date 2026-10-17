@@ -134,7 +134,9 @@
       if (fs < 14) small++;
       if (fs < 12) tiny.push(rec);
     }
-    return { n, hidden, unparsed, groups: groups.size, below, exempt, small, tiny };
+    const pairs = new Map();
+    for (const g of groups.values()) { const k = g.fg + ">" + g.bg; const cur = pairs.get(k); if (!cur || g.ratio < cur.ratio) pairs.set(k, { fg: g.fg, bg: g.bg, ratio: g.ratio, fs: g.fs, need: g.need, sample: g.text }); }
+    return { n, hidden, unparsed, groups: groups.size, below, exempt, small, tiny, pairs: [...pairs.values()] };
   }
 
   // ───────────── A. placeholder ─────────────
@@ -386,6 +388,8 @@
       if (n.getAttribute("aria-hidden") === "true" || /^(SCRIPT|STYLE|NOSCRIPT|TEMPLATE|svg)$/i.test(n.tagName)) return "";
       const cs = getComputedStyle(n);
       if (cs.display === "none" || cs.visibility === "hidden") return "";
+      // Giá trị ô nhập là thông tin mà công nghệ hỗ trợ đọc được nhưng không phải text node: phải tính (bản 1.2, mục 0.6 luật 5).
+      if (/^(INPUT|TEXTAREA)$/.test(n.tagName)) return /^(hidden|password|checkbox|radio|file|submit|button|image|range|color|reset)$/i.test(n.type || "") ? "" : n.value || "";
       return [...n.childNodes].map(walk).join(" ");
     };
     return walk(root).replace(/\s+/g, " ").trim();
@@ -419,6 +423,8 @@
       rows.push({
         i, role: c.getAttribute("role"), label: c.getAttribute("aria-label"), imgAlt: img ? img.getAttribute("alt") : null,
         ariaHidden: !!c.closest('[aria-hidden="true"]'), ownerIdx: owner ? i : null, ownerHidden: owner ? !!owner.closest('[aria-hidden="true"]') : false,
+        printed: (c.innerText || "").split("\n").map((x) => x.replace(/\s+/g, " ").trim()).filter(Boolean),
+        mainText: c.closest('[aria-hidden="true"]') && !owner ? realText(document.querySelector("main") || document.body, c).slice(0, 4000) : null,
         href: owner ? owner.getAttribute("href") : null, selfText: (c.innerText || "").replace(/\s+/g, " ").trim().slice(0, 200),
         adjacent: adjacent.slice(0, 400), bPlace, rect: { x: +r.x.toFixed(1), y: +(r.y + window.scrollY).toFixed(1), w: +r.width.toFixed(1), h: +r.height.toFixed(1) },
       });

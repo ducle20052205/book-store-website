@@ -59,7 +59,7 @@ là nút văn bản trực tiếp. Liên kết có chữ cùng khối nhưng kh�
 ## Đối chứng (`control`)
 
 Mỗi phép đo có một ca PHẢI BẮT và một ca PHẢI KHÔNG BẮT, chèn vào DOM trong bộ nhớ của `/dang-nhap`, so số đo với số tính độc lập
-bên Node (`common.mjs`). Hiện 37 ca (35 ca luôn chạy; 2 ca D2 "gỡ liên kết bỏ qua" chỉ chạy khi trang đã có liên kết `#noi-dung`, trước đó ghi là bỏ qua và không tính là đạt). Một ca trượt nghĩa là **phép đo hỏng**, không phải trang có lỗi.
+bên Node (`common.mjs`). Hiện 39 ca (2 ca D2 "gỡ liên kết bỏ qua" chỉ chạy khi trang đã có liên kết `#noi-dung`, trước đó ghi là bỏ qua và không tính là đạt; ở bản hiện tại cả 39 ca đều chạy). Một ca trượt nghĩa là **phép đo hỏng**, không phải trang có lỗi.
 
 Hai bài học nằm trong các ca này:
 

@@ -15,6 +15,7 @@ import { runControls } from "./controls.mjs";
 import { cartSlot } from "./cartslot.mjs";
 import { chang2 } from "./chang2.mjs";
 import { chang3 } from "./chang3.mjs";
+import { finalReport } from "./final.mjs";
 import { compare } from "./compare.mjs";
 import { checkChartTables, ctx, glueChecked, keyboardToggle, measureState } from "./measure.mjs";
 import { printReport } from "./report.mjs";
@@ -107,6 +108,28 @@ async function survey() {
   const to = (b, path) => () => b.goto(`${BASE}${path}`);
 
   try {
+    // ───── admin ─────
+    // ĐẦU TIÊN, trước mọi trạng thái sinh sự kiện (xem trang sách, tìm kiếm, vào thanh toán): /admin đọc số tích luỹ nên nếu đo
+    // sau thì nhiễm sự kiện của chính lượt đo (spec đợt sửa a11y, mục 0.6 luật 4).
+    const D = await launch("admin");
+    try {
+      console.log("admin");
+      const ok = await recoveryLogin(D, ADMIN_EMAIL);
+      emit({ setup: { adminSession: ok } });
+      await D.goto(`${BASE}/admin`);
+      await D.waitFor(`!!document.querySelector('[data-testid="admin-stats"]')`, 10000);
+      ctx.adminStats = await fetchAdminStats(); // giá trị kỳ vọng của biểu đồ, tính từ cùng RPC lúc đo
+      emit({ setup: { funnelAtAdmin: ctx.adminStats.funnel.steps.map((x) => `${x.event_type}=${x.count}`).join(",") } });
+      await run(D, "admin-thong-ke", "/admin", async () => {});
+      await run(D, "admin-don-hang", "/admin/don-hang", to(D, "/admin/don-hang"));
+      await run(D, "admin-don-hang-chi-tiet", "/admin/don-hang/[code]", to(D, `/admin/don-hang/${orderCode}`));
+      await run(D, "admin-sach-danh-sach", "/admin/sach", to(D, "/admin/sach"));
+      await run(D, "admin-sach-moi", "/admin/sach/moi", to(D, "/admin/sach/moi"));
+      await run(D, "admin-sach-moi-co-loi", "/admin/sach/moi", async () => { await D.click('form button[type="submit"]'); await sleep(900); });
+      await run(D, "admin-sach-khong-ket-qua", "/admin/sach", to(D, "/admin/sach?q=zzqxkv"));
+      await run(D, "admin-sach-slug", "/admin/sach/[slug]", to(D, `/admin/sach/${slugFirst}`));
+    } finally { await D.close(); }
+
     // ───── ẩn danh ─────
     const A = await launch("anon");
     try {
@@ -161,24 +184,6 @@ async function survey() {
       await run(C, "thanh-toan", "/thanh-toan", to(C, "/thanh-toan"));
     } finally { await C.close(); }
 
-    // ───── admin ─────
-    const D = await launch("admin");
-    try {
-      console.log("admin");
-      const ok = await recoveryLogin(D, ADMIN_EMAIL);
-      emit({ setup: { adminSession: ok } });
-      await D.goto(`${BASE}/admin`);
-      await D.waitFor(`!!document.querySelector('[data-testid="admin-stats"]')`, 10000);
-      ctx.adminStats = await fetchAdminStats(); // giá trị kỳ vọng của biểu đồ, tính từ cùng RPC lúc đo
-      await run(D, "admin-thong-ke", "/admin", async () => {});
-      await run(D, "admin-don-hang", "/admin/don-hang", to(D, "/admin/don-hang"));
-      await run(D, "admin-don-hang-chi-tiet", "/admin/don-hang/[code]", to(D, `/admin/don-hang/${orderCode}`));
-      await run(D, "admin-sach-danh-sach", "/admin/sach", to(D, "/admin/sach"));
-      await run(D, "admin-sach-moi", "/admin/sach/moi", to(D, "/admin/sach/moi"));
-      await run(D, "admin-sach-moi-co-loi", "/admin/sach/moi", async () => { await D.click('form button[type="submit"]'); await sleep(900); });
-      await run(D, "admin-sach-khong-ket-qua", "/admin/sach", to(D, "/admin/sach?q=zzqxkv"));
-      await run(D, "admin-sach-slug", "/admin/sach/[slug]", to(D, `/admin/sach/${slugFirst}`));
-    } finally { await D.close(); }
   } finally {
     // ───── khôi phục dữ liệu thử ─────
     // Mỗi bước độc lập: một bước hỏng không được chặn các bước còn lại, và không bước nào được bỏ qua mà không báo.
@@ -274,6 +279,7 @@ else if (cmd === "report") printReport(process.argv[3]);
 else if (cmd === "keyboard") await keyboard();
 else if (cmd === "charts") await charts();
 else if (cmd === "chang3") chang3(process.argv.slice(3));
+else if (cmd === "final") finalReport(process.argv.slice(3));
 else if (cmd === "compare") compare(process.argv[3], process.argv[4]);
 else if (cmd === "chang2") chang2(process.argv.slice(3));
 else if (cmd === "cartslot") { await cartSlot(); process.exit(0); }

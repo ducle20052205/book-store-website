@@ -39,5 +39,16 @@ export async function runCoverControls(b, lib, inject) {
   res.push({ id: "A11Y-14 sáu bìa tổng hợp (4 trượt, 2 đạt) phân loại đúng 6/6", expect: "6/6", pass: six.every(Boolean) && r.rows.length === 8, observed: `${six.filter(Boolean).length}/6 · passA=${JSON.stringify(r.rows.map((x) => x.passA))}` });
   res.push({ id: "A11Y-14 bìa aria-hidden có tên sách là chữ thật cạnh bìa phải ĐẠT (a), đường 'chữ cạnh bìa'", expect: "passA=true, path='chữ cạnh bìa'", pass: r.rows[6]?.passA === true && r.rows[6]?.path === "chữ cạnh bìa", observed: JSON.stringify({ passA: r.rows[6]?.passA, path: r.rows[6]?.path }) });
   res.push({ id: "A11Y-14 bìa aria-hidden có chữ cạnh bìa nhưng KHÔNG phải tên sách phải TRƯỢT (a)", expect: "passA=false", pass: r.rows[7]?.passA === false, observed: JSON.stringify({ passA: r.rows[7]?.passA, adjacent: r.rows[7]?.adjacent }) });
+
+  // Bìa aria-hidden KHÔNG nằm trong liên kết (như bìa xem trước của form admin): tên sách có ở giá trị ô nhập trong <main> thì ĐẠT;
+  // ô nhập mang giá trị khác thì TRƯỢT. Chèn vào đầu <main> (nhánh này đọc chữ của <main>).
+  const inMain = async (html) => {
+    await b.evalJs(`(() => { document.getElementById('a11y-ctl')?.remove(); const box = document.createElement('div'); box.id = 'a11y-ctl'; box.innerHTML = ${JSON.stringify(html)}; document.querySelector('main').prepend(box); return 1; })()`);
+    return (await a14Measure(b, ROOT, BOOKS)).rows[0];
+  };
+  const ok = await inMain(`<aside><div aria-hidden="true" ${COVER}>Sách Thử A</div><p>Bìa xem trước, sinh tự động từ các ô bên dưới.</p></aside><label>Tên sách <input value="Sách Thử A"></label>`);
+  const bad = await inMain(`<aside><div aria-hidden="true" ${COVER}>Sách Thử A</div><p>Bìa xem trước, sinh tự động từ các ô bên dưới.</p></aside><label>Tên sách <input value="Một cuốn khác hẳn"></label>`);
+  res.push({ id: "A11Y-14 bìa aria-hidden ngoài liên kết, tên sách là GIÁ TRỊ Ô NHẬP trong main phải ĐẠT (a)", expect: "passA=true, path='chữ/giá trị ô nhập trong main'", pass: ok?.passA === true && ok?.path === "chữ/giá trị ô nhập trong main", observed: JSON.stringify({ passA: ok?.passA, path: ok?.path }) });
+  res.push({ id: "A11Y-14 bìa aria-hidden ngoài liên kết, ô nhập mang giá trị KHÁC phải TRƯỢT (a)", expect: "passA=false", pass: bad?.passA === false, observed: JSON.stringify({ passA: bad?.passA, path: bad?.path }) });
   return res;
 }

@@ -68,7 +68,7 @@ export async function measureState(b, lib, titles, name, route, extra = {}) {
   const covers = await coverNames(b, "document.body", titles);
   const glue = await glueChecked(b, "document.body");
   const tx = await b.evalJs("window.__a11y.measureText(document.body)");
-  const text = { n: tx.n, unparsed: tx.unparsed, hidden: tx.hidden, groups: tx.groups, below: tx.below.length, exempt: tx.exempt.length, under14: tx.small, under12: tx.tiny.length };
+  const text = { n: tx.n, unparsed: tx.unparsed, hidden: tx.hidden, groups: tx.groups, below: tx.below.length, exempt: tx.exempt.length, under14: tx.small, under12: tx.tiny.length, pairs: tx.pairs.map((p) => [p.fg, p.bg, p.ratio, p.fs, p.need, p.sample]) };
   const page = await b.evalJs("window.__a11y.page()");
   const finalPath = await b.evalJs("location.pathname + location.search");
   const svg = await b.evalJs("(()=>{const s=window.__a11y.measureSvg(document.body);return {total:s.svgTotal,bad:s.svgNoAriaHidden.length,roleImg:s.roleImg,roleImgNoLabel:s.roleImgNoLabel.length}})()");
@@ -194,11 +194,17 @@ export function classifyCover(row, ownerName, axName, books) {
   const viaLabel = !row.ariaHidden && isTitle(axName);
   const viaLink = !!ownerName && !row.ownerHidden && (book ? norm(ownerName).includes(book.title) : books.some((b) => norm(ownerName).includes(b.title)));
   const viaText = row.ariaHidden && !!book && adj.includes(book.title);
-  const passA = viaLabel || viaLink || viaText;
+  // Bìa aria-hidden KHÔNG nằm trong liên kết (vd. bìa xem trước của form admin): thông tin của bìa có ở chữ hoặc giá trị ô nhập
+  // trong <main> thì bìa không phải nơi duy nhất mang thông tin. Rộng hơn "tổ tiên đầu tiên đủ 20 ký tự" vì ô nhập nằm ngoài
+  // khối chú thích của bìa; chỉ áp cho bìa ngoài liên kết, để thẻ trong lưới danh mục vẫn phải có chữ NGAY cạnh bìa.
+  const mainText = norm(row.mainText);
+  const printedLines = row.printed ?? [];
+  const viaMain = row.ariaHidden && row.ownerIdx === null && !!mainText && (book ? mainText.includes(book.title) : printedLines.length > 0 && printedLines.every((l) => mainText.includes(l)));
+  const passA = viaLabel || viaLink || viaText || viaMain;
   const passB = row.bPlace ? !!book && adj.includes(book.author) : null;
   return {
-    book: book?.title ?? null, place: row.bPlace, hidden: row.ariaHidden, viaLabel, viaLink, viaText, passA,
-    path: row.ariaHidden ? (viaText ? "chữ cạnh bìa" : viaLink ? "tên liên kết bọc" : null) : viaLabel ? "nhãn bìa" : viaLink ? "tên liên kết bọc" : null,
+    book: book?.title ?? null, place: row.bPlace, hidden: row.ariaHidden, viaLabel, viaLink, viaText, viaMain, passA,
+    path: row.ariaHidden ? (viaText ? "chữ cạnh bìa" : viaLink ? "tên liên kết bọc" : viaMain ? "chữ/giá trị ô nhập trong main" : null) : viaLabel ? "nhãn bìa" : viaLink ? "tên liên kết bọc" : null,
     bReq: !!row.bPlace, passB, ownerHidden: row.ownerHidden, rect: row.rect, adjacent: adj.slice(0, 80),
   };
 }
