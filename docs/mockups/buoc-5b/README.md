@@ -46,7 +46,9 @@ Chiều cao artboard lấy theo trạng thái cao nhất (trạng thái "xoa-duo
 - Danh mục mẫu ("Tiểu thuyết") nằm trong 17 danh mục con thật.
 - Ô ngày dùng placeholder dd/mm/yyyy, không dùng `input type=date`: trình duyệt sẽ hiện mm/dd/yyyy theo locale máy.
 
-## Chữ nghĩa để xem lại ở đợt 1.6, KHÔNG phải việc của 5B
+## Chữ nghĩa cần chủ dự án quyết, KHÔNG phải việc của 5B
+
+*(Tiêu đề cũ, giữ làm dấu vết: "Chữ nghĩa để xem lại ở đợt 1.6, KHÔNG phải việc của 5B". Cập nhật 17/10/2026: việc này không thuộc 1.6a lẫn 1.6b.)* Việc này nằm ở mục rà chữ trong "chưa xếp đợt" của mục 9 file quyết định (`docs/trang-quyet-dinh-dac-ta-tong.md`), vì nó là quyết định giọng thương hiệu — cần chủ dự án, không quyết được bằng lệnh.
 
 - Cân nhắc "Giá bìa" thay "Giá" và "Khổ sách" thay "Kích thước".
 - Đổi "Địa chỉ trang" sẽ phải đổi tập chữ quản trị trong TC-1, nên không làm trong đợt này.
