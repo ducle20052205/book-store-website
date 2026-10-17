@@ -60,7 +60,12 @@ export function BookCard({ book, className }: { book: BookCardBook; className?: 
       href={`/sach/${book.slug}`}
       className={`book-card-lift group block rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2 ${className ?? ""}`}
     >
-      <div className="relative">
+      {/*
+        Bìa là trang trí đối với công nghệ hỗ trợ: tên sách đã là chữ trong cùng liên kết (<p>{book.title}</p>), nên để
+        nhãn của bìa thì tên khả truy cập đọc tên sách hai lần (A11Y-09). aria-hidden đặt ở phần tử bọc sẵn có, không đổi
+        API của BookCover; badge -X% bên trong vốn đã aria-hidden.
+      */}
+      <div aria-hidden="true" className="relative">
         <BookCover
           slug={book.slug}
           title={book.title}
@@ -82,11 +87,17 @@ export function BookCard({ book, className }: { book: BookCardBook; className?: 
         {(categoryName || collectionRef) && (
           <p className="truncate text-micro">
             {categoryName && <span className="text-ink-400">{categoryName}</span>}
+            {/*
+              Dấu cách nằm NGOÀI span aria-hidden: đặt bên trong thì tên khả truy cập mất cả dấu cách lẫn dấu "·" và
+              ra "Tiểu thuyếtTrong tủ sách" (A11Y-09). Giao diện không đổi: vẫn " · " giữa hai nhãn.
+            */}
             {categoryName && collectionRef && (
-              <span aria-hidden="true" className="text-ink-400">
+              <>
                 {" "}
-                ·{" "}
-              </span>
+                <span aria-hidden="true" className="text-ink-400">
+                  ·
+                </span>{" "}
+              </>
             )}
             {collectionRef && (
               <span title={`Trong tủ sách: ${collectionRef.title}`} className="font-semibold text-cham-700">

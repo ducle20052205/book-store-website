@@ -168,7 +168,7 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
             Tác giả:{" "}
             <Link
               href={`/sach?q=${encodeURIComponent(book.author)}`}
-              className="font-medium text-cham-700 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+              className="font-medium text-cham-700 underline underline-offset-2 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
             >
               {book.author}
             </Link>
@@ -251,7 +251,7 @@ export default async function BookDetailPage({ params }: PageProps<"/sach/[slug]
                     Có trong tủ{" "}
                     <Link
                       href={`/tu-sach/${collection.slug}`}
-                      className="font-semibold text-cham-700 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+                      className="font-semibold text-cham-700 underline underline-offset-2 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
                     >
                       {collection.title}
                     </Link>

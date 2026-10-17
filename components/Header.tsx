@@ -20,8 +20,8 @@ interface HeaderViewProps {
   categories: CategoryNode[];
   /** Mục "Đăng nhập" hoặc menu "Tài khoản" — Header truyền vào một <Suspense>, xem bên dưới. */
   accountItem: ReactNode;
-  /** Badge số lượng giỏ hàng — Header truyền vào một slot có <Suspense> RIÊNG, xem Header(). */
-  cartBadge: ReactNode;
+  /** Liên kết giỏ hàng kèm badge số lượng — Header truyền vào một slot có <Suspense> RIÊNG, xem Header(). */
+  cartLink: ReactNode;
 }
 
 /** Mục "Đăng nhập" — CHỈ là trạng thái chưa đăng nhập thật (fallback là AccountFallback). */
@@ -56,7 +56,7 @@ function AccountFallback() {
  * mục — "Đăng nhập" hoặc "Tài khoản", và "Giỏ hàng" (đã gỡ mục "Yêu thích" vì
  * trang đó chưa tồn tại).
  */
-export function HeaderView({ categories, accountItem, cartBadge }: HeaderViewProps) {
+export function HeaderView({ categories, accountItem, cartLink }: HeaderViewProps) {
   return (
     <HeaderShell
       topbar={
@@ -99,12 +99,7 @@ export function HeaderView({ categories, accountItem, cartBadge }: HeaderViewPro
           >
             {accountItem}
 
-            <Link href="/gio-hang" className={`relative ${navItemClass}`}>
-              <BagIcon className={navIconClass} />
-              {/* Tên truy cập là "Giỏ hàng" (cộng ", N sản phẩm" từ badge); từ sm mới hiện chữ. */}
-              <span className="sr-only sm:not-sr-only">Giỏ hàng</span>
-              {cartBadge}
-            </Link>
+            {cartLink}
           </nav>
         </div>
       }
@@ -161,21 +156,43 @@ async function AccountItem() {
  * (khách) hoặc bảng `cart_items` (đã đăng nhập), nên số trong HTML đầu đã đúng. Đọc
  * cookie nên nằm sau <Suspense> RIÊNG, tách khỏi slot auth — hai boundary độc lập.
  * Giỏ rỗng thì không hiện gì.
+ *
+ * Đợt sửa accessibility (FR-A.2c, A11Y-09): cả `<Link>` nằm trong boundary đó, không chỉ badge, vì tên khả truy cập chỉ
+ * đặt đúng được ở cấp liên kết. Ghép từ các <span> con cho ra "Giỏ hàng , 2 sản phẩm": trình duyệt chèn dấu cách trước mọi
+ * hộp không phải inline thuần (phần tử sr-only là absolute, con của flex container cũng bị khối hoá), nên khoảng trắng JSX
+ * không phải nguyên nhân và không sửa được ở đó. `aria-label` cho đúng "Giỏ hàng, 2 sản phẩm"; chữ nhìn thấy "Giỏ hàng"
+ * (từ sm) vẫn là phần đầu của tên (WCAG 2.5.3). `count` = 0 khi chưa biết (fallback) hoặc giỏ rỗng: không badge, không nhãn.
  */
-async function CartCount() {
-  const count = await getCartCount();
-  if (count <= 0) return null;
+function CartLink({ count }: { count: number }) {
   return (
-    <>
+    <Link
+      href="/gio-hang"
+      aria-label={count > 0 ? `Giỏ hàng, ${count} sản phẩm` : undefined}
+      className={`relative ${navItemClass}`}
+    >
+      <BagIcon className={navIconClass} />
+      <span className="sr-only sm:not-sr-only">Giỏ hàng</span>
+      {/* Phần tử bọc cố định 20×20px, KHÔNG chứa số khi chưa biết giỏ (fallback): thà chưa có thông tin còn hơn hiện "0"
+          sai (nguyên tắc 2B.2). Tuyệt đối vị trí nên không đổi bố cục. */}
       <span
-        aria-hidden="true"
-        className="flex h-5 min-w-5 items-center justify-center rounded-full bg-nghe-400 px-1 text-xs font-semibold leading-none text-ink-900"
+        data-testid="header-cart-count"
+        className="pointer-events-none absolute -top-1 right-0 flex h-5 min-w-5 items-center justify-center"
       >
-        {count > 99 ? "99+" : count}
+        {count > 0 && (
+          <span
+            aria-hidden="true"
+            className="flex h-5 min-w-5 items-center justify-center rounded-full bg-nghe-400 px-1 text-xs font-semibold leading-none text-ink-900"
+          >
+            {count > 99 ? "99+" : count}
+          </span>
+        )}
       </span>
-      <span className="sr-only">, {count} sản phẩm</span>
-    </>
+    </Link>
   );
+}
+
+async function CartLinkLive() {
+  return <CartLink count={await getCartCount()} />;
 }
 
 /**
@@ -198,17 +215,10 @@ export async function Header() {
   return (
     <HeaderView
       categories={categories}
-      cartBadge={
-        // Phần tử bọc cố định 20×20px, KHÔNG chứa số khi chưa biết giỏ (fallback rỗng): thà chưa
-        // có thông tin còn hơn hiện "0" sai (nguyên tắc 2B.2). Tuyệt đối vị trí nên không đổi bố cục.
-        <span
-          data-testid="header-cart-count"
-          className="pointer-events-none absolute -top-1 right-0 flex h-5 min-w-5 items-center justify-center"
-        >
-          <Suspense fallback={null}>
-            <CartCount />
-          </Suspense>
-        </span>
+      cartLink={
+        <Suspense fallback={<CartLink count={0} />}>
+          <CartLinkLive />
+        </Suspense>
       }
       accountItem={
         <div data-testid="header-auth" className="flex">

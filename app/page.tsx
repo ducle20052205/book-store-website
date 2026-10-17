@@ -204,7 +204,7 @@ export default async function Home() {
                 <p className="mt-4 text-sm text-white/70">
                   <Link
                     href={`/sach/${editorial.book.slug}`}
-                    className="inline-block rounded-control py-3 -my-3 font-medium text-cham-50 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    className="inline-block rounded-control py-3 -my-3 font-medium text-cham-50 underline underline-offset-2 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   >
                     {editorial.book.title}
                   </Link>{" "}
@@ -214,7 +214,7 @@ export default async function Home() {
                   Trong tủ{" "}
                   <Link
                     href={`/tu-sach/${editorial.collectionSlug}`}
-                    className="inline-block rounded-control py-3 -my-3 font-medium text-cham-50 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                    className="inline-block rounded-control py-3 -my-3 font-medium text-cham-50 underline underline-offset-2 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                   >
                     {editorial.collectionTitle}
                   </Link>
