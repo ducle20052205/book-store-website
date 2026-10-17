@@ -1,6 +1,6 @@
 # Đợt sửa accessibility — đặc tả
 
-Phiên bản 1.3 · 17/10/2026 · 8 FR · 10 tiêu chí · 4 chặng. Bản 1.1 sửa TC-A.9 và TC-A.10; bản 1.2 sửa TC-A.1, TC-A.5, TC-A.8, TC-A.9 và thêm mục 0.6 luật 4–6 cùng mục 0.7; bản 1.3 sửa lại cơ chế của luật 0.6.4, sửa hai con số sai của TC-A.6, và ghi tiếp những gì chặng 3 đo được. FR và phạm vi không đổi từ bản 1.0.
+Phiên bản 1.4 · 17/10/2026 · 8 FR · 10 tiêu chí · 4 chặng. Bản 1.1–1.3 sửa tiêu chí không đo được và ghi lại những gì từng chặng đo (lịch sử ở mục 0.7). Bản 1.4 là lượt sửa chữ cuối: chính xác hoá NFR-6.7 trong TC-A.9, ghi đúng hai bước mở rộng của quy tắc A11Y-14, và đánh dấu những con số thuộc về chặng nào. FR và phạm vi không đổi từ bản 1.0.
 Nguồn phát hiện: `docs/specs/dot-accessibility-ra-soat.md` bản 1.4 (14 phát hiện còn mở).
 Số đo phạm vi: chặng 0 của đợt này, 16/10/2026, bộ đo `scripts/a11y/` tại `24b1af2`,
 36 trạng thái của 21 route, chỉ 1280×900.
@@ -143,7 +143,7 @@ Phần lớn mức tăng đến từ `/tu-sach/[slug]`, route chỉ được đo
   gỡ nhãn là xoá thông tin chứ không phải bỏ trùng lặp. Tên khả truy cập của ba thẻ đó vẫn
   dài sau đợt này. Sau chặng 2: liên kết > 90 ký tự còn **9** (từ 34), dài nhất **308** (từ
   320), trung vị **74** (từ 93) — phần còn lại là ba thẻ tủ sách và thẻ nổi bật có mô tả.
-- **Giới hạn của đối chứng.** 29 ca đối chứng chưa phủ nhánh `<img>` ảnh bìa thật; dữ liệu
+- **Giới hạn của đối chứng.** 39 ca đối chứng ở cuối đợt (29 ở chặng 2) chưa phủ nhánh `<img>` ảnh bìa thật; dữ liệu
   đo chỉ có bìa sinh tự động.
 - **Cấu trúc của FR-A.2(c) phải sửa lại sau chặng 2.** Bản chặng 2 (`78b3bfb`) đặt `aria-label`
   ở `<Link>` và cho cả liên kết vào Suspense, nên **fallback là một `<a href>` focusable** —
@@ -186,10 +186,10 @@ Mỗi tiêu chí nêu lệnh cho ra con số. Mọi phép đo ở **1280×900**,
 `scripts/a11y/`. Phép đo nào có đối chứng mà đối chứng cũng "đạt" thì đó là phép đo hỏng,
 không phải mã đạt.
 
-- **TC-A.1** (FR-A.1, chặng 1) — Liên kết bỏ qua là điểm dừng `Tab` đầu tiên ở **36/36**
-  trạng thái; **số lần bấm `Tab` CẦN để tới `<main>`** giảm từ 8 (9 ở `/?chao=1` và `/?mk=1`) xuống **1**. *Bản 1.0–1.1 viết "số điểm dừng trước `<main>`", câu đó có hai nghĩa đi ngược chiều nhau:* theo thứ tự DOM, số điểm dừng **tăng** 8→9 vì liên kết bỏ qua là một điểm dừng mới; số lần bấm **cần** để tới `<main>` mới là con số giảm về 1. Chặng 1 đo cả hai: 8→9 ở 34 trạng thái, 9→10 ở 2 trạng thái, và 1 ở 36/36;
+- **TC-A.1** (FR-A.1, chặng 1) — Liên kết bỏ qua là điểm dừng `Tab` đầu tiên ở **36/36 trạng thái của survey chặng 1**;
+  **số lần bấm `Tab` CẦN để tới `<main>`** giảm từ 8 (9 ở `/?chao=1` và `/?mk=1`) xuống **1**. *Bản 1.0–1.1 viết "số điểm dừng trước `<main>`", câu đó có hai nghĩa đi ngược chiều nhau:* theo thứ tự DOM, số điểm dừng **tăng** 8→9 vì liên kết bỏ qua là một điểm dừng mới; số lần bấm **cần** để tới `<main>` mới là con số giảm về 1. Chặng 1 đo cả hai: 8→9 ở 34 trạng thái, 9→10 ở 2 trạng thái, và 1 ở 36/36 trạng thái của survey chặng 1;
   `<main>` có `id` và nhận focus khi kích hoạt liên kết. *Lệnh:* phép đo D của
-  `scripts/a11y/`. *Đối chứng:* gỡ liên kết trong bộ nhớ ⇒ số đếm quay về 8 và 9.
+  `scripts/a11y/`. *Đối chứng:* gỡ liên kết trong bộ nhớ ⇒ số đếm quay về 8 và 9. *Survey lên 39 trạng thái từ chặng 2 (mục 0.7); con số của TC-A.1 là số của chặng 1, không lệch với TC-A.9.*
 - **TC-A.2** (FR-A.2, chặng 2) — **0/66** liên kết chứa bìa có tên sách xuất hiện hai lần
   (trước: 62); **0** liên kết có chuỗi dính không dấu cách (trước: 39); tên khả truy cập của
   liên kết giỏ hàng không chứa " ," (trước: "Giỏ hàng , 2 sản phẩm"). Số liên kết > 90 ký tự,
@@ -221,8 +221,8 @@ không phải mã đạt.
   ⇒ phép đo phải báo thiếu.
 - **TC-A.9** (không hồi quy, chặng 4) — Đo lại **39 trạng thái**: 0 vi phạm NFR-6.1; mọi phần
   tử tương tác tới được bằng `Tab`, 0 thiếu chỉ báo focus, 0 chỉ báo dưới 3:1; 0 `<svg>` thiếu
-  `aria-hidden` hoặc nhãn; 0 phần tử tương tác không tên; 0 cặp token dưới 4,5:1 (NFR-6.7, vì
-  đợt này đổi token màu placeholder). Điều kiện miễn trừ **A11Y-14** đo lại ở 1280px: **0 bìa trượt (a)**, và 0 nơi bắt buộc trượt (b); **số bìa đo được ghi lại làm số liệu, KHÔNG phải ngưỡng.** *Vì sao bản 1.0 sai:* nó đặt ngưỡng 108, là cột 1280px của bảng mục 3.1 bản 1.3 (108 + 111 = 219 qua hai khung). Bản 1.3 đo trên dữ liệu cục bộ khác (3 tủ sách, 1 khách có giỏ 2 dòng, 1 đơn 3 dòng), còn đợt này đo trên seed demo (40 sách, 42 đơn, 84 dòng `order_items`), nên số bìa ở `/gio-hang`, `OrderSummary` và các lưới `BookCard` không so sánh được giữa hai lượt. Tiêu chí giữ được tính không rỗng bằng đối chứng: **6/6** bìa tổng hợp phải bị phân loại đúng. **Phép thao tác hoá của (a), sửa ở bản 1.2:** nhánh "bìa trang trí thì `aria-hidden` và không được là nơi duy nhất mang thông tin" phải tính thông tin có mặt dưới dạng **giá trị ô nhập**, không chỉ text node. Chặng 2 chấm 3 bìa xem trước của form admin (`components/admin/BookForm.tsx` dòng ~144) là trượt (a); đó là phép đo hẹp hơn chính điều kiện, không phải vi phạm — xem mục 0.7. Đối chứng của bộ đo **≥ 21/21**, gồm ca
+  `aria-hidden` hoặc nhãn; 0 phần tử tương tác không tên; **0 cặp token của chữ HOẠT ĐỘNG dưới 4,5:1** (NFR-6.7, vì
+  đợt này đổi token màu placeholder). Số đo cuối: **68 cặp, 5 dưới ngưỡng — cả 5 đều là miễn trừ đã chấp nhận**: 3 cặp của thành phần vô hiệu hoá (A11Y-02, miễn trừ của chính WCAG 1.4.3) và 2 cặp của dấu `“` trang trí `aria-hidden` (A11Y-03); 3 cặp trong 4,5–5,0:1 đúng là ba cặp của A11Y-04 (4,66 · 4,77 · 4,97). *Bản 1.0–1.3 viết "0 cặp token dưới 4,5:1" mà quên khoét hai miễn trừ đã biết, trong khi tiêu chí 6.1 của cùng mục thì có mệnh đề "thành phần vô hiệu hoá tách riêng" — tiêu chí viết thiếu phần khoét sẵn sẽ đọc ra "trượt" trong khi mã đạt.* Điều kiện miễn trừ **A11Y-14** đo lại ở 1280px: **0 bìa trượt (a)**, và 0 nơi bắt buộc trượt (b); **số bìa đo được ghi lại làm số liệu, KHÔNG phải ngưỡng.** *Vì sao bản 1.0 sai:* nó đặt ngưỡng 108, là cột 1280px của bảng mục 3.1 bản 1.3 (108 + 111 = 219 qua hai khung). Bản 1.3 đo trên dữ liệu cục bộ khác (3 tủ sách, 1 khách có giỏ 2 dòng, 1 đơn 3 dòng), còn đợt này đo trên seed demo (40 sách, 42 đơn, 84 dòng `order_items`), nên số bìa ở `/gio-hang`, `OrderSummary` và các lưới `BookCard` không so sánh được giữa hai lượt. Tiêu chí giữ được tính không rỗng bằng đối chứng: **6/6** bìa tổng hợp phải bị phân loại đúng. **Phép thao tác hoá của (a), sửa ở bản 1.2 và ghi đủ ở bản 1.4 — HAI bước, không phải một:** (1) tính thông tin có mặt dưới dạng **giá trị ô nhập**, không chỉ text node; (2) với bìa `aria-hidden` **không nằm trong liên kết nào**, kiểm thêm chữ trong `<main>`, vì ô nhập nằm ngoài khối chú thích nên quy tắc "tổ tiên đầu tiên đủ 20 ký tự" không với tới. Bước (2) là phán đoán của Claude Code, ghi ở mục 3.3.2 của bản 1.5 rà soát. Kết quả cuối: **161 bìa, 0 trượt (a), 96 nơi bắt buộc 0 trượt (b)**; ba bìa xem trước của form admin chuyển trượt → đạt. **Hai bìa ở `/admin/sach/moi` (form trống) đạt một cách tầm thường, không phải "nhờ nhãn ô":** bìa vẽ chữ giữ chỗ "Tên sách"/"Tác giả" nên **không mang thông tin sách nào**, và nhánh trang trí của (a) chỉ đòi bìa không là nơi duy nhất mang thông tin — ở đây không có thông tin nào để giữ. Đối chứng của bộ đo **≥ 21/21**, gồm ca
   "màu mặc định". *Lệnh:* `node scripts/a11y/run.mjs` toàn bộ.
 - **TC-A.10** (đóng đợt, chặng 4) — Mọi tài liệu khớp hiện trạng: spec rà soát lên **bản 1.5**
   mang số đo sửa lại ở mục 0.5 và lý do lệch; mục 7.15 mới; mục 8 thêm sáu luật ở mục 0.6;
