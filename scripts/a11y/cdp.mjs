@@ -75,6 +75,14 @@ export async function launch(tag, { width = 1280, height = 900 } = {}) {
     await send("Input.dispatchKeyEvent", { type: "rawKeyDown", key: k, code, windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk, modifiers });
     await send("Input.dispatchKeyEvent", { type: "keyUp", key: k, code, windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk, modifiers });
   }
+  /**
+   * Nhấn một phím kèm ký tự (Enter = "\r"). `key()` ở trên chỉ gửi rawKeyDown nên không sinh sự kiện keypress, và nút/liên
+   * kết chỉ được kích hoạt bằng Enter khi có keypress.
+   */
+  async function press(k, code, vk, text) {
+    await send("Input.dispatchKeyEvent", { type: "keyDown", key: k, code, windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk, text });
+    await send("Input.dispatchKeyEvent", { type: "keyUp", key: k, code, windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk });
+  }
   /** Tên và vai trò khả truy cập của một biểu thức JS trả về phần tử, đọc từ cây accessibility của trình duyệt. */
   async function axOf(expression) {
     const ev = await send("Runtime.evaluate", { expression });
@@ -98,5 +106,5 @@ export async function launch(tag, { width = 1280, height = 900 } = {}) {
     await sleep(1000);
     try { rmSync(profile, { recursive: true, force: true }); } catch { /* hồ sơ còn bị khoá: bỏ qua */ }
   }
-  return { pid: edge.pid, send, evalJs, goto, waitFor, setInput, click, key, axOf, close };
+  return { pid: edge.pid, send, evalJs, goto, waitFor, setInput, click, key, press, axOf, close };
 }

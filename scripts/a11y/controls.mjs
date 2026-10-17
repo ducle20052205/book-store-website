@@ -5,6 +5,7 @@
 import { sleep } from "./cdp.mjs";
 import { BASE, blend, ratioHex, ratioRgb, rgbOf } from "./common.mjs";
 import { coverNames, glueChecked, tabStopsBeforeMain } from "./measure.mjs";
+import { runNavControls } from "./controls-nav.mjs";
 
 const ROOT = "document.getElementById('a11y-ctl')";
 const near = (a, b, tol) => a !== null && b !== null && Math.abs(a - b) <= tol;
@@ -114,5 +115,7 @@ export async function runControls(b, lib) {
   const ch = await b.evalJs(`window.__a11y.measureCharts(${ROOT})`);
   add("6.5 phải BẮT biểu đồ chỉ khác màu, KHÔNG bắt biểu đồ có chữ", "onlyColor: true rồi false", ch.length === 2 && ch[0].onlyColor === true && ch[1].onlyColor === false, JSON.stringify(ch.map((c) => c.onlyColor)));
   add("6.6 phải BẮT chữ 11px (<12), KHÔNG bắt chữ 12px", "tiny chứa 'Chu nho', không chứa 'Chu muoi hai'", tx.tiny.some((x) => x.text.startsWith("Chu nho")) && !tx.tiny.some((x) => x.text.startsWith("Chu muoi hai")), tx.tiny.map((x) => x.text).join("; "));
+  // ───── chặng 1: liên kết bỏ qua (D2) và bàn phím ─────
+  res.push(...(await runNavControls(b, lib, inject)));
   return res;
 }

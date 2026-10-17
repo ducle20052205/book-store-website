@@ -375,7 +375,38 @@
     return out;
   }
 
+  // ───────────── bố cục và phần tử đang focus (FR-A.1) ─────────────
+  /** Kích thước bố cục lúc CHƯA focus gì: dùng để chứng minh một thành phần ẩn không đẩy bố cục một pixel nào. */
+  function layoutMetrics() {
+    const header = document.querySelector("header");
+    const main = document.querySelector("main");
+    const h = header ? header.getBoundingClientRect() : null;
+    const m = main ? main.getBoundingClientRect() : null;
+    return {
+      headerH: h ? +h.height.toFixed(2) : null,
+      mainTop: m ? +(m.top + window.scrollY).toFixed(2) : null,
+      bodyScrollH: document.body.scrollHeight,
+      docScrollH: document.documentElement.scrollHeight,
+      bodyScrollW: document.body.scrollWidth,
+    };
+  }
+  /** Hộp, màu chữ, nền, tỉ lệ và chỉ báo focus của phần tử đang focus (đọc ngay sau khi nhấn Tab). */
+  function activeStyle() {
+    const e = document.activeElement;
+    if (!e || e === document.body) return null;
+    const cs = getComputedStyle(e);
+    const r = e.getBoundingClientRect();
+    const { bg } = effective(e);
+    const fg = parseColor(cs.color);
+    return {
+      rect: { x: +r.x.toFixed(1), y: +r.y.toFixed(1), w: +r.width.toFixed(1), h: +r.height.toFixed(1) },
+      position: cs.position, zIndex: cs.zIndex, clip: cs.clip, color: fg ? hex(over(fg, bg)) : null, bg: hex(bg),
+      ratio: fg ? r2(ratio(over(fg, bg), bg)) : null, fs: parseFloat(cs.fontSize), indicator: describe(e),
+    };
+  }
+
   window.__a11y = {
+    layoutMetrics, activeStyle,
     parseColor, ratio, over, hex, effective, visible, label, sel,
     measureText, measurePlaceholders, measureBoundaries, measureLinks, coverOwners, glueCandidates,
     preMain, resetTabStart, activeInfo, interactive, describe, measureSvg, measureCharts,

@@ -12,7 +12,8 @@ import { fileURLToPath } from "node:url";
 import { launch, sleep } from "./cdp.mjs";
 import { ADMIN_EMAIL, API_URL, BASE, SECRET_KEY, USER_EMAIL, assertLocal, baseline, psql } from "./common.mjs";
 import { runControls } from "./controls.mjs";
-import { measureState } from "./measure.mjs";
+import { compare } from "./compare.mjs";
+import { keyboardToggle, measureState } from "./measure.mjs";
 import { printReport } from "./report.mjs";
 import { tokenReport } from "./tokens.mjs";
 
@@ -47,9 +48,10 @@ async function control() {
   const b = await launch("ctl");
   let res;
   try { res = await runControls(b, LIB); } finally { await b.close(); }
-  for (const r of res) console.log(`${r.pass ? "ĐẠT  " : "TRƯỢT"} ${r.id}\n        mong đợi: ${r.expect}\n        đo được : ${r.observed}`);
-  const bad = res.filter((r) => !r.pass).length;
-  console.log(`\nĐỐI CHỨNG: ${res.length - bad}/${res.length} đạt`);
+  for (const r of res) console.log(`${r.pass === null ? "BỎ QUA" : r.pass ? "ĐẠT  " : "TRƯỢT"} ${r.id}\n        mong đợi: ${r.expect}\n        đo được : ${r.observed}`);
+  const ran = res.filter((r) => r.pass !== null), skipped = res.length - ran.length;
+  const bad = ran.filter((r) => !r.pass).length;
+  console.log(`\nĐỐI CHỨNG: ${ran.length - bad}/${ran.length} đạt${skipped ? ` (+${skipped} bỏ qua: trang chưa có liên kết #noi-dung)` : ""}`);
   process.exit(bad ? 1 : 0);
 }
 
@@ -182,9 +184,35 @@ async function survey() {
   process.exit(0);
 }
 
+/** TC-A.5: Enter mở, Escape đóng, focus về nút — CategoryNav (khách) và AccountMenu (khách đã đăng nhập), ở 1280px. */
+async function keyboard() {
+  assertLocal();
+  const out = {};
+  const A = await launch("kb-anon");
+  try {
+    await A.goto(`${BASE}/`);
+    out.CategoryNav = await keyboardToggle(A, `document.querySelector('nav[aria-label="Danh mục và điều hướng nhanh"] button')`);
+  } finally { await A.close(); }
+  const C = await launch("kb-user");
+  try {
+    await recoveryLogin(C, USER_EMAIL);
+    await C.goto(`${BASE}/`);
+    out.AccountMenu = await keyboardToggle(C, `document.querySelector('button[aria-label="Tài khoản"]')`);
+  } finally { await C.close(); }
+  for (const [k, v] of Object.entries(out)) console.log(k, JSON.stringify(v));
+  // Đạt khi Enter mở và Escape đóng, và khi focus đang ở nút hoặc trong panel thì Escape trả focus về nút. S2 (Tab rồi Escape)
+  // chỉ đòi focusBack nếu Tab thật sự vào panel; nếu Tab đi sang phần tử khác ngoài panel (CategoryNav: panel nằm sau các liên
+  // kết trong DOM) thì Escape không có lý do kéo focus về nút. tabIntoPanel được ghi lại làm thông tin.
+  const ok = (v) => v.S1.startedClosed && v.S1.opens && v.S1.closes && v.S1.focusBack && v.S2.opens && v.S2.closes && (v.S2.tabIntoPanel ? v.S2.focusBack : true);
+  console.log(`BÀN PHÍM: ${Object.values(out).filter(ok).length}/${Object.keys(out).length} nút đạt · tabIntoPanel(S2): ${Object.entries(out).map(([k, v]) => `${k}=${v.S2.tabIntoPanel}`).join(", ")} · aria-haspopup: ${Object.entries(out).map(([k, v]) => `${k}=${v.haspopup}`).join(", ")}`);
+  process.exit(0);
+}
+
 const cmd = process.argv[2];
 if (cmd === "control") await control();
 else if (cmd === "tokens") tokens();
 else if (cmd === "survey") await survey();
 else if (cmd === "report") printReport(process.argv[3]);
-else { console.log("Dùng: node scripts/a11y/run.mjs <control|tokens|survey|report <file>>"); process.exit(2); }
+else if (cmd === "keyboard") await keyboard();
+else if (cmd === "compare") compare(process.argv[3], process.argv[4]);
+else { console.log("Dùng: node scripts/a11y/run.mjs <control|tokens|survey|report <file>|compare <trước> <sau>|keyboard>"); process.exit(2); }

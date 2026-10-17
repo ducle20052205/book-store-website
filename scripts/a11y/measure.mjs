@@ -61,6 +61,7 @@ export async function glueChecked(b, root) {
 /** Đo đầy đủ một trạng thái của survey. `lib` là mã lib.js. */
 export async function measureState(b, lib, titles, name, route, extra = {}) {
   await b.evalJs(lib);
+  const layout = await b.evalJs("window.__a11y.layoutMetrics()");
   const ph = await b.evalJs("window.__a11y.measurePlaceholders(document)");
   const bd = await b.evalJs("window.__a11y.measureBoundaries(document)");
   const links = await b.evalJs("window.__a11y.measureLinks(document.body)");
@@ -71,5 +72,95 @@ export async function measureState(b, lib, titles, name, route, extra = {}) {
   const page = await b.evalJs("window.__a11y.page()");
   const finalPath = await b.evalJs("location.pathname + location.search");
   const tab = await tabStopsBeforeMain(b);
-  return { name, route, finalPath, page, text, placeholders: ph, boundaries: bd, links, covers, glue, tab, ...extra };
+  const ax = await axUnnamed(b);
+  const focus = await focusWalk(b);
+  const skip = await skipLinkCheck(b);
+  return { name, route, finalPath, page, layout, ax, focus, skip, text, placeholders: ph, boundaries: bd, links, covers, glue, tab, ...extra };
+}
+
+// ───────────── chặng 1: liên kết bỏ qua, duyệt focus, phần tử không tên, bàn phím ─────────────
+
+/**
+ * FR-A.1 — Tab một lần từ đầu tài liệu: điểm dừng đầu tiên có phải liên kết `#noi-dung` không, nó nhìn thấy được khi
+ * focus không (hộp, màu, tỉ lệ), và Enter có đưa focus vào <main> không. Gỡ dấu `#` khỏi URL ngay sau đó.
+ */
+export async function skipLinkCheck(b) {
+  await b.evalJs("window.__a11y.resetTabStart()");
+  await b.key("Tab", "Tab", 9);
+  await sleep(80);
+  const first = await b.evalJs(`(()=>{const e=document.activeElement;return {href:e&&e.getAttribute?e.getAttribute('href'):null,style:window.__a11y.activeStyle()}})()`);
+  const ax = await b.axOf("document.activeElement");
+  const isSkip = first.href === "#noi-dung";
+  let focusInMain = null, hash = null;
+  if (isSkip) {
+    await b.press("Enter", "Enter", 13, "\r");
+    await sleep(200);
+    focusInMain = await b.evalJs("document.activeElement===document.querySelector('main')");
+    hash = await b.evalJs("location.hash");
+    await b.evalJs("history.replaceState(null,'',location.pathname+location.search)");
+  }
+  return { firstName: ax?.name ?? null, firstHref: first.href, isSkip, style: first.style, focusInMain, hash };
+}
+
+/**
+ * Duyệt Tab thật qua mọi phần tử tương tác nhìn thấy (bắt đầu từ phần tử cuối rồi vòng về đầu, như bản 1.4): có tới được
+ * không, chỉ báo focus và tỉ lệ của nó. Giữ cách tính của bản 1.4; tắt transition trước khi đọc.
+ */
+export async function focusWalk(b) {
+  await b.evalJs(`(()=>{window.__a11y.noTransition();document.activeElement&&document.activeElement.blur();window.scrollTo(0,0);window.__n=0;window.__list=window.__a11y.interactive(document.body);window.__list.forEach(e=>{e.__i=++window.__n});if(window.__list.length)window.__list[window.__list.length-1].focus();return window.__list.length})()`);
+  const total = await b.evalJs("window.__list.length");
+  const seen = new Set();
+  const rows = [];
+  for (let i = 0; i < total + 12; i++) {
+    await b.key("Tab", "Tab", 9);
+    await sleep(55);
+    const d = await b.evalJs(`(()=>{const e=document.activeElement;if(!e||e===document.body)return null;return {i:e.__i??-1,d:window.__a11y.describe(e)}})()`);
+    if (d === null) { if (rows.length > 0) break; continue; }
+    if (seen.has(d.i) && d.i !== -1) break;
+    seen.add(d.i);
+    rows.push(d);
+  }
+  const missed = await b.evalJs(`window.__list.filter(e=>!${JSON.stringify([...seen])}.includes(e.__i)).map(e=>({tag:e.tagName.toLowerCase(),type:e.type||null,text:(e.getAttribute('aria-label')||e.textContent||e.name||'').replace(/\s+/g,' ').trim().slice(0,24)}))`);
+  const noIndicator = rows.filter((r) => r.d.indicator === "none").map((r) => `${r.d.tag}:${r.d.text}`);
+  const weak = rows.filter((r) => r.d.indicator !== "none" && r.d.ratio < 3).map((r) => `${r.d.tag}:${r.d.text}:${r.d.ratio}`);
+  return { interactive: total, stops: rows.length, notReached: missed.length, notReachedSample: missed.slice(0, 5), radios: missed.filter((m) => m.type === "radio").length, noIndicator: noIndicator.length, noIndicatorSample: noIndicator.slice(0, 5), below3: weak.length, below3Sample: weak.slice(0, 5), minRatio: rows.length ? Math.min(...rows.map((r) => r.d.ratio)) : null };
+}
+
+const INTERACTIVE_ROLES = new Set(["link", "button", "textbox", "combobox", "searchbox", "checkbox", "radio", "spinbutton", "listbox", "menuitem", "switch", "slider", "tab", "option"]);
+/** 6.4 — phần tử tương tác (vai trò từ cây accessibility, không bị bỏ qua) mà không có tên. */
+export async function axUnnamed(b) {
+  const { nodes } = await b.send("Accessibility.getFullAXTree");
+  const inter = nodes.filter((n) => !n.ignored && INTERACTIVE_ROLES.has(n.role?.value));
+  const unnamed = inter.filter((n) => !(n.name?.value ?? "").trim());
+  return { interactive: inter.length, unnamed: unnamed.length, unnamedRoles: unnamed.slice(0, 5).map((n) => n.role.value) };
+}
+
+/**
+ * TC-A.5 — Một nút mở/đóng bằng bàn phím. Hai chuỗi: S1 = Enter rồi Escape (focus vẫn ở nút); S2 = Enter, Tab vào panel,
+ * Escape. Mỗi chuỗi ghi: mở được không (aria-expanded), panel nhìn thấy không, Tab có vào liên kết trong panel không,
+ * Escape có đóng không, focus có về nút không. `buttonExpr` là biểu thức JS trả về nút.
+ */
+export async function keyboardToggle(b, buttonExpr) {
+  const q = async (js) => b.evalJs(`(()=>{const btn=${buttonExpr};${js}})()`);
+  const state = () => q(`const id=(btn.getAttribute('aria-controls')||'').split(' ')[0];const p=id?document.getElementById(id):null;return {exp:btn.getAttribute('aria-expanded'),panelVisible:!!p&&p.getBoundingClientRect().width>0,active:document.activeElement===btn,inPanel:!!p&&p.contains(document.activeElement),haspopup:btn.getAttribute('aria-haspopup')}`);
+  const out = { haspopup: (await q("return btn.getAttribute('aria-haspopup')")), controls: (await q("return btn.hasAttribute('aria-controls')||null")) };
+  for (const seq of ["S1", "S2"]) {
+    await q("if(btn.getAttribute('aria-expanded')==='true'){btn.click();}document.activeElement&&document.activeElement.blur&&document.activeElement.blur();btn.focus();return 1");
+    await sleep(150);
+    const before = await state();
+    await b.press("Enter", "Enter", 13, "\r");
+    await sleep(250);
+    const opened = await state();
+    let tabbed = null;
+    if (seq === "S2") { await b.key("Tab", "Tab", 9); await sleep(120); tabbed = await state(); }
+    await b.key("Escape", "Escape", 27);
+    await sleep(250);
+    const closed = await state();
+    out[seq] = {
+      startedClosed: before.exp === "false", opens: opened.exp === "true" && opened.panelVisible,
+      tabIntoPanel: tabbed ? tabbed.inPanel : null,
+      closes: closed.exp === "false", focusBack: closed.active,
+    };
+  }
+  return out;
 }
