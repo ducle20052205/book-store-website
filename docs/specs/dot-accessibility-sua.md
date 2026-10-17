@@ -1,6 +1,6 @@
 # Đợt sửa accessibility — đặc tả
 
-Phiên bản 1.2 · 17/10/2026 · 8 FR · 10 tiêu chí · 4 chặng. Bản 1.1 sửa TC-A.9 và TC-A.10. Bản 1.2 sửa TC-A.1, TC-A.5, TC-A.8 và TC-A.9 theo những gì chặng 1 và chặng 2 đo được, thêm mục 0.7 và ba luật vào mục 0.6; FR và phạm vi không đổi.
+Phiên bản 1.3 · 17/10/2026 · 8 FR · 10 tiêu chí · 4 chặng. Bản 1.1 sửa TC-A.9 và TC-A.10; bản 1.2 sửa TC-A.1, TC-A.5, TC-A.8, TC-A.9 và thêm mục 0.6 luật 4–6 cùng mục 0.7; bản 1.3 sửa lại cơ chế của luật 0.6.4, sửa hai con số sai của TC-A.6, và ghi tiếp những gì chặng 3 đo được. FR và phạm vi không đổi từ bản 1.0.
 Nguồn phát hiện: `docs/specs/dot-accessibility-ra-soat.md` bản 1.4 (14 phát hiện còn mở).
 Số đo phạm vi: chặng 0 của đợt này, 16/10/2026, bộ đo `scripts/a11y/` tại `24b1af2`,
 36 trạng thái của 21 route, chỉ 1280×900.
@@ -95,11 +95,18 @@ Phần lớn mức tăng đến từ `/tu-sach/[slug]`, route chỉ được đo
    xong là thành 7, vì nó chứa cả các cụm cần tìm lẫn câu lệnh tìm. Hệ quả: tiêu chí dạng đếm
    phải đo SAU KHI mọi file của đợt đã có mặt, và một cổng quét cả repo phải TỰ LOẠI TRỪ tài
    liệu của chính đợt.
-4. **Một tiêu chí không được ghi cứng con số do dữ liệu sinh ra.** FR-A.8 và TC-A.8 ghi
-   360/150/60 cho ba bước giữa của phễu `/admin`; chặng 2 đo được 361/150/61. Giá trị kỳ vọng
-   phải tính từ dữ liệu lúc đo. Mốc bảy số không bắt được chuyện này vì nó có tổng `events`
-   mà không có phân tách theo loại sự kiện: một dịch chuyển giữa các loại mà giữ nguyên tổng
-   là vô hình.
+4. **Một tiêu chí không được ghi cứng con số do dữ liệu sinh ra, vì chính lượt đo làm đổi dữ
+   liệu — và THỨ TỰ các trạng thái trong một lượt quyết định ai nhiễm ai.** FR-A.8 và TC-A.8
+   bản 1.0–1.1 ghi 360/150/60 cho ba bước giữa của phễu `/admin`; chặng 2 đọc được 361/150/61
+   và bản 1.2 giải thích sai là "số liệu trôi theo thời gian". Chặng 3 đọc
+   `supabase/migrations/20261006164939_admin_dashboard_stats.sql`: hàm **không lọc thời gian**,
+   và DB đúng seed từng loại (`page_view` 1200, `search` 360, `add_to_cart` 150,
+   `checkout_started` 60, `order_placed` 42). Chênh +3/+1/0/+1/0 là **5 sự kiện của chính lượt
+   đo** (3 xem trang sách, 1 tìm rỗng, 1 vào thanh toán), đọc trước lúc dọn, vì `/admin` được
+   khảo sát SAU phần ẩn danh và phần khách. Hai hệ quả: giá trị kỳ vọng phải tính từ dữ liệu
+   lúc đo, và trạng thái nào đọc số tích luỹ thì phải đo TRƯỚC các trạng thái sinh ra số đó.
+   Mốc bảy số không bắt được chuyện này vì chỉ có tổng `events`; từ chặng 3 mốc có thêm phân
+   tách theo loại.
 5. **Phép thao tác hoá của một điều kiện có thể hẹp hơn chính điều kiện.** Điều kiện (a) của
    miễn trừ A11Y-14 nói "không được là nơi duy nhất mang thông tin"; bộ đo chỉ đếm text node
    nên không thấy giá trị ô nhập, và chấm trượt ba bìa xem trước của form admin. Khi phép đo
@@ -138,6 +145,32 @@ Phần lớn mức tăng đến từ `/tu-sach/[slug]`, route chỉ được đo
   320), trung vị **74** (từ 93) — phần còn lại là ba thẻ tủ sách và thẻ nổi bật có mô tả.
 - **Giới hạn của đối chứng.** 29 ca đối chứng chưa phủ nhánh `<img>` ảnh bìa thật; dữ liệu
   đo chỉ có bìa sinh tự động.
+- **Cấu trúc của FR-A.2(c) phải sửa lại sau chặng 2.** Bản chặng 2 (`78b3bfb`) đặt `aria-label`
+  ở `<Link>` và cho cả liên kết vào Suspense, nên **fallback là một `<a href>` focusable** —
+  đúng hình mẫu mà `docs/specs/buoc-2b2-xoa-nhay-trang-thai-header.md` TC-6 đã loại bỏ ("0
+  phần tử focusable lúc fallback"). Phép thử focus trên `78b3bfb`: **0/5** lượt giữ được focus
+  (focus rơi về `body`, node cũ rời DOM). Bản sửa (`b3eb0f9`): `<Link>` đứng ngoài Suspense,
+  tên qua `aria-labelledby` trỏ vào một `span` ẩn nằm trong boundary — **5/5** giữ được focus,
+  focusable trong boundary 1 → 0, tên "Giỏ hàng, 2 sản phẩm" không chứa " ,", bề rộng chênh
+  0,00 px, CLS băng thông thường 0. *Ghi chú về phép đo:* tiêu chí đặt ra là "lúc ổn định 1
+  phần tử focusable" nhưng đếm trong BOUNDARY thì đúng là 0 ở cả hai lúc, vì liên kết nay nằm
+  ngoài boundary — tiêu chí chỉ sai chỗ đếm, không sai yêu cầu.
+- **CLS ở băng thông thấp: phát hiện mới, KHÔNG do đợt này.** Ở 60 KB/s, CLS của `/` là
+  **0,097–0,100**, giống nhau ở cả `78b3bfb` và `b3eb0f9`, nên nguồn không phải slot giỏ hàng
+  và chưa xác định. Hệ quả cho tài liệu cũ: TC-4 của 2B.2 ghi "CLS của `/` = 0" mà không nêu
+  điều kiện băng thông; câu đó cần mệnh đề "ở băng thông thường". Thuộc NFR-3.6, không thuộc
+  đợt accessibility, hạn mức đã kín — xếp cho đợt sau.
+- **Lý lẽ của FR-A.7 hẹp hơn lời chủ dự án nói khi chốt.** Lý do nêu là "`readOnly` cho bôi
+  đen và copy, `disabled` chặn". Chặng 3 đo trên Edge 154: bằng **chuột**, ba cú nhấp chọn
+  được 25/25 ký tự ở **cả** `disabled` lẫn `readOnly`; chỉ đường **focus/bàn phím** phân biệt
+  (`select()` chọn 0/25 → 25/25). Lợi ích thuộc về người dùng bàn phím, không phải mọi người
+  dùng. Phần tương phản (4,45:1 → 16,81:1) đứng độc lập với lý lẽ này.
+- **Hệ quả thị giác của FR-A.7:** bỏ `opacity` làm ô email trông như sửa được. `readOnly` vẫn
+  được công nghệ hỗ trợ thông báo đúng và ô có dòng giải thích ngay dưới. Xếp cho đợt sau.
+- **FR-A.8 chọn `sr-only` chứ không phải bảng nhìn thấy:** người nhìn đã đọc mọi số ngay trên
+  biểu đồ, một bảng nhìn thấy sẽ lặp lại và đổi bố cục đóng băng. Ba bảng (8/6/6 hàng, gồm
+  tiêu đề) nằm ngoài cây `role="img"`; 17/17 giá trị có mặt, 0 chữ của biểu đồ thiếu ở bảng,
+  0/20 hàng có lỗi chữ dính.
 
 ## 1. Bốn chặng
 
@@ -176,9 +209,8 @@ không phải mã đạt.
 - **TC-A.5** (FR-A.5, chặng 1) — **0** nút `aria-haspopup` mà panel không có
   `role=menu`/`menuitem`; **2/2** chỗ đã xử lý (`AccountMenu`, `CategoryNav`). `Enter` mở, `Escape` đóng và trả focus về nút khi focus đang ở nút hoặc trong panel: **2/2** vẫn đạt sau khi sửa. *Bản 1.0–1.1 còn đòi "Tab vào panel"; bỏ ở bản 1.2 vì tiêu chí đó ôm sát `AccountMenu` (panel nằm ngay sau nút trong DOM) và không đúng cho `CategoryNav` (panel nằm sau các liên kết điều hướng). Yêu cầu thật của một disclosure là Escape đóng và trả focus. Chặng 1 báo việc nới này thay vì nới lặng lẽ — đó là lằn ranh.* *Lệnh:* `grep -rn
   'aria-haspopup'` ra đúng tập đã xử lý, cộng phép đo bàn phím của `scripts/a11y/`.
-- **TC-A.6** (FR-A.6, chặng 3) — **21/21** route có `<title>`; **3/3** `/tu-sach/[slug]` có
-  tiêu đề riêng, khác nhau và khác "NA Books"; **4** route admin cố ý giữ "NA Books"
-  (A11Y-13). *Lệnh:* `curl` từng route trên bản production, `grep` thẻ `<title>`.
+- **TC-A.6** (FR-A.6, chặng 3) — **21 route cộng `/_not-found`** đều có `<title>`; **3/3** `/tu-sach/[slug]` có
+  tiêu đề riêng, khác nhau và khác "NA Books"; **6** route admin cố ý giữ "NA Books" (A11Y-13): `/admin`, `/admin/don-hang`, `/admin/don-hang/[code]`, `/admin/sach`, `/admin/sach/moi`, `/admin/sach/[slug]`. *Bản 1.0–1.2 ghi 4; con số đó chép từ bản 1.4 của spec rà soát, mà bản 1.4 chỉ đếm những route nó vừa đo và bỏ `/admin/don-hang` (đã đo ở bản 1.3) — một con số cũng mô tả nơi nó được đo, mục 0.6 luật 1.* *Lệnh:* `curl` từng route trên bản production, `grep` thẻ `<title>`.
 - **TC-A.7** (FR-A.7, chặng 3) — Ô email ở `/tai-khoan` dùng `readOnly`, không `disabled`;
   chữ giá trị **≥ 4,5:1** (trước: 4,45:1); chọn và copy được (`document.getSelection()` sau
   khi chọn trả về đúng chuỗi email, điều `disabled` chặn). **3/3** trạng thái của trang.
