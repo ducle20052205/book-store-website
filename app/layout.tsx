@@ -41,9 +41,23 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${beVietnamPro.variable} ${newsreader.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-paper font-sans text-ink-900">
+        {/*
+          FR-A.1 (WCAG 2.4.1): điểm dừng Tab đầu tiên của mọi trang, nhảy thẳng tới <main> để khỏi đi qua 8 điểm dừng
+          của header. Ẩn bằng sr-only (hộp 1×1px, tuyệt đối, không chiếm chỗ trong luồng nên không đẩy bố cục); khi
+          focus thì hiện đè lên header (absolute + z-index) ở góc trên trái.
+        */}
+        <a
+          href="#noi-dung"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:inline-flex focus:h-12 focus:items-center focus:rounded-field focus:bg-cham-700 focus:px-6 focus:text-button focus:font-medium focus:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
+        >
+          Bỏ qua tới nội dung
+        </a>
         <Header />
         <WelcomeStrip />
-        <main className="flex-1">{children}</main>
+        {/* tabIndex={-1}: đích của liên kết bỏ qua phải nhận được focus; không phải điều khiển nên không vẽ vòng focus. */}
+        <main id="noi-dung" tabIndex={-1} className="flex-1 focus:outline-none">
+          {children}
+        </main>
         {/* usePathname() trong FooterSwitch cần <Suspense> ở route có tham số động; fallback là footer đầy đủ. */}
         <Suspense fallback={<Footer />}>
           <FooterSwitch full={<Footer />} compact={<FooterCompact />} />

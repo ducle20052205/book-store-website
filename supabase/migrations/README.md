@@ -5,7 +5,7 @@ Máy dev không có Supabase CLI, nên mọi migration được áp dụng qua S
 `version` mà Supabase ghi nhận trong `supabase_migrations.schema_migrations`
 (kiểm tra bằng `list_migrations`), dạng `<version>_<tên>.sql`.
 
-**Lệch quy ước đặt tên:** 4 file đầu tiên (`0001_init_schema.sql`,
+**Lệch quy ước đặt tên:** 3 file đầu tiên (`0001_init_schema.sql`,
 `0002_restrict_trigger_function_execute.sql`, `0003_perf_fixes.sql`) được đặt
 tên thủ công theo số thứ tự `000N` trước khi quy ước trên được chốt — chúng
 không khớp 1-1 với `version` timestamp thật trên remote (remote ghi nhận 4 lần

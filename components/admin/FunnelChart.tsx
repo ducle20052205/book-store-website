@@ -19,21 +19,48 @@ export function FunnelChart({ steps }: { steps: { event_type: string; count: num
   const label = `Phễu chuyển đổi, đếm số lượt: từ ${integer.format(first)} lượt xem trang sách xuống ${integer.format(last)} đơn đặt, bằng ${percent.format(ratio(last))}% của bước đầu.`;
 
   return (
-    <div role="img" aria-label={label} data-testid="admin-funnel-chart" className={`${cardClass} p-4 md:p-6`}>
-      <ul className="flex flex-col gap-2">
-        {steps.map((s, i) => (
-          <li key={s.event_type} className="grid h-11 grid-cols-[96px_minmax(0,1fr)_104px] items-center gap-x-3 md:grid-cols-[150px_minmax(0,1fr)_132px]">
-            <span className="text-[13px] leading-[1.25] text-ink-900">{FUNNEL_LABELS[s.event_type] ?? s.event_type}</span>
-            <svg aria-hidden="true" className="block h-5 w-full">
-              <rect x="0" y="0" width={`${ratio(s.count)}%`} height="20" fillOpacity={OPACITIES[i] ?? 0.4} className="fill-cham-700" />
-            </svg>
-            <span className="text-right">
-              <span className="text-[13px] text-ink-900">{integer.format(s.count)}</span>{" "}
-              <span className="text-[12px] text-ink-400">{percent.format(ratio(s.count))}%</span>
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <>
+      <div role="img" aria-label={label} data-testid="admin-funnel-chart" className={`${cardClass} p-4 md:p-6`}>
+        <ul className="flex flex-col gap-2">
+          {steps.map((s, i) => (
+            <li key={s.event_type} className="grid h-11 grid-cols-[96px_minmax(0,1fr)_104px] items-center gap-x-3 md:grid-cols-[150px_minmax(0,1fr)_132px]">
+              <span className="text-[13px] leading-[1.25] text-ink-900">{FUNNEL_LABELS[s.event_type] ?? s.event_type}</span>
+              <svg aria-hidden="true" className="block h-5 w-full">
+                <rect x="0" y="0" width={`${ratio(s.count)}%`} height="20" fillOpacity={OPACITIES[i] ?? 0.4} className="fill-cham-700" />
+              </svg>
+              <span className="text-right">
+                <span className="text-[13px] text-ink-900">{integer.format(s.count)}</span>{" "}
+                <span className="text-[12px] text-ink-400">{percent.format(ratio(s.count))}%</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      {/*
+       * FR-A.8 (A11Y-23): bảng số liệu bằng chữ cho công nghệ hỗ trợ, đặt NGOÀI cây role="img". Phần tử role="img" coi con của nó là
+       * trình bày thuần, nên chữ trong biểu đồ có thể không được đọc dù có trong cây accessibility; bảng này luôn đọc được và
+       * điều hướng được theo hàng/cột. Dùng sr-only (không phải bảng nhìn thấy): người nhìn đã đọc mọi giá trị ngay trên biểu đồ
+       * (mỗi cột có số), bảng hiện thêm sẽ lặp nội dung và đổi bố cục của hệ layout đóng băng. sr-only là absolute, không chiếm chỗ.
+       */}
+      <table data-testid="admin-funnel-table" className="sr-only">
+        <caption>Phễu chuyển đổi, đếm số lượt, bảng số liệu</caption>
+        <thead>
+          <tr>
+            <th scope="col">Bước</th>
+            <th scope="col">Số lượt</th>
+            <th scope="col">Tỉ lệ so với bước đầu</th>
+          </tr>
+        </thead>
+        <tbody>
+          {steps.map((s) => (
+            <tr key={s.event_type}>
+              <th scope="row">{FUNNEL_LABELS[s.event_type] ?? s.event_type}</th>
+              <td>{integer.format(s.count)}</td>
+              <td>{`${percent.format(ratio(s.count))}%`}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
   );
 }

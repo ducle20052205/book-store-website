@@ -110,7 +110,6 @@ export function AccountMenu({ name, email, isAdmin }: AccountMenuProps) {
         ref={buttonRef}
         type="button"
         aria-expanded={open}
-        aria-haspopup="true"
         aria-controls={open ? `${panelId} ${sheetId}` : undefined}
         aria-label="Tài khoản"
         onClick={() => setOpen((value) => !value)}

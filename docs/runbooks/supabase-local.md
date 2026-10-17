@@ -1,12 +1,14 @@
 # Runbook — Supabase cục bộ (Docker) để kiểm các bước cần phiên thật
 
-Cập nhật lần cuối: 07/10/2026. Dựng và kiểm chứng ở đợt 2B bằng Supabase CLI 2.118.0; dựng lại và đo lại ngày 06/10/2026 (mục "Môi trường đã đo ngày 06/10/2026").
+Cập nhật lần cuối: 17/10/2026. Dựng và kiểm chứng ở đợt 2B bằng Supabase CLI 2.118.0; dựng lại và đo lại ngày 06/10/2026 (mục "Môi trường đã đo ngày 06/10/2026").
 
 ## Vì sao cần
 
 Đăng ký, đăng nhập và mọi phép kiểm cần phiên thật đều gửi credential tới Auth. Trên project hosted việc đó chỉ người dùng làm được; trên stack chạy ngay trên máy (credential không rời máy) thì tài khoản thử tạo, dùng và xoá thoải mái. Stack này **chỉ để kiểm thử**: migration lên hosted vẫn áp bằng Supabase MCP (xem `CLAUDE.md`), không dùng `supabase link` hay `supabase db push`.
 
 ## Dựng
+
+**Mẹo trước khi mở Docker Desktop: chạy `wsl --shutdown` TRƯỚC.** Ngày 07/10/2026, mở Docker Desktop thẳng cho lỗi `vpnkit-bridge handshake failed` hai lần liền (engine không lên sau ~290 s và ~216 s) và mất gần một giờ; sau `wsl --shutdown` thì daemon lên sau 4–15 s ở 5/5 lần dùng lại (11, 15, 6, 4 và 8 s, ngày 07–17/10/2026). `docker.exe` không nằm trên PATH, nằm ở `...\Programs\DockerDesktop\resources\bin`. Docker Desktop cũng có thể tự cập nhật giữa chừng (đã gặp 07/10: daemon mất vài chục giây rồi tự lên lại, image và volume còn nguyên) — đừng đọc đó là hỏng. Nếu sau hai lần thử daemon vẫn không lên thì dừng và xem log ở `%LOCALAPPDATA%\Docker\log\host`.
 
 Điều kiện: Docker Desktop đang chạy; Supabase CLI (tải bản phát hành chính thức ở github.com/supabase/cli/releases, đối chiếu SHA256 với `checksums.txt` cùng bản phát hành; không cần thêm vào `package.json`).
 

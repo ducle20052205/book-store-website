@@ -100,7 +100,7 @@ Khu quản trị được kiểm quyền theo từng tầng: `proxy.ts` chặn s
 ## Chưa làm gì, và vì sao
 
 - **Giao diện mobile tạm dừng.** Mobile là một giai đoạn sau khi sản phẩm hoàn thành, không nằm trong định nghĩa "xong" và không chen vào thứ tự các đợt. Mã mobile đã có được giữ nguyên, không xây thêm và không đo thêm theo bề rộng mobile.
-- **14 phát hiện accessibility còn mở** (3 Trung bình, 11 Thấp, 0 Cao). Đã đo, chưa sửa; có đợt riêng cho việc này.
+- **6 phát hiện accessibility còn mở** (1 Trung bình, 5 Thấp, 0 Cao) sau đợt sửa accessibility (8 phát hiện đã đóng, 17/23 tổng cộng). Sáu mục còn lại: vùng chạm và hộp thoại bộ lọc ở 390px (chờ giai đoạn mobile), viền ô nhập (quyết định thiết kế), và ba mục đã quyết không sửa hoặc chỉ ghi nhận (ký tự trang trí, tiêu đề trang admin, biên token). Chi tiết và số đo: `docs/specs/dot-accessibility-ra-soat.md` bản 1.5.
 - **URL động có dãy `%XX` hỏng hoặc `%25` trả HTTP 500.** Lỗi có từ trước mọi đợt, xảy ra trước khi tới mã trang, không lộ dữ liệu; gom vào đợt sửa lỗi giao diện tồn đọng.
 - **Preview và production dùng chung một database.** Mọi lần ghi khi thử ở preview nằm trong database mà production cũng đọc. Đợt sửa lỗi giao diện tồn đọng sẽ tách chúng.
 - **Chatbot và scenario Make.com.** Chưa làm, chưa xếp đợt và ngoài định nghĩa "xong".

@@ -68,13 +68,16 @@ function FeaturedBook({ book, extra }: { book: WithCardExtras<BookSummary>; extr
       href={`/sach/${book.slug}`}
       className="hover-lift col-span-2 flex flex-col rounded-card border border-line bg-surface p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600 focus-visible:ring-offset-2"
     >
-      <BookCover
-        slug={book.slug}
-        title={book.title}
-        author={book.author}
-        coverImageUrl={book.coverImageUrl}
-        className="shadow-md"
-      />
+      {/* Bìa trang trí: tên sách và tác giả đã là chữ trong cùng liên kết (A11Y-09); xem BookCard. */}
+      <div aria-hidden="true">
+        <BookCover
+          slug={book.slug}
+          title={book.title}
+          author={book.author}
+          coverImageUrl={book.coverImageUrl}
+          className="shadow-md"
+        />
+      </div>
       <div className="mt-4">
         {(categoryName || collectionRef) && (
           <p className="mb-2 truncate text-micro">

@@ -172,7 +172,7 @@ export default async function SachPage({ searchParams }: PageProps<"/sach">) {
               )}{" "}
               <Link
                 href="/tu-sach"
-                className="font-medium text-cham-700 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
+                className="font-medium text-cham-700 underline underline-offset-2 hover:text-cham-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cham-600"
               >
                 tủ sách tuyển chọn
               </Link>{" "}
