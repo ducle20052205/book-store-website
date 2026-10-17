@@ -10,12 +10,13 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { launch, sleep } from "./cdp.mjs";
-import { ADMIN_EMAIL, API_URL, BASE, SECRET_KEY, USER_EMAIL, assertLocal, baseline, psql } from "./common.mjs";
+import { ADMIN_EMAIL, API_URL, BASE, SECRET_KEY, USER_EMAIL, assertLocal, baseline, fetchAdminStats, psql } from "./common.mjs";
 import { runControls } from "./controls.mjs";
 import { cartSlot } from "./cartslot.mjs";
 import { chang2 } from "./chang2.mjs";
+import { chang3 } from "./chang3.mjs";
 import { compare } from "./compare.mjs";
-import { ctx, keyboardToggle, measureState } from "./measure.mjs";
+import { checkChartTables, ctx, glueChecked, keyboardToggle, measureState } from "./measure.mjs";
 import { printReport } from "./report.mjs";
 import { tokenReport } from "./tokens.mjs";
 
@@ -168,6 +169,7 @@ async function survey() {
       emit({ setup: { adminSession: ok } });
       await D.goto(`${BASE}/admin`);
       await D.waitFor(`!!document.querySelector('[data-testid="admin-stats"]')`, 10000);
+      ctx.adminStats = await fetchAdminStats(); // giá trị kỳ vọng của biểu đồ, tính từ cùng RPC lúc đo
       await run(D, "admin-thong-ke", "/admin", async () => {});
       await run(D, "admin-don-hang", "/admin/don-hang", to(D, "/admin/don-hang"));
       await run(D, "admin-don-hang-chi-tiet", "/admin/don-hang/[code]", to(D, `/admin/don-hang/${orderCode}`));
@@ -216,12 +218,62 @@ async function keyboard() {
   process.exit(0);
 }
 
+/**
+ * TC-A.8 trên /admin thật: giá trị kỳ vọng tính TỪ RPC lúc đo, phải có mặt ở bảng nằm ngoài cây role="img"; đối chứng xoá một hàng
+ * của từng bảng trong bộ nhớ thì phép kiểm phải báo thiếu đúng giá trị đó; kiểm tên khả truy cập của từng hàng bảng có bị dính
+ * chữ không (các ô phải cách nhau bằng dấu cách); và cây accessibility có thấy ba bảng không.
+ */
+async function charts() {
+  assertLocal();
+  const stats = await fetchAdminStats();
+  const D = await launch("charts");
+  try {
+    await recoveryLogin(D, ADMIN_EMAIL);
+    await D.goto(`${BASE}/admin`);
+    await D.waitFor(`!!document.querySelector('[data-testid="admin-stats"]')`, 10000);
+    await D.evalJs(LIB);
+    const funnel = stats.funnel.steps.map((s) => `${s.event_type}=${s.count}`).join(", ");
+    console.log("giá trị kỳ vọng tính từ RPC lúc đo — phễu:", funnel);
+    console.log("  doanh thu:", stats.revenue_by_month.map((m) => `${m.month}=${m.revenue}`).join(", "));
+    console.log("  danh mục:", stats.category_sales.map((c) => `${c.name}=${c.units}`).join(", "));
+    const live = checkChartTables(await D.evalJs("window.__a11y.chartTables()"), stats);
+    console.log(`KIỂM THẬT: ${live.charts} biểu đồ · bảng mỗi biểu đồ ${JSON.stringify(live.tables)} · hàng ${JSON.stringify(live.rows)} · thiếu ${JSON.stringify(live.missing)} · chữ biểu đồ chưa có ở bảng ${JSON.stringify(live.uncovered)}`);
+    // đối chứng: xoá một hàng dữ liệu của từng bảng trong bộ nhớ
+    for (const tid of ["admin-revenue-table", "admin-category-table", "admin-funnel-table"]) {
+      await D.evalJs(`(() => { const t = document.querySelector('[data-testid="${tid}"]'); if (t) t.querySelectorAll('tbody tr')[1].remove(); })()`);
+      const after = checkChartTables(await D.evalJs("window.__a11y.chartTables()"), stats);
+      console.log(`ĐỐI CHỨNG xoá hàng 2 của ${tid}: thiếu ${JSON.stringify(after.missing)} (mong đợi đúng 1 mục)`);
+      await D.goto(`${BASE}/admin`);
+      await D.evalJs(LIB);
+    }
+    // chữ dính / tên hàng bảng
+    const rows = await D.evalJs(`(() => { window.__a11y._tr = [...document.querySelectorAll('[data-testid$="-table"] tr')]; return window.__a11y._tr.map((tr) => [...tr.children].map((c) => c.textContent.replace(/\s+/g, ' ').trim())); })()`);
+    let glued = 0, shown = 0;
+    for (let i = 0; i < rows.length; i++) {
+      const ax = await D.axOf(`window.__a11y._tr[${i}]`);
+      const name = (ax?.name ?? "").replace(/\s+/g, " ");
+      const expect = rows[i].join(" ");
+      if (name && name !== expect) { glued++; if (shown++ < 3) console.log(`  hàng ${i}: tên AX "${name}" ≠ ô nối bằng dấu cách "${expect}"`); }
+    }
+    console.log(`CHỮ DÍNH ở bảng: ${glued}/${rows.length} hàng có tên khả truy cập khác chuỗi ô nối bằng dấu cách`);
+    const glue = await glueChecked(D, `document.querySelector('[data-testid="admin-stats"]')`);
+    const inTables = glue.filter((g) => g.where && /table|tr|td|th/i.test(g.where));
+    console.log(`ỨNG VIÊN dính (nút aria-hidden có chữ hai phía) trong cả /admin: ${glue.length}, trong đó nằm ở phần tử bảng: ${inTables.length}`);
+    const { nodes } = await D.send("Accessibility.getFullAXTree");
+    const tablesAx = nodes.filter((n) => !n.ignored && n.role?.value === "table").map((n) => n.name?.value ?? "");
+    console.log(`CÂY ACCESSIBILITY thấy ${tablesAx.length} bảng: ${JSON.stringify(tablesAx)}`);
+  } finally { await D.close(); }
+  process.exit(0);
+}
+
 const cmd = process.argv[2];
 if (cmd === "control") await control();
 else if (cmd === "tokens") tokens();
 else if (cmd === "survey") await survey();
 else if (cmd === "report") printReport(process.argv[3]);
 else if (cmd === "keyboard") await keyboard();
+else if (cmd === "charts") await charts();
+else if (cmd === "chang3") chang3(process.argv.slice(3));
 else if (cmd === "compare") compare(process.argv[3], process.argv[4]);
 else if (cmd === "chang2") chang2(process.argv.slice(3));
 else if (cmd === "cartslot") { await cartSlot(); process.exit(0); }

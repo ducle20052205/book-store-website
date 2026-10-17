@@ -74,11 +74,14 @@ export async function measureState(b, lib, titles, name, route, extra = {}) {
   const svg = await b.evalJs("(()=>{const s=window.__a11y.measureSvg(document.body);return {total:s.svgTotal,bad:s.svgNoAriaHidden.length,roleImg:s.roleImg,roleImgNoLabel:s.roleImgNoLabel.length}})()");
   const a14 = await a14Measure(b, "document.body");
   const cartAx = await b.axOf(`document.querySelector('header a[href="/gio-hang"]')`);
+  const fields = await b.evalJs("window.__a11y.measureFields(document).filter((f) => f.type === 'email' || f.disabled || f.readOnly)");
+  const emailCheck = route === "/tai-khoan" ? await emailFieldCheck(b) : null;
+  const chartCheck = route === "/admin" && ctx.adminStats ? checkChartTables(await b.evalJs("window.__a11y.chartTables()"), ctx.adminStats) : null;
   const tab = await tabStopsBeforeMain(b);
   const ax = await axUnnamed(b);
   const focus = await focusWalk(b);
   const skip = await skipLinkCheck(b);
-  return { name, route, finalPath, page, layout, svg, a14, headerCartName: cartAx?.name ?? null, ax, focus, skip, text, placeholders: ph, boundaries: bd, links, covers, glue, tab, ...extra };
+  return { name, route, finalPath, page, layout, fields, emailCheck, chartCheck, svg, a14, headerCartName: cartAx?.name ?? null, ax, focus, skip, text, placeholders: ph, boundaries: bd, links, covers, glue, tab, ...extra };
 }
 
 // ───────────── chặng 1: liên kết bỏ qua, duyệt focus, phần tử không tên, bàn phím ─────────────
@@ -171,7 +174,7 @@ export async function keyboardToggle(b, buttonExpr) {
 // ───────────── chặng 2: điều kiện miễn trừ A11Y-14 (tên sách và tác giả của bìa) ─────────────
 
 /** Danh sách sách ({title, author, slug}) cho phép đo A11Y-14; run.mjs nạp từ DB cục bộ, ca đối chứng truyền danh sách riêng. */
-export const ctx = { books: [] };
+export const ctx = { books: [], adminStats: null };
 const norm = (s) => (s ?? "").replace(/\s+/g, " ").trim();
 
 /**
@@ -215,4 +218,58 @@ export async function a14Measure(b, root, books = ctx.books) {
     rows.push(classifyCover(r, ownerName, axName, books));
   }
   return { covers: rows.length, failA: rows.filter((x) => !x.passA).length, bRequired: rows.filter((x) => x.bReq).length, failB: rows.filter((x) => x.bReq && !x.passB).length, rows };
+}
+
+// ───────────── chặng 3: ô email chỉ đọc (FR-A.7), bảng số liệu biểu đồ (FR-A.8) ─────────────
+
+/** TC-A.7 — ô email của /tai-khoan: chữ giá trị, disabled/readOnly, và chọn-chữ bằng DOM lẫn bằng chuột thật (ba cú nhấp). */
+export async function emailFieldCheck(b) {
+  const fields = await b.evalJs("window.__a11y.measureFields(document).filter((f) => f.type === 'email')");
+  const dom = await b.evalJs("window.__a11y.selectProbe('input[type=email]')");
+  // Chuột thật: bấm ba lần giữa ô (chọn cả dòng). Ô disabled không nhận sự kiện chuột nên không chọn được gì.
+  await b.evalJs("(() => { getSelection().removeAllRanges(); document.activeElement && document.activeElement.blur(); })()");
+  const box = await b.evalJs("(() => { const r = document.querySelector('input[type=email]').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; })()");
+  for (const clickCount of [1, 2, 3]) {
+    await b.send("Input.dispatchMouseEvent", { type: "mousePressed", x: box.x, y: box.y, button: "left", clickCount });
+    await b.send("Input.dispatchMouseEvent", { type: "mouseReleased", x: box.x, y: box.y, button: "left", clickCount });
+  }
+  const mouse = await b.evalJs("(() => { const el = document.querySelector('input[type=email]'); return { domSelection: document.getSelection().toString(), controlSelection: (el.value || '').substring(el.selectionStart ?? 0, el.selectionEnd ?? 0), active: document.activeElement === el, valueLength: (el.value || '').length }; })()");
+  return { fields, dom, mouse };
+}
+
+const numsOf = (t) => (t.match(/\d[\d.]*/g) ?? []).map((x) => Number(x.replace(/\./g, "")));
+const intl = { integer: new Intl.NumberFormat("vi-VN"), percent: new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 1 }) };
+
+/**
+ * TC-A.8 — Giá trị kỳ vọng tính từ `stats` (kết quả RPC lúc đo) phải có mặt trong bảng nằm NGOÀI cây role="img", từng hàng:
+ * doanh thu từng tháng; tên danh mục + số bản; từng bước phễu + số lượt + tỉ lệ. Ngoài ra mọi chữ có chữ số trong biểu đồ phải có
+ * mặt nguyên văn ở bảng cùng biểu đồ (trừ số tiền rút gọn "1,2tr"/"850k" trên đỉnh cột, được thay bằng số tiền đầy đủ).
+ */
+export function checkChartTables(charts, stats) {
+  const by = Object.fromEntries(charts.map((c) => [c.testid, c]));
+  const rowsOf = (c) => (c?.tables ?? []).flatMap((t) => t.rows);
+  const missing = [];
+  const rev = by["admin-revenue-chart"], cat = by["admin-category-chart"], fun = by["admin-funnel-chart"];
+  const first = stats.funnel.steps[0]?.count ?? 0;
+  for (const m of stats.revenue_by_month) {
+    const label = `T${Number(m.month.slice(5, 7))}/${m.month.slice(0, 4)}`;
+    if (!rowsOf(rev).some((r) => r[0] === label && numsOf(r[1] ?? "").includes(m.revenue))) missing.push(`doanh thu ${label} = ${m.revenue}`);
+  }
+  for (const c of stats.category_sales) if (!rowsOf(cat).some((r) => r[0] === c.name && r[1] === String(c.units))) missing.push(`danh mục ${c.name} = ${c.units}`);
+  const labels = { page_view: "Xem trang sách", search: "Tìm kiếm", add_to_cart: "Thêm vào giỏ", checkout_started: "Bắt đầu thanh toán", order_placed: "Đặt đơn" };
+  for (const st of stats.funnel.steps) {
+    const pct = `${intl.percent.format(first > 0 ? (st.count / first) * 100 : 0)}%`;
+    if (!rowsOf(fun).some((r) => r[0] === labels[st.event_type] && r[1] === intl.integer.format(st.count) && r[2] === pct)) missing.push(`phễu ${st.event_type} = ${st.count} (${pct})`);
+  }
+  // mọi chữ có chữ số của biểu đồ phải có nguyên văn ở bảng cùng biểu đồ
+  const uncovered = [];
+  for (const c of charts) {
+    const outside = rowsOf(c).flat();
+    for (const t of c.tokens) {
+      if (!/\d/.test(t)) continue;
+      if (c.testid === "admin-revenue-chart" && /^\d+(,\d+)?(tr|k)?$/.test(t)) continue; // số tiền rút gọn
+      if (!outside.some((cell) => cell === t || cell.includes(t))) uncovered.push(`${c.testid}: "${t}"`);
+    }
+  }
+  return { charts: charts.length, tables: charts.map((c) => c.tables.length), rows: charts.map((c) => rowsOf(c).length), missing, uncovered };
 }

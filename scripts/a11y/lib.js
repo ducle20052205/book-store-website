@@ -426,6 +426,51 @@
     return { rows };
   }
 
+  // ───────────── chữ giá trị trong ô nhập (6.1) và bảng số liệu của biểu đồ ─────────────
+  /** Chữ GIÁ TRỊ trong ô nhập (không phải nút văn bản nên measureText không thấy): màu chữ kể cả opacity của tổ tiên (ô disabled mờ 60%) hợp lên nền ô. */
+  function measureFields(root) {
+    root = root || document;
+    const rows = [];
+    for (const el of root.querySelectorAll("input:not([type=hidden]):not([type=checkbox]):not([type=radio]),textarea,select")) {
+      if (!visible(el)) continue;
+      const cs = getComputedStyle(el);
+      const col = parseColor(cs.color);
+      const { bg, acc } = effective(el);
+      if (!col) { rows.push({ sel: sel(el), type: el.type, unparsed: true }); continue; }
+      const text = over({ r: col.r, g: col.g, b: col.b, a: col.a * acc }, bg);
+      rows.push({ sel: sel(el), type: el.type, name: el.getAttribute("name"), disabled: el.disabled, readOnly: el.readOnly, hasValue: (el.value || "").length > 0, opacityChain: +acc.toFixed(2), ratio: r2(ratio(text, bg)), fs: parseFloat(cs.fontSize) });
+    }
+    return rows;
+  }
+  /** Phép thử chọn-chữ của một ô nhập: focus, chọn hết, đọc chuỗi đang chọn. Ô disabled không nhận focus nên không chọn được. */
+  function selectProbe(selector) {
+    const el = document.querySelector(selector);
+    if (!el) return null;
+    el.focus();
+    try { el.select(); } catch (e) { /* một số loại ô không có select() */ }
+    return { active: document.activeElement === el, domSelection: document.getSelection().toString(), controlSelection: (el.value || "").substring(el.selectionStart ?? 0, el.selectionEnd ?? 0), valueLength: (el.value || "").length, disabled: el.disabled, readOnly: el.readOnly };
+  }
+  /**
+   * Biểu đồ của /admin: chữ trong biểu đồ (các nút chữ) và, trong cùng <section>, mọi bảng nằm NGOÀI cây role="img"
+   * (từng hàng: các ô). Dùng cho phép kiểm FR-A.8.
+   */
+  function chartTables() {
+    const out = [];
+    for (const c of document.querySelectorAll('[role="img"][data-testid^="admin-"]')) {
+      if (!c.querySelector("svg") && !c.querySelector("ul")) continue;
+      const tokens = [];
+      const w = document.createTreeWalker(c, NodeFilter.SHOW_TEXT);
+      for (let n; (n = w.nextNode()); ) { const t = n.textContent.replace(/\s+/g, " ").trim(); if (t) tokens.push(t); }
+      const section = c.closest("section") || c.parentElement;
+      const tables = [...section.querySelectorAll("table")].filter((t) => !t.closest('[role="img"]'));
+      out.push({
+        testid: c.getAttribute("data-testid"), label: c.getAttribute("aria-label"), tokens,
+        tables: tables.map((t) => ({ testid: t.getAttribute("data-testid"), caption: (t.querySelector("caption") || {}).textContent || null, rows: [...t.querySelectorAll("tr")].map((tr) => [...tr.children].map((x) => x.textContent.replace(/\s+/g, " ").trim())) })),
+      });
+    }
+    return out;
+  }
+
   // ───────────── bố cục và phần tử đang focus (FR-A.1) ─────────────
   /** Kích thước bố cục lúc CHƯA focus gì: dùng để chứng minh một thành phần ẩn không đẩy bố cục một pixel nào. */
   function layoutMetrics() {
@@ -457,7 +502,7 @@
   }
 
   window.__a11y = {
-    layoutMetrics, activeStyle, coverInfo, realText,
+    layoutMetrics, activeStyle, coverInfo, realText, measureFields, selectProbe, chartTables,
     parseColor, ratio, over, hex, effective, visible, label, sel,
     measureText, measurePlaceholders, measureBoundaries, measureLinks, coverOwners, glueCandidates,
     preMain, resetTabStart, activeInfo, interactive, describe, measureSvg, measureCharts,

@@ -24,6 +24,9 @@ node scripts/a11y/run.mjs survey --out=f.jsonl  # 21 route, 36 trạng thái, gh
 node scripts/a11y/run.mjs report f.jsonl        # bảng tóm tắt từ file JSONL
 node scripts/a11y/run.mjs compare truoc.jsonl sau.jsonl   # so hai lượt khảo sát theo từng trạng thái (liên kết bỏ qua, bố cục, placeholder, focus, tên)
 node scripts/a11y/run.mjs chang2 t1.jsonl t2.jsonl s1.jsonl s2.jsonl   # chặng 2: tổng hợp hai lượt trước + hai lượt sau (tên liên kết chứa bìa, chữ dính, liên kết giữa câu, A11Y-14)
+node scripts/a11y/run.mjs cartslot [--runs=5 --kbps=60]   # slot giỏ hàng của header lúc fallback và lúc ổn định (băng thông bị giới hạn): focus có mất không, tên, bề rộng, CLS
+node scripts/a11y/run.mjs charts                # FR-A.8: bảng số liệu của 3 biểu đồ /admin so với RPC lúc đo, đối chứng xoá một hàng
+node scripts/a11y/run.mjs chang3 t.jsonl s1.jsonl s2.jsonl   # chặng 3: tiêu đề, ô email chỉ đọc, bảng biểu đồ, không hồi quy
 node scripts/a11y/run.mjs keyboard              # Enter mở, Escape đóng, focus về nút: CategoryNav và AccountMenu
 ```
 
@@ -56,7 +59,7 @@ là nút văn bản trực tiếp. Liên kết có chữ cùng khối nhưng kh�
 ## Đối chứng (`control`)
 
 Mỗi phép đo có một ca PHẢI BẮT và một ca PHẢI KHÔNG BẮT, chèn vào DOM trong bộ nhớ của `/dang-nhap`, so số đo với số tính độc lập
-bên Node (`common.mjs`). Hiện 29 ca (27 ca luôn chạy; 2 ca D2 "gỡ liên kết bỏ qua" chỉ chạy khi trang đã có liên kết `#noi-dung`, trước đó ghi là bỏ qua và không tính là đạt). Một ca trượt nghĩa là **phép đo hỏng**, không phải trang có lỗi.
+bên Node (`common.mjs`). Hiện 37 ca (35 ca luôn chạy; 2 ca D2 "gỡ liên kết bỏ qua" chỉ chạy khi trang đã có liên kết `#noi-dung`, trước đó ghi là bỏ qua và không tính là đạt). Một ca trượt nghĩa là **phép đo hỏng**, không phải trang có lỗi.
 
 Hai bài học nằm trong các ca này:
 

@@ -5,6 +5,7 @@
 import { sleep } from "./cdp.mjs";
 import { BASE, blend, ratioHex, ratioRgb, rgbOf } from "./common.mjs";
 import { coverNames, glueChecked, tabStopsBeforeMain } from "./measure.mjs";
+import { runChang3Controls } from "./controls-chang3.mjs";
 import { runCoverControls } from "./controls-cover.mjs";
 import { runNavControls } from "./controls-nav.mjs";
 
@@ -121,5 +122,7 @@ export async function runControls(b, lib) {
   // ───── chặng 2: điều kiện miễn trừ A11Y-14 ─────
   await b.goto(`${BASE}/dang-nhap`);
   res.push(...(await runCoverControls(b, lib, inject)));
+  // ───── chặng 3: chọn-chữ của ô nhập, kiểm bảng số liệu biểu đồ ─────
+  res.push(...(await runChang3Controls(b, lib, inject)));
   return res;
 }

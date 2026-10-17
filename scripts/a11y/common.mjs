@@ -6,6 +6,7 @@ export const API_URL = process.env.API_URL ?? "http://127.0.0.1:54321";
 export const SECRET_KEY = process.env.SECRET_KEY ?? "";
 const DOCKER = process.env.DOCKER_BIN ?? "docker";
 const DB_CONTAINER = process.env.DB_CONTAINER ?? "supabase_db_book-store-website";
+export const ANON_KEY = process.env.ANON_KEY ?? "";
 export const USER_EMAIL = process.env.A11Y_USER ?? "nguoi-dung-01@example.com";
 export const ADMIN_EMAIL = process.env.A11Y_ADMIN ?? "admin-demo@example.com";
 
@@ -57,4 +58,18 @@ export function countTitles(name, titles) {
     if (n) found[t] = n;
   }
   return found;
+}
+
+/**
+ * Gọi RPC `admin_dashboard_stats` bằng phiên admin (liên kết recovery của Auth cục bộ đổi lấy token), tức CÙNG nguồn mà trang
+ * /admin dùng. Dùng để tính giá trị kỳ vọng của biểu đồ TỪ DỮ LIỆU LÚC ĐO thay vì ghi cứng (spec mục 0.6 luật 4).
+ */
+export async function fetchAdminStats() {
+  const h = { apikey: SECRET_KEY, Authorization: `Bearer ${SECRET_KEY}`, "Content-Type": "application/json" };
+  const link = await (await fetch(`${API_URL}/auth/v1/admin/generate_link`, { method: "POST", headers: h, body: JSON.stringify({ type: "recovery", email: ADMIN_EMAIL }) })).json();
+  const session = await (await fetch(`${API_URL}/auth/v1/verify`, { method: "POST", headers: { apikey: ANON_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ type: "recovery", token_hash: link.hashed_token }) })).json();
+  if (!session.access_token) throw new Error("không đổi được token admin");
+  const r = await fetch(`${API_URL}/rest/v1/rpc/admin_dashboard_stats`, { method: "POST", headers: { apikey: ANON_KEY, Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" }, body: "{}" });
+  if (!r.ok) throw new Error(`RPC trả ${r.status}`);
+  return r.json();
 }
