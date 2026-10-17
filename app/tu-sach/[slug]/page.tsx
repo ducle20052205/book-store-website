@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BookCard } from "@/components/BookCard";
 import { EditorNoteConnector } from "@/components/EditorNoteConnector";
@@ -20,6 +21,18 @@ export async function generateStaticParams() {
 // Bọc trong <Suspense> thì shell đã gửi đi với mã 200 trước khi biết slug có
 // tồn tại không — đã đo: trước đợt này slug lạ trả 404, bản Suspense trả 200.
 export const instant = false;
+
+// FR-A.6 (A11Y-22): tiêu đề riêng cho từng tủ sách; trước đó cả ba tủ dùng chung "NA Books" của layout gốc.
+export async function generateMetadata({ params }: PageProps<"/tu-sach/[slug]">): Promise<Metadata> {
+  const { slug } = await params;
+  const collection = await getCollectionBySlug(slug);
+  if (!collection) notFound();
+
+  return {
+    title: `${collection.title} — Tủ sách | NA Books`,
+    description: collection.description ? collection.description.slice(0, 160) : undefined,
+  };
+}
 
 export default async function CollectionDetailPage({ params }: PageProps<"/tu-sach/[slug]">) {
   const { slug } = await params;

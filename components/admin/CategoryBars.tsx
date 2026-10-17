@@ -22,23 +22,48 @@ export function CategoryBars({ categories }: { categories: { slug: string; name:
   const label = `Số bản đã bán theo danh mục cha, tổng ${total} bản. Nhiều nhất: ${top.name}, ${top.units} bản. ${categories.map((c) => `${c.name} ${c.units}`).join("; ")}.`;
 
   return (
-    <div role="img" aria-label={label} data-testid="admin-category-chart" className={`${cardClass} p-4 md:p-6`}>
-      <ul className="flex flex-col gap-2">
-        {categories.map((c) => {
-          const pct = max > 0 ? (c.units / max) * 100 : 0;
-          return (
-            <li key={c.slug} className="flex h-10 items-center">
-              <span className="w-[100px] shrink-0 pr-2 text-[13px] leading-[1.25] text-ink-900 md:w-[140px]">{c.name}</span>
-              <svg aria-hidden="true" className="mr-12 block h-4 min-w-0 flex-1 overflow-visible">
-                <rect x="0" y="0" width={`${pct}%`} height="16" rx="2" className={FILL[c.slug] ?? "fill-cham-700"} />
-                <text x={`${pct}%`} dx="8" y="12" fontSize="12" className="fill-ink-900">
-                  {c.units}
-                </text>
-              </svg>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    <>
+      <div role="img" aria-label={label} data-testid="admin-category-chart" className={`${cardClass} p-4 md:p-6`}>
+        <ul className="flex flex-col gap-2">
+          {categories.map((c) => {
+            const pct = max > 0 ? (c.units / max) * 100 : 0;
+            return (
+              <li key={c.slug} className="flex h-10 items-center">
+                <span className="w-[100px] shrink-0 pr-2 text-[13px] leading-[1.25] text-ink-900 md:w-[140px]">{c.name}</span>
+                <svg aria-hidden="true" className="mr-12 block h-4 min-w-0 flex-1 overflow-visible">
+                  <rect x="0" y="0" width={`${pct}%`} height="16" rx="2" className={FILL[c.slug] ?? "fill-cham-700"} />
+                  <text x={`${pct}%`} dx="8" y="12" fontSize="12" className="fill-ink-900">
+                    {c.units}
+                  </text>
+                </svg>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      {/*
+       * FR-A.8 (A11Y-23): bảng số liệu bằng chữ cho công nghệ hỗ trợ, đặt NGOÀI cây role="img". Phần tử role="img" coi con của nó là
+       * trình bày thuần, nên chữ trong biểu đồ có thể không được đọc dù có trong cây accessibility; bảng này luôn đọc được và
+       * điều hướng được theo hàng/cột. Dùng sr-only (không phải bảng nhìn thấy): người nhìn đã đọc mọi giá trị ngay trên biểu đồ
+       * (mỗi cột có số), bảng hiện thêm sẽ lặp nội dung và đổi bố cục của hệ layout đóng băng. sr-only là absolute, không chiếm chỗ.
+       */}
+      <table data-testid="admin-category-table" className="sr-only">
+        <caption>Số bản đã bán theo danh mục cha, bảng số liệu</caption>
+        <thead>
+          <tr>
+            <th scope="col">Danh mục</th>
+            <th scope="col">Số bản đã bán</th>
+          </tr>
+        </thead>
+        <tbody>
+          {categories.map((c) => (
+            <tr key={c.slug}>
+              <th scope="row">{c.name}</th>
+              <td>{c.units}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
   );
 }

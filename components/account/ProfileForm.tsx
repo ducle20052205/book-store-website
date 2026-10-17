@@ -25,7 +25,7 @@ const sectionTitleClass = "font-serif text-xl font-semibold text-ink-900";
 /**
  * Hai thẻ đầu của trang hồ sơ (đợt 8, FR-A.4): "Thông tin cá nhân" và "Địa chỉ giao hàng", MỘT form, MỘT nút lưu.
  *
- * - Email hiện ở dạng CHỈ ĐỌC (`disabled`): đổi email kéo theo xác minh địa chỉ mới và đồng bộ `profiles.email`, ngoài
+ * - Email hiện ở dạng CHỈ ĐỌC (`readOnly`, không `disabled`: ô `disabled` bị mờ 60% nên chữ email chỉ còn 4,45:1, không chọn và không copy được — A11Y-21): đổi email kéo theo xác minh địa chỉ mới và đồng bộ `profiles.email`, ngoài
  *   phạm vi đợt này (spec mục 6.4). Form không gửi email lên.
  * - Ba trường địa chỉ cùng trống hoặc cùng có giá trị (khoá ngoại ghép `MATCH FULL`, FR-5.8): luật nằm ở
  *   lib/account/profileRules.ts, dùng chung với Server Action; form báo lỗi ở từng ô thiếu, không để lưu nửa vời.
@@ -164,7 +164,7 @@ export function ProfileForm({
             label="Email"
             type="email"
             value={initial.email}
-            disabled
+            readOnly
             hint="Email dùng để đăng nhập. Đợt này chúng mình chưa cho đổi email."
             onChange={() => {}}
           />
