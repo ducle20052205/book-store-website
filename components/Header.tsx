@@ -20,8 +20,8 @@ interface HeaderViewProps {
   categories: CategoryNode[];
   /** Mục "Đăng nhập" hoặc menu "Tài khoản" — Header truyền vào một <Suspense>, xem bên dưới. */
   accountItem: ReactNode;
-  /** Liên kết giỏ hàng kèm badge số lượng — Header truyền vào một slot có <Suspense> RIÊNG, xem Header(). */
-  cartLink: ReactNode;
+  /** Tên khả truy cập + badge số lượng của liên kết giỏ hàng — Header truyền vào một slot có <Suspense> RIÊNG, xem Header(). */
+  cartSlot: ReactNode;
 }
 
 /** Mục "Đăng nhập" — CHỈ là trạng thái chưa đăng nhập thật (fallback là AccountFallback). */
@@ -56,7 +56,7 @@ function AccountFallback() {
  * mục — "Đăng nhập" hoặc "Tài khoản", và "Giỏ hàng" (đã gỡ mục "Yêu thích" vì
  * trang đó chưa tồn tại).
  */
-export function HeaderView({ categories, accountItem, cartLink }: HeaderViewProps) {
+export function HeaderView({ categories, accountItem, cartSlot }: HeaderViewProps) {
   return (
     <HeaderShell
       topbar={
@@ -99,7 +99,16 @@ export function HeaderView({ categories, accountItem, cartLink }: HeaderViewProp
           >
             {accountItem}
 
-            {cartLink}
+            {/*
+              Liên kết giỏ hàng đứng NGOÀI boundary (không bị React thay node khi boundary ổn định, nên focus không mất và
+              không có liên kết focusable nào bị dựng lại giữa chừng). Tên đến từ một span sr-only NẰM TRONG boundary qua
+              aria-labelledby: một text run trong một phần tử, nên trình duyệt không có chỗ ghép để chèn dấu cách.
+            */}
+            <Link href="/gio-hang" aria-labelledby={CART_NAME_ID} className={`relative ${navItemClass}`}>
+              <BagIcon className={navIconClass} />
+              <span className="sr-only sm:not-sr-only">Giỏ hàng</span>
+              {cartSlot}
+            </Link>
           </nav>
         </div>
       }
@@ -151,27 +160,26 @@ async function AccountItem() {
   );
 }
 
+const CART_NAME_ID = "header-cart-name";
+
 /**
- * Badge số lượng giỏ hàng (đợt 3A, FR-3A.4): render phía server từ cookie `na_cart`
- * (khách) hoặc bảng `cart_items` (đã đăng nhập), nên số trong HTML đầu đã đúng. Đọc
- * cookie nên nằm sau <Suspense> RIÊNG, tách khỏi slot auth — hai boundary độc lập.
- * Giỏ rỗng thì không hiện gì.
+ * Tên khả truy cập và badge số lượng giỏ hàng (đợt 3A, FR-3A.4): render phía server từ cookie `na_cart` (khách) hoặc bảng
+ * `cart_items` (đã đăng nhập), nên số trong HTML đầu đã đúng. Đọc cookie nên nằm sau <Suspense> RIÊNG, tách khỏi slot auth —
+ * hai boundary độc lập. Giỏ rỗng thì không có badge.
  *
- * Đợt sửa accessibility (FR-A.2c, A11Y-09): cả `<Link>` nằm trong boundary đó, không chỉ badge, vì tên khả truy cập chỉ
- * đặt đúng được ở cấp liên kết. Ghép từ các <span> con cho ra "Giỏ hàng , 2 sản phẩm": trình duyệt chèn dấu cách trước mọi
- * hộp không phải inline thuần (phần tử sr-only là absolute, con của flex container cũng bị khối hoá), nên khoảng trắng JSX
- * không phải nguyên nhân và không sửa được ở đó. `aria-label` cho đúng "Giỏ hàng, 2 sản phẩm"; chữ nhìn thấy "Giỏ hàng"
- * (từ sm) vẫn là phần đầu của tên (WCAG 2.5.3). `count` = 0 khi chưa biết (fallback) hoặc giỏ rỗng: không badge, không nhãn.
+ * Đợt sửa accessibility (FR-A.2c, A11Y-09): tên đúng là "Giỏ hàng, N sản phẩm". Khoảng trắng JSX không phải nguyên nhân của
+ * "Giỏ hàng , 2 sản phẩm": trình duyệt chèn dấu cách trước mọi hộp không phải inline thuần (phần tử sr-only là absolute, con
+ * của flex container cũng bị khối hoá), nên ghép tên từ nhiều <span> không bao giờ ra đúng. Vì vậy cả chuỗi tên nằm trong MỘT
+ * span (một text run) mà liên kết trỏ tới bằng aria-labelledby. Liên kết đứng ngoài boundary, nên người dùng bàn phím bấm Tab
+ * trúng cửa sổ streaming không mất focus (React không thay node liên kết). `count` = 0 khi chưa biết (fallback) hoặc giỏ rỗng:
+ * tên chỉ là "Giỏ hàng", không badge. Chữ nhìn thấy "Giỏ hàng" (từ sm) vẫn là phần đầu của tên (WCAG 2.5.3).
  */
-function CartLink({ count }: { count: number }) {
+function CartSlot({ count }: { count: number }) {
   return (
-    <Link
-      href="/gio-hang"
-      aria-label={count > 0 ? `Giỏ hàng, ${count} sản phẩm` : undefined}
-      className={`relative ${navItemClass}`}
-    >
-      <BagIcon className={navIconClass} />
-      <span className="sr-only sm:not-sr-only">Giỏ hàng</span>
+    <>
+      <span id={CART_NAME_ID} className="sr-only">
+        {count > 0 ? `Giỏ hàng, ${count} sản phẩm` : "Giỏ hàng"}
+      </span>
       {/* Phần tử bọc cố định 20×20px, KHÔNG chứa số khi chưa biết giỏ (fallback): thà chưa có thông tin còn hơn hiện "0"
           sai (nguyên tắc 2B.2). Tuyệt đối vị trí nên không đổi bố cục. */}
       <span
@@ -187,12 +195,12 @@ function CartLink({ count }: { count: number }) {
           </span>
         )}
       </span>
-    </Link>
+    </>
   );
 }
 
-async function CartLinkLive() {
-  return <CartLink count={await getCartCount()} />;
+async function CartSlotLive() {
+  return <CartSlot count={await getCartCount()} />;
 }
 
 /**
@@ -215,9 +223,9 @@ export async function Header() {
   return (
     <HeaderView
       categories={categories}
-      cartLink={
-        <Suspense fallback={<CartLink count={0} />}>
-          <CartLinkLive />
+      cartSlot={
+        <Suspense fallback={<CartSlot count={0} />}>
+          <CartSlotLive />
         </Suspense>
       }
       accountItem={
