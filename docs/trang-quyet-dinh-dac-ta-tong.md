@@ -6,7 +6,7 @@
 >
 > **Hướng đồng bộ — một chiều, chốt 07/10/2026.** **Repo là bản gốc của MỌI mục.** Claude Code ghi thẳng vào `docs/trang-quyet-dinh-dac-ta-tong.md`, kể cả mục 1–6, 8, 9; quyết định chốt trong chat đi vào repo qua prompt đóng đợt, không ai sửa tay bản Project knowledge. Bản trong Claude.ai Project được **sinh lại từ repo** sau mỗi đợt, bằng cách thay mục 7 bằng stub — không bao giờ sửa tay. Luật cũ (Project knowledge là bản gốc của mục 1–6, 8, 9) đã làm hai bản trôi khỏi nhau hai lần trong hai ngày (06/10 và 07/10), vì bên sửa được bản này thì không sửa được bản kia. **`docs/SRS.md` chỉ nằm ở repo** — Project knowledge không giữ bản sao nào. Bản sao ở đó không có chủ sở hữu và đã lệch thật (v1.3 trong Project knowledge so với v1.5 trong repo, phát hiện 02/10). Cần đọc SRS thì gắn repo vào chat và đọc `docs/SRS.md`.
 >
-> **Cập nhật lần cuối:** 07/10/2026
+> **Cập nhật lần cuối:** 17/10/2026
 > **Nguồn chân lý:** repo `github.com/ducle20052205/book-store-website`. Các file `docs/SRS.md`, `docs/specs/*`, `CLAUDE.md` trong repo là bản gốc; file này là bản tóm tắt cấp quyết định.
 
 ## 1. Bối cảnh & mục tiêu (đã chốt)
@@ -30,6 +30,7 @@
 - **Tên: NA Books.** "NA" là viết tắt của Ngọc Anh.
 - **Màu:** chàm `#26306B` (`cham-700`) chủ đạo; chàm đậm `#171D40` (`cham-900`) cho footer và khối editorial; vàng nghệ `#D9A33A` chỉ dùng cho badge; giá khuyến mãi `#BD3125` (`sale`); nền trang `#EDE6D9` (`paper`), nền thẻ trắng (`surface`) để tạo lớp phân tách; chữ `#1A1C2E` (`ink-900`), chữ phụ `#5F6379` (`ink-400`); `success` `#266E48`.
 - **Màu bổ sung từ đợt 2A/2B:** viền ô nhập `#9E8E70` (`line-field`) — chọn vì đạt 3,203:1 trên nền trắng, thỏa WCAG 1.4.11 Non-text Contrast; bản `#CFC7B8` cũ chỉ 1,68:1 và `#A29376` 3,01:1 là quá sát ngưỡng. Nền phụ `#F6F2E9`, nền chọn `#F4F2F8`, danger `#C2362B`.
+- **Màu placeholder (đợt sửa accessibility, 17/10/2026): không thêm token.** `inputClass` đặt tường minh `placeholder:text-ink-400` (5,92:1 trên nền ô trắng); màu mặc định của preflight Tailwind v4 là 50% `currentcolor`, chỉ 3,3:1 (A11Y-01).
 - **Màu danh mục:** 5 danh mục cha mỗi danh mục một màu lấy từ bảng 12 màu bìa, dùng nhất quán ở thẻ "Khám phá theo danh mục" và dải màu dưới tiêu đề trang catalog.
 - **Hiện diện màu:** cuộn tới bất kỳ vị trí nào trên trang chủ và trang catalog đều phải thấy ít nhất một thành phần màu chàm (vạch 3px bên trái tiêu đề section, tab đang chọn, phân trang, link).
 - **Font:** Newsreader cho tiêu đề và tên sách (thay Lora từ đợt E), Be Vietnam Pro cho giao diện. Serif chỉ dùng từ 18px trở lên. Bắt buộc subset `vietnamese`. Chữ nghiêng chỉ từ 18px và tối đa 3 dòng. Line-height của chữ display tối thiểu 1.15 để không cắt dấu tiếng Việt.
@@ -181,7 +182,7 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 - **Tài khoản thử trên hosted phải xoá sau mỗi đợt kiểm** (tiêu chí dọn dẹp). Quy trình: SELECT trước và in ra, xoá `events` của tài khoản đó trước (khoá ngoại NO ACTION), rồi xoá `auth.users` bằng id tường minh trong một transaction có chốt số dòng.
 - **Ảnh mockup phải là bản xuất từ canvas ở 2×, không phải ảnh chụp màn hình** — ảnh chụp mang theo giao diện công cụ, không đạt chuẩn cho repo public. Lưu ở `docs/mockups/buoc-N/`, kèm README ghi quyết định thiết kế và phạm vi.
 
-## 7. Tiến độ (07/10/2026)
+## 7. Tiến độ (17/10/2026)
 
 | Hạng mục | Trạng thái |
 |---|---|
@@ -203,13 +204,14 @@ Thiếu bất kỳ bước nào là chưa xong. Thừa gì ngoài danh sách nà
 | Đợt 5A chặng 1: trigger trạng thái đơn và cộng trả kho trong database | Xong, đã merge (PR #17, `35a7f32`); migration `20261003063859` đã áp lên hosted ngày 03/10/2026 |
 | Đợt 5A chặng 2: danh sách đơn, chi tiết đơn, đổi trạng thái (khu quản trị) | Xong, đã merge (PR #18, `3fc5c52`); 1 lần đổi trạng thái thật trên production ngày 03/10/2026 |
 | Đợt N+1: chữa chuỗi truy vấn tuần tự ở trang chủ | Xong, đã merge (PR #19, `424e96f`); không áp gì lên hosted |
-| Rà soát accessibility (một lần đo, không phải đợt sửa) | Xong: 23 phát hiện, 9 đóng, 14 mở (3 Trung bình, 11 Thấp, 0 Cao); `docs/specs/dot-accessibility-ra-soat.md` bản 1.4 (`f796d05`: đo thêm 12 route chưa đo, chỉ ở 1280px, không đo NFR-6.2 và 390px; A11Y-23 chưa kết luận); bản 1.3 (`7cfe9ff`); SRS lên 1.9 (`2580589`) |
+| Rà soát accessibility (một lần đo, không phải đợt sửa) | Xong: 23 phát hiện; trạng thái SAU đợt sửa (bản 1.5): 17 đóng, 6 mở (1 Trung bình, 5 Thấp, 0 Cao); trước đợt sửa (bản 1.4): 9 đóng, 14 mở. `docs/specs/dot-accessibility-ra-soat.md` bản 1.5; bản 1.4 (`f796d05`: đo thêm 12 route chưa đo, chỉ ở 1280px, không đo NFR-6.2 và 390px; A11Y-23 chưa kết luận); bản 1.3 (`7cfe9ff`); SRS lên 1.9 (`2580589`) |
 | Đợt 5B chặng 1: ràng buộc dữ liệu cho `books` (ba CHECK, CHECK slug, hai `NOT NULL`) | Xong, đã merge (PR #21, `4b08d44`); migration `20261004090859` đã áp lên hosted ngày 04/10/2026 |
 | Đợt 5B chặng 2: quản lý sách (`/admin/sach*`, form thêm/sửa, xoá có chặn) và làm mới cache bằng `updateTag` | PR #22 (commit mã `b491dee`); merge `622ea35`; 108 phép kiểm cục bộ (không tính TC-15), 15/15 lượt trên Vercel preview và 6/6 lượt trên production (nút "Đặt tồn kho về 0" chỉ kiểm ở cục bộ và preview), xem 7.10 |
 | Đợt seed dữ liệu demo (25 tài khoản, 42 đơn, 1.897 sự kiện) | Xong, đã merge (PR #23, `6257f0e`); 9/10 tiêu chí đạt, TC-S.10 trượt và giữ nguyên là trượt; đã chạy lên hosted ngày 07/10/2026, xem 7.11 |
 | Đợt 6: dashboard thống kê (`/admin`, RPC `admin_dashboard_stats()`, mục "Khu quản trị" trong menu) | Xong, đã merge (PR #24, `8e43c16`); 10 tiêu chí đo trên cục bộ, hai phép đo yếu hơn tiêu chí gốc (TC-D.3, CLS), xem 7.12 |
 | Đợt 7: README cho nhà tuyển dụng | Xong, đã merge (PR #25, `eaddf67`); 6/6 tiêu chí đạt (TC-R.6 theo spec v1.1), xem 7.13 |
 | Đợt 8: tài khoản hoàn chỉnh (quên/đặt lại mật khẩu, `/tai-khoan`, đổi mật khẩu) | Xong, đã merge (PR #26, `8e54621`); 10 tiêu chí TC-A, TC-A.8 đo bằng phép thay thế, chín chỗ lệch spec, xem 7.14 |
+| Đợt sửa accessibility (8 FR, 10 tiêu chí, 4 chặng) | Xong trên nhánh `fix/accessibility`; PR mở 17/10/2026, chưa merge (số PR ghi khi merge). 8 phát hiện đóng, 14 → 6 còn mở; xem 7.15 |
 | 5C scenario Make.com · Chatbot | Chưa bắt đầu, chưa xếp đợt (admin đơn hàng xong ở 5A, admin sách ở 5B) |
 | README cho nhà tuyển dụng · Logo | Xong một phần: README xong ở đợt 7 (PR #25, `eaddf67`); Logo chưa bắt đầu |
 
@@ -781,6 +783,31 @@ Spec `docs/specs/dot-8-tai-khoan-hoan-chinh.md` v1.1 (FR-A.1 → FR-A.7, TC-A.1 
 
 **Ghi nhận — địa chỉ email tác giả commit.** Trong 15 commit gần nhất của `main`, email tác giả gồm hai địa chỉ cá nhân: một địa chỉ email trường học (10 commit) và một địa chỉ Gmail (5 commit); số đếm 07/10/2026 bằng `git log main -15`. Điều này va vào luật "email cá nhân không bao giờ được commit". **Quyết định 07/10/2026:** chặn từ nay bằng tuỳ chọn "Keep my email addresses private" của GitHub; **KHÔNG viết lại lịch sử**, vì mục 7 tham chiếu theo hash commit và rewrite làm hỏng chính sổ đo. **Vì sao lọt:** luật được áp cho NỘI DUNG FILE (grep `gmail.com` trước khi commit thư mục tài liệu), không ai kiểm phần tác giả của commit. Mục này cố ý không chép địa chỉ nguyên văn, để tài liệu không lặp lại đúng điều nó ghi nhận. Số đếm thêm trên toàn bộ lịch sử `main` (125 commit, đếm 07/10/2026): 97 commit mang địa chỉ email trường học, 28 mang địa chỉ Gmail.
 
+### 7.15 Đợt sửa accessibility (16–17/10/2026)
+
+Spec `docs/specs/dot-accessibility-sua.md` bản 1.3 (8 FR: FR-A.1 → FR-A.8; 10 tiêu chí: TC-A.1 → TC-A.10; 4 chặng) và `docs/specs/dot-accessibility-ra-soat.md` bản 1.5 (hồ sơ phát hiện và số đo sửa lại). Nhánh `fix/accessibility`, PR mở 17/10/2026, **chưa merge**. Mã: chặng 1 `4bb138d`, chặng 2 `78b3bfb`, sửa cấu trúc liên kết giỏ hàng `b3eb0f9`, chặng 3 `5defe08`. Bộ đo vào repo ở `scripts/a11y/` (`24b1af2`, `72c257c`, `05ae3a7`, `05bdb6b`, `7f95842`; có README). Spec: `9e2bb62` (1.0), `9f1002e` (1.1), `9e5c611` (1.2), `bfb530c` (1.3).
+
+**Điều kiện đo:** stack Supabase cục bộ (127.0.0.1), bản production (`next build` rồi `next start`, cổng 3100), Edge headless qua CDP, dữ liệu seed demo, **chỉ 1280×900** (mobile tạm dừng: không 390px, không NFR-6.2). Phiên đăng nhập cấp bằng liên kết `recovery` của Auth cục bộ, không cần mật khẩu seed. Khảo sát 39 trạng thái của 21 route cộng `/_not-found`, hai lượt mỗi nhánh cho các tiêu chí chặng 2 và chặng 4.
+
+| Tiêu chí | Kết quả (trước → sau) |
+|---|---|
+| TC-A.1 liên kết bỏ qua | số lần `Tab` CẦN để tới `<main>` 8 (9 ở `/?chao=1`, `/?mk=1`) → **1** ở 36/36; Enter đưa focus vào `<main>` 36/36; số điểm dừng theo DOM *tăng* 8→9 (liên kết là điểm dừng mới); bố cục lúc chưa focus giống hệt 36/36; đối chứng gỡ liên kết → 8 và 9 |
+| TC-A.2 tên liên kết chứa bìa | tên lặp 62/66 → **0/66**; chữ dính 39 → **0**; tên giỏ hàng chứa " ," 10 trạng thái → **0**. Số liệu, không phải cổng: > 90 ký tự 34 → 9, dài nhất 320 → 308, trung vị 93 → 74 |
+| TC-A.3 gạch chân liên kết giữa câu | vi phạm 11 lượt (7 duy nhất) → **0** (5 chỗ mã, một chỗ do quét phát hiện thêm); 9 liên kết đối chiếu bản 1.4: 0 vi phạm; điểm mù `AuthAlert.tsx:39`: 1,00:1 nhưng có gạch chân, không sửa |
+| TC-A.4 màu placeholder | 16 lượt ở 3,3:1 → **0/59** dưới 4,5:1; đối chứng theo nguyên nhân (ô thật ăn màu mặc định) bị bắt trước, không bị bắt sau |
+| TC-A.5 `aria-haspopup` | 2 → **0** dòng; bàn phím Enter mở / Escape đóng và trả focus: 2/2 → 2/2 |
+| TC-A.6 `<title>` | 21 route cộng `/_not-found` đều có; 3 tủ sách có tiêu đề riêng (trước: cùng "NA Books"); **6** route admin giữ "NA Books" (A11Y-13); tủ sách lạ vẫn 404 |
+| TC-A.7 ô email chỉ đọc | chữ giá trị 4,45 → **16,81:1** (3/3 trạng thái); `select()` chọn 0/25 → 25/25 ký tự; bằng chuột 25/25 ở cả `disabled` và `readOnly` (Edge 154) |
+| TC-A.8 bảng số liệu biểu đồ | 0 → **17/17** giá trị có ở chữ ngoài `role="img"` (giá trị kỳ vọng tính từ RPC lúc đo); 3 bảng `sr-only`; 0/20 hàng dính chữ; đối chứng xoá hàng báo thiếu đúng giá trị |
+| TC-A.9 không hồi quy | 6.1: 3.049 nút chữ, 0 vi phạm hoạt động (4 dấu `“` trang trí); 6.3: 0 thiếu chỉ báo focus, 0 dưới 3:1 (yếu nhất 7,14:1); 6.4: 0 `<svg>` thiếu `aria-hidden`, 0/1.937 phần tử tương tác không tên; NFR-6.7: 68 cặp, 3 cặp trong 4,5–5,0:1 (đúng ba cặp A11Y-04); A11Y-14: 161 bìa, **0 trượt (a)**, 0/96 trượt (b); đối chứng bộ đo 39/39; 2 lượt giống hệt 39/39 |
+| TC-A.10 tài liệu | lệnh (1) 4 → **0** dòng; lệnh (2) `wsl --shutdown` trong runbook 0 → **1** |
+
+**Số đo của bản 1.4 phải sửa lại** (chi tiết ở `dot-accessibility-ra-soat.md` mục 3.3.1): placeholder "20 lượt, 0 vi phạm" → 54 lượt đo được với 16 lượt ở 3,3:1 (bộ đo cũ bỏ qua màu `oklab()` rồi `continue`); nút chữ 1.018 → 1.176; nút dưới 12px 0 → 11 (dòng tác giả trên bìa, nhóm A11Y-14 đã miễn trừ). Kết luận 6.1 và 9 liên kết giữa câu không đổi.
+
+**Còn mở sau đợt (6):** A11Y-05 (Trung bình), A11Y-03, 04, 06, 12, 13 (Thấp); không có Cao. A11Y-23 đóng ở trạng thái "đã sửa, chưa kết luận nó có phải vi phạm". **Chưa làm, để đợt sau:** `read-only:bg-field` cho ô email (chủ dự án chưa trả lời), CLS 0,097–0,100 ở băng thông 60 KB/s (NFR-3.6, không do đợt này), và toàn bộ phép đo mobile (390px, NFR-6.2, 12 route của bản 1.4).
+
+**Chỗ lệch spec/prompt đã ghi (không chép lại, xem spec mục 0.7):** chẩn đoán "khoảng trắng JSX" của liên kết giỏ hàng sai (chỉ `aria-label`/`aria-labelledby` cho tên đúng); cấu trúc `aria-label` trong Suspense có fallback focusable, 0/5 giữ focus, sửa lại thành 5/5; "4 route admin" thực ra 6; phễu "trôi" 360→361 là 5 sự kiện của chính lượt đo; quy tắc điều kiện (a) của A11Y-14 phải mở rộng hai bước mới đo được bìa xem trước của form admin.
+
 ## 8. Bài học đã rút ra (giữ lại để không lặp)
 
 **Về tiêu chí nghiệm thu**
@@ -869,6 +896,15 @@ Spec `docs/specs/dot-8-tai-khoan-hoan-chinh.md` v1.1 (FR-A.1 → FR-A.7, TC-A.1 
 - **Một bất biến đo được chọn cho đợt chỉ-đọc sẽ sai ở đợt có ghi.** Bất biến phải chọn theo việc sắp làm, không bê nguyên từ đợt trước. Ví dụ: `xmin` lớn nhất của `books` là bất biến đúng khi đo cache ở 5B, nhưng sai ở đợt seed vì `place_order` có `UPDATE books`.
 - **Trigger `BEFORE UPDATE` trên `orders` không chạy khi `DELETE`.** Xoá một đơn đã trừ kho sẽ không cộng trả, và đơn `completed` không chuyển sang `cancelled` được. Mọi kịch bản dọn dẹp đụng tới `orders` phải tính tồn kho riêng.
 
+**Từ đợt sửa accessibility (17/10/2026)**
+
+- **Một phát hiện mô tả NƠI NÓ ĐƯỢC ĐO, không phải nơi khuyết tật nằm.** A11Y-07 chỉ nêu nút "Tài khoản" trong khi `CategoryNav` có mã y hệt; A11Y-01 nêu một `textarea` trong khi nguyên nhân ở `inputClass`; "4 route admin" thực ra là 6. Giao việc theo nguyên nhân trong mã và quét toàn site.
+- **Đối chứng phải dựng từ NGUYÊN NHÂN NGHI NGỜ, không từ ngưỡng.** Hai ca placeholder hex tường minh (`#949494`, `#5F6379`) bộ đo cũ vượt cả hai trong khi vẫn bỏ sót mọi ô ăn màu mặc định (`oklab()`): 15 lượt 3,3:1 ở admin biến mất khỏi "20 lượt, 0 vi phạm". Nhánh đo không đọc được thì phải đếm, không được `continue` âm thầm.
+- **Một con số đếm trong repo có thể bị chính hành động của đợt làm sai.** Kỳ vọng "4 dòng" của lệnh `grep` thành 7 ngay khi file spec được viết (nó chứa cả cụm tìm lẫn câu lệnh). Tiêu chí dạng đếm đo SAU KHI mọi file đã có mặt; cổng quét cả repo tự loại trừ tài liệu của chính đợt.
+- **Không ghi cứng con số do dữ liệu sinh ra — vì chính lượt đo làm đổi dữ liệu, và thứ tự trạng thái quyết định ai nhiễm ai.** Phễu `/admin` "360/150/60" thành "361/150/61": 5 sự kiện của chính lượt đo, vì admin được khảo sát sau phần ẩn danh và khách; hàm không lọc thời gian nên giả thuyết "trôi theo thời gian" sai. Đo trạng thái đọc số tích luỹ TRƯỚC trạng thái sinh ra số đó; mốc dữ liệu kèm phân tách theo loại, không chỉ tổng.
+- **Phép thao tác hoá của một điều kiện có thể hẹp hơn chính điều kiện.** "Không được là nơi duy nhất mang thông tin" bị đo chỉ bằng text node nên không thấy giá trị ô nhập và chấm trượt bìa xem trước của form admin. Khi phép đo và điều kiện lệch nhau, sửa phép đo trước khi kết luận mã sai — và nói rõ phần nào của bản sửa là phán đoán.
+- **Một tiêu chí viết từ hành vi của MỘT thành phần sẽ ôm sát thành phần đó.** "Tab vào panel" viết từ `AccountMenu` sai với `CategoryNav` chỉ vì thứ tự DOM khác. Tiêu chí cho một họ thành phần phải phát biểu yêu cầu (Escape đóng và trả focus), không phát biểu hành vi quan sát được ở một thành viên.
+
 ## 9. Việc cần bàn tiếp trong project
 
 - **Ô "Nhập lại email"** — giữ nguyên, hay thay bằng gợi ý typo domain ("Ý bạn là …@gmail.com?"), hay bật lại xác nhận email. Hiện giữ nguyên; nghiêng về gợi ý typo cho đợt sau.
@@ -878,10 +914,10 @@ Spec `docs/specs/dot-8-tai-khoan-hoan-chinh.md` v1.1 (FR-A.1 → FR-A.7, TC-A.1 
 - **Tách database cho preview (đợt 1.6).** Preview và production dùng chung một database hosted (`xnqfswvtrgfokkhsrmkx`), nên mọi lần ghi khi đo ở preview nằm trong database mà production cũng đọc, với cache 60 giây; ghi chi tiết ở mục 7.10. Chưa làm.
 - **`BookForm` gắn bằng `onSubmit` phía client (đợt 1.6).** Form admin không có progressive enhancement: bấm Lưu trước khi trang hydrate xong thì form gửi kiểu GET tới chính URL, không lưu gì và đẩy giá trị các ô lên URL. Cần chọn giữa `<form action={serverAction}>` và vô hiệu nút Lưu tới khi hydrate xong; ghi chi tiết ở mục 7.10. Chưa làm.
 - **Lớp ảnh atmosphere** — chọn nguồn, số lượng, đặt ở những trang nào. Gom vào đợt 1.6 mở rộng.
-- **Repo có 20 file migration `.sql`; hosted báo 21 (theo mục 7.12, sau đợt 6; trước đó 19 và 20).** Chênh 1 chưa giải thích được; mục 7 chỉ ghi dãy 17→18→19. Không chặn đợt nào vì mọi phép đo của đợt seed chạy trên local. Kiểm khi làm đợt 1.6 (tách database preview), bằng cách liệt kê migration hosted ở chế độ chỉ đọc.
+- **Repo có 20 file migration `.sql`; hosted báo 21 dòng — đã giải thích, không còn là việc mở.** Ba file `0001`/`0002`/`0003` ứng với bốn lần apply trên remote (`init_schema`, `restrict_trigger_function_execute`, `restrict_trigger_function_execute_v2`, `perf_fixes`) vì `0002` gộp cả bản `restrict_trigger_function_execute` lẫn bản `_v2` sửa lỗi của nó; từ `20260922050938` trở đi tên file khớp đúng `version` trên remote. Đã ghi sẵn ở `supabase/migrations/README.md`; xác nhận ngày 17/10/2026 bằng `list_migrations` ở chế độ chỉ đọc (hosted: 21 dòng, bốn phiên bản đầu `20260921112009` → `20260921112302`). **Đợt 1.6 bớt một việc** (không cần kiểm lại điều này khi tách database preview).
 - Persona chính trong 18–30.
 - Logo chính thức.
 - System prompt cho chatbot.
 - Nội dung README cho nhà tuyển dụng (đã xong ở đợt 7; còn lại ở đây chỉ như dấu vết của danh sách).
-- **14 việc accessibility còn mở** (3 Trung bình, 11 Thấp, 0 Cao; bản 1.4, trong đó A11Y-23 chưa kết luận) — danh sách và số đo ở `docs/specs/dot-accessibility-ra-soat.md`, sửa ở đợt accessibility. Không còn nợ mockup cho admin: khu quản trị lắp từ hệ layout đóng băng, đó chính là lý do hệ đó tồn tại.
+- **6 việc accessibility còn mở** (1 Trung bình, 5 Thấp, 0 Cao; bản 1.5 của `docs/specs/dot-accessibility-ra-soat.md`, sau đợt sửa 17/10/2026): A11Y-05 (Trung bình, vùng chạm ở 390px), A11Y-06 (hộp thoại bộ lọc ở 390px) — cả hai chờ giai đoạn mobile; A11Y-12 (viền ô nhập, quyết định thiết kế); A11Y-03 và A11Y-13 (đã quyết không sửa); A11Y-04 (biên token, phép canh tự động để đợt sau). Việc nhỏ để đợt sau: `read-only:bg-field` cho ô email `/tai-khoan` (chờ chủ dự án), CLS 0,097–0,100 ở băng thông 60 KB/s (NFR-3.6). Không còn nợ mockup cho admin: khu quản trị lắp từ hệ layout đóng băng, đó chính là lý do hệ đó tồn tại.
 - Viết lại mô tả 3 tủ sách bằng giọng của chủ dự án (nội dung hiện tại do AI viết).
