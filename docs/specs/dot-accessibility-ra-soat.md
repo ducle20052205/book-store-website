@@ -290,6 +290,8 @@ Ba kiểu ô trượt (không phải hai); tỉ lệ viền↔ngoài · viền�
 
 Trên nền trắng cùng `border-line-field` đạt: 3,20 · 3,20 · 1,00 (82 ô ở 8 route). Đối chứng của phép đo: viền `#EFEDE8` bị bắt (1,17), viền `#6F6F6F` không bị bắt (5,02 trên trắng, 4,05 trên `paper`). **Vì sao bỏ khỏi đợt:** 26/41 token màu đạt ≥ 3:1 với cả `#FFFFFF` và `#EDE6D9`, nhưng token nhẹ nhất trong số đó (`ink-400` `#5F6379`, 5,92 và 4,77) đậm hơn hẳn hai token viền đang dùng, nên đổi là đổi diện mạo hệ layout đóng băng ở lọc catalog, ô tìm header và form admin cùng lúc. Đó là quyết định thiết kế, không phải sửa lỗi; thuộc một đợt thiết kế.
 
+**[Bản 1.5, bổ sung 17/10/2026]** Nửa HEADER của phát hiện này đã được xếp vào **1.6a** (cùng một khuyết tật với mục 6 của `docs/specs/dot-1.6-sua-loi-giao-dien.md`, xem mục 0 của file đó); nửa còn lại chờ quyết định màu. Trạng thái A11Y-12 không đổi: vẫn còn mở.
+
 ### 3.3.4 Hồ sơ phát hiện thêm trong khi làm (chép từ spec đợt sửa, mục 0.7)
 
 - **Bìa xem trước của form admin KHÔNG vi phạm (a).** `components/admin/BookForm.tsx` dòng ~144: bìa `aria-hidden` trong `<aside aria-label="Bìa xem trước">`, tên sách là **giá trị ô nhập** admin đang gõ ngay cạnh, cộng một `h2` và một đoạn giải thích; thông tin không nằm duy nhất ở bìa. Đây là bìa xem trước đang soạn, không phải bìa đại diện một cuốn trong danh mục. Bộ đo bản 1.2 chấm trượt vì chỉ đếm text node; đã sửa phép đo, không sửa mã.
