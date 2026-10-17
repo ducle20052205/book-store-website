@@ -71,11 +71,14 @@ export async function measureState(b, lib, titles, name, route, extra = {}) {
   const text = { n: tx.n, unparsed: tx.unparsed, hidden: tx.hidden, groups: tx.groups, below: tx.below.length, exempt: tx.exempt.length, under14: tx.small, under12: tx.tiny.length };
   const page = await b.evalJs("window.__a11y.page()");
   const finalPath = await b.evalJs("location.pathname + location.search");
+  const svg = await b.evalJs("(()=>{const s=window.__a11y.measureSvg(document.body);return {total:s.svgTotal,bad:s.svgNoAriaHidden.length,roleImg:s.roleImg,roleImgNoLabel:s.roleImgNoLabel.length}})()");
+  const a14 = await a14Measure(b, "document.body");
+  const cartAx = await b.axOf(`document.querySelector('header a[href="/gio-hang"]')`);
   const tab = await tabStopsBeforeMain(b);
   const ax = await axUnnamed(b);
   const focus = await focusWalk(b);
   const skip = await skipLinkCheck(b);
-  return { name, route, finalPath, page, layout, ax, focus, skip, text, placeholders: ph, boundaries: bd, links, covers, glue, tab, ...extra };
+  return { name, route, finalPath, page, layout, svg, a14, headerCartName: cartAx?.name ?? null, ax, focus, skip, text, placeholders: ph, boundaries: bd, links, covers, glue, tab, ...extra };
 }
 
 // ───────────── chặng 1: liên kết bỏ qua, duyệt focus, phần tử không tên, bàn phím ─────────────
@@ -163,4 +166,53 @@ export async function keyboardToggle(b, buttonExpr) {
     };
   }
   return out;
+}
+
+// ───────────── chặng 2: điều kiện miễn trừ A11Y-14 (tên sách và tác giả của bìa) ─────────────
+
+/** Danh sách sách ({title, author, slug}) cho phép đo A11Y-14; run.mjs nạp từ DB cục bộ, ca đối chứng truyền danh sách riêng. */
+export const ctx = { books: [] };
+const norm = (s) => (s ?? "").replace(/\s+/g, " ").trim();
+
+/**
+ * Phân loại một bìa theo điều kiện miễn trừ A11Y-14 (spec rà soát bản 1.3, mục 3.1).
+ * (a) ĐẠT khi tên sách tới công nghệ hỗ trợ bằng ít nhất một đường: nhãn/alt của chính bìa đúng bằng một tên sách (đọc từ
+ *     cây accessibility); tên khả truy cập của liên kết bọc chứa tên sách; hoặc bìa nằm trong cây aria-hidden mà tên sách là
+ *     chữ thật cạnh bìa. TRƯỢT khi không đường nào đúng (bìa trơ, aria-hidden không chữ, alt rỗng, nhãn không phải tên sách).
+ * (b) chỉ xét ở nơi bắt buộc (`bPlace`): tên tác giả là chữ thật cạnh bìa.
+ */
+export function classifyCover(row, ownerName, axName, books) {
+  const adj = norm(row.adjacent);
+  const sorted = [...books].sort((a, b) => b.title.length - a.title.length);
+  const slug = row.href?.match(/^\/sach\/([^/?#]+)/)?.[1];
+  const printed = [row.label, row.imgAlt, row.selfText].filter(Boolean).join(" ");
+  const book = (slug && books.find((b) => b.slug === slug)) || sorted.find((b) => printed.includes(b.title)) || null;
+  const isTitle = (s) => !!s && books.some((b) => norm(s) === b.title);
+  const viaLabel = !row.ariaHidden && isTitle(axName);
+  const viaLink = !!ownerName && !row.ownerHidden && (book ? norm(ownerName).includes(book.title) : books.some((b) => norm(ownerName).includes(b.title)));
+  const viaText = row.ariaHidden && !!book && adj.includes(book.title);
+  const passA = viaLabel || viaLink || viaText;
+  const passB = row.bPlace ? !!book && adj.includes(book.author) : null;
+  return {
+    book: book?.title ?? null, place: row.bPlace, hidden: row.ariaHidden, viaLabel, viaLink, viaText, passA,
+    path: row.ariaHidden ? (viaText ? "chữ cạnh bìa" : viaLink ? "tên liên kết bọc" : null) : viaLabel ? "nhãn bìa" : viaLink ? "tên liên kết bọc" : null,
+    bReq: !!row.bPlace, passB, ownerHidden: row.ownerHidden, rect: row.rect, adjacent: adj.slice(0, 80),
+  };
+}
+
+/** Đo mọi bìa nhìn thấy trong `root` (biểu thức JS). */
+export async function a14Measure(b, root, books = ctx.books) {
+  const info = await b.evalJs(`window.__a11y.coverInfo(${root})`);
+  const rows = [];
+  for (const r of info.rows) {
+    const ownerName = r.ownerIdx !== null ? (await b.axOf(`window.__a11y._covOwner[${r.i}]`))?.name ?? "" : null;
+    let axName = null;
+    if (!r.ariaHidden) {
+      const ax = await b.axOf(`window.__a11y._cov[${r.i}]`);
+      axName = ax && !ax.ignored && ax.name ? ax.name : null;
+      if (!axName && r.imgAlt !== null) axName = (await b.axOf(`window.__a11y._cov[${r.i}].querySelector('img')`))?.name ?? null;
+    }
+    rows.push(classifyCover(r, ownerName, axName, books));
+  }
+  return { covers: rows.length, failA: rows.filter((x) => !x.passA).length, bRequired: rows.filter((x) => x.bReq).length, failB: rows.filter((x) => x.bReq && !x.passB).length, rows };
 }

@@ -23,6 +23,7 @@ node scripts/a11y/run.mjs tokens                # tỉ lệ của mọi token m�
 node scripts/a11y/run.mjs survey --out=f.jsonl  # 21 route, 36 trạng thái, ghi JSONL
 node scripts/a11y/run.mjs report f.jsonl        # bảng tóm tắt từ file JSONL
 node scripts/a11y/run.mjs compare truoc.jsonl sau.jsonl   # so hai lượt khảo sát theo từng trạng thái (liên kết bỏ qua, bố cục, placeholder, focus, tên)
+node scripts/a11y/run.mjs chang2 t1.jsonl t2.jsonl s1.jsonl s2.jsonl   # chặng 2: tổng hợp hai lượt trước + hai lượt sau (tên liên kết chứa bìa, chữ dính, liên kết giữa câu, A11Y-14)
 node scripts/a11y/run.mjs keyboard              # Enter mở, Escape đóng, focus về nút: CategoryNav và AccountMenu
 ```
 
@@ -45,6 +46,7 @@ bảy con số mốc nền. `--no-restore` tắt việc xoá `events`.
 | **C.2** liên kết giữa câu: gạch chân hoặc tỉ lệ màu với chữ quanh | `measureLinks` | 3:1 (WCAG 1.4.1) |
 | **D** số điểm dừng `Tab` thật từ đầu tài liệu cho tới khi focus vào `<main>`, tên khả truy cập từng điểm; kiểm chéo với số phần tử tương tác đứng trước `<main>` theo DOM | `preMain`, `resetTabStart` + `measure.mjs` | — |
 | **Chặng 1**: nhiều điểm đo mỗi trạng thái: bố cục lúc chưa focus (`layoutMetrics`), liên kết bỏ qua (`skipLinkCheck`: điểm dừng đầu, hộp, tỉ lệ, Enter có đưa focus vào `<main>`), duyệt focus toàn trang (`focusWalk`), phần tử tương tác không tên (`axUnnamed`), bàn phím mở/đóng (`keyboardToggle`) | `measure.mjs`, `lib.js` | chỉ báo focus ≥ 3:1 |
+| **A11Y-14** (điều kiện miễn trừ chữ in trên bìa): với mỗi `.book-cover-shadow` nhìn thấy, (a) tên sách tới công nghệ hỗ trợ bằng đường nào (nhãn/alt của bìa, tên khả truy cập của liên kết bọc, hoặc bìa `aria-hidden` mà tên sách là chữ thật cạnh bìa) và (b) tên tác giả là chữ thật cạnh bìa ở nơi bắt buộc (`BookCard`, thẻ nổi bật, dòng giỏ hàng). "Chữ thật cạnh bìa" = tổ tiên đầu tiên có từ 20 ký tự chữ thật, không tính cây của bìa, cây `aria-hidden`, phần tử ẩn | `coverInfo` + `classifyCover` (`measure.mjs`) | không bìa nào trượt (a); số bìa chỉ là số liệu |
 | Giữ lại từ bản 1.4 (chỉ chạy trong `control`): tương phản chữ, `<svg>` thiếu `aria-hidden`, chỉ báo focus, biểu đồ chỉ khác màu, cỡ chữ | `measureText`, `measureSvg`, `describe`, `measureCharts` | như bản 1.4 |
 
 Liên kết giữa câu theo **đúng quy tắc của bản 1.4**: bộ chọn `p a, li a, dd a, span a`, khối gần nhất `p, li, dd, div` có chữ thường
@@ -54,7 +56,7 @@ là nút văn bản trực tiếp. Liên kết có chữ cùng khối nhưng kh�
 ## Đối chứng (`control`)
 
 Mỗi phép đo có một ca PHẢI BẮT và một ca PHẢI KHÔNG BẮT, chèn vào DOM trong bộ nhớ của `/dang-nhap`, so số đo với số tính độc lập
-bên Node (`common.mjs`). Hiện 26 ca (24 ca luôn chạy; 2 ca D2 "gỡ liên kết bỏ qua" chỉ chạy khi trang đã có liên kết `#noi-dung`, trước đó ghi là bỏ qua và không tính là đạt). Một ca trượt nghĩa là **phép đo hỏng**, không phải trang có lỗi.
+bên Node (`common.mjs`). Hiện 29 ca (27 ca luôn chạy; 2 ca D2 "gỡ liên kết bỏ qua" chỉ chạy khi trang đã có liên kết `#noi-dung`, trước đó ghi là bỏ qua và không tính là đạt). Một ca trượt nghĩa là **phép đo hỏng**, không phải trang có lỗi.
 
 Hai bài học nằm trong các ca này:
 

@@ -5,6 +5,7 @@
 import { sleep } from "./cdp.mjs";
 import { BASE, blend, ratioHex, ratioRgb, rgbOf } from "./common.mjs";
 import { coverNames, glueChecked, tabStopsBeforeMain } from "./measure.mjs";
+import { runCoverControls } from "./controls-cover.mjs";
 import { runNavControls } from "./controls-nav.mjs";
 
 const ROOT = "document.getElementById('a11y-ctl')";
@@ -117,5 +118,8 @@ export async function runControls(b, lib) {
   add("6.6 phải BẮT chữ 11px (<12), KHÔNG bắt chữ 12px", "tiny chứa 'Chu nho', không chứa 'Chu muoi hai'", tx.tiny.some((x) => x.text.startsWith("Chu nho")) && !tx.tiny.some((x) => x.text.startsWith("Chu muoi hai")), tx.tiny.map((x) => x.text).join("; "));
   // ───── chặng 1: liên kết bỏ qua (D2) và bàn phím ─────
   res.push(...(await runNavControls(b, lib, inject)));
+  // ───── chặng 2: điều kiện miễn trừ A11Y-14 ─────
+  await b.goto(`${BASE}/dang-nhap`);
+  res.push(...(await runCoverControls(b, lib, inject)));
   return res;
 }

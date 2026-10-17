@@ -12,8 +12,9 @@ import { fileURLToPath } from "node:url";
 import { launch, sleep } from "./cdp.mjs";
 import { ADMIN_EMAIL, API_URL, BASE, SECRET_KEY, USER_EMAIL, assertLocal, baseline, psql } from "./common.mjs";
 import { runControls } from "./controls.mjs";
+import { chang2 } from "./chang2.mjs";
 import { compare } from "./compare.mjs";
-import { keyboardToggle, measureState } from "./measure.mjs";
+import { ctx, keyboardToggle, measureState } from "./measure.mjs";
 import { printReport } from "./report.mjs";
 import { tokenReport } from "./tokens.mjs";
 
@@ -71,6 +72,8 @@ async function survey() {
   const emit = (o) => appendFileSync(out, JSON.stringify(o) + "\n");
 
   const titles = psql("select title from public.books").split("\n").filter(Boolean);
+  // danh sách sách cho phép đo A11Y-14 (tên sách, tác giả, slug)
+  ctx.books = psql("select title||'¦'||author||'¦'||slug from public.books").split("\n").filter(Boolean).map((l) => { const [title, author, slug] = l.split("¦"); return { title, author, slug }; });
   const before = baseline();
   const startTs = psql("select clock_timestamp()");
   const uid = psql(`select id from auth.users where email='${USER_EMAIL}'`);
@@ -125,6 +128,9 @@ async function survey() {
       await run(A, "dang-ky-co-loi", "/dang-ky", async () => { await A.click('form button[type="submit"]'); await sleep(800); });
       await run(A, "quen-mat-khau", "/quen-mat-khau", to(A, "/quen-mat-khau"));
       await run(A, "quen-mat-khau-het-han", "/quen-mat-khau", to(A, "/quen-mat-khau?loi=het-han"));
+      // thông báo rỗng và 404 chứa liên kết giữa câu; không có ở 36 trạng thái của chặng 0
+      await run(A, "sach-khong-ket-qua", "/sach", to(A, "/sach?q=zzqxkv"));
+      await run(A, "khong-tim-thay", "/_not-found", to(A, "/trang-khong-ton-tai"));
       await run(A, "quen-mat-khau-da-gui", "/quen-mat-khau", async () => {
         await A.goto(`${BASE}/quen-mat-khau`); await A.setInput('input[name="email"]', "khong-ton-tai-xyz@example.com");
         await A.click('button[type="submit"]'); await A.waitFor(`!!document.querySelector('[role=status]')`, 6000);
@@ -167,6 +173,7 @@ async function survey() {
       await run(D, "admin-sach-danh-sach", "/admin/sach", to(D, "/admin/sach"));
       await run(D, "admin-sach-moi", "/admin/sach/moi", to(D, "/admin/sach/moi"));
       await run(D, "admin-sach-moi-co-loi", "/admin/sach/moi", async () => { await D.click('form button[type="submit"]'); await sleep(900); });
+      await run(D, "admin-sach-khong-ket-qua", "/admin/sach", to(D, "/admin/sach?q=zzqxkv"));
       await run(D, "admin-sach-slug", "/admin/sach/[slug]", to(D, `/admin/sach/${slugFirst}`));
     } finally { await D.close(); }
   } finally {
@@ -215,4 +222,5 @@ else if (cmd === "survey") await survey();
 else if (cmd === "report") printReport(process.argv[3]);
 else if (cmd === "keyboard") await keyboard();
 else if (cmd === "compare") compare(process.argv[3], process.argv[4]);
-else { console.log("Dùng: node scripts/a11y/run.mjs <control|tokens|survey|report <file>|compare <trước> <sau>|keyboard>"); process.exit(2); }
+else if (cmd === "chang2") chang2(process.argv.slice(3));
+else { console.log("Dùng: node scripts/a11y/run.mjs <control|tokens|survey|report <file>|compare <trước> <sau>|chang2 <trước1> <trước2> <sau1> <sau2>|keyboard>"); process.exit(2); }

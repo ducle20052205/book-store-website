@@ -375,6 +375,57 @@
     return out;
   }
 
+  // ───────────── A11Y-14: tên sách và tác giả của bìa tới công nghệ hỗ trợ ─────────────
+  /** Chữ thật mà công nghệ hỗ trợ đọc trong `root`: bỏ mọi cây aria-hidden, phần tử ẩn bằng CSS và cây `skip` (bìa). */
+  function realText(root, skip) {
+    if (root.closest && root.closest('[aria-hidden="true"]')) return "";
+    const walk = (n) => {
+      if (n === skip) return "";
+      if (n.nodeType === 3) return n.textContent;
+      if (n.nodeType !== 1) return "";
+      if (n.getAttribute("aria-hidden") === "true" || /^(SCRIPT|STYLE|NOSCRIPT|TEMPLATE|svg)$/i.test(n.tagName)) return "";
+      const cs = getComputedStyle(n);
+      if (cs.display === "none" || cs.visibility === "hidden") return "";
+      return [...n.childNodes].map(walk).join(" ");
+    };
+    return walk(root).replace(/\s+/g, " ").trim();
+  }
+  /**
+   * Mọi `.book-cover-shadow` nhìn thấy: nhãn/alt, có nằm trong cây aria-hidden không, liên kết/nút bọc, chữ in trên bìa,
+   * và "chữ thật cạnh bìa" = chữ thật của tổ tiên đầu tiên có từ 20 ký tự chữ trở lên (không tính cây của chính bìa).
+   * Tham chiếu giữ ở `_cov` / `_covOwner` để run.mjs hỏi tên khả truy cập của trình duyệt. `bPlace` = nơi điều kiện (b)
+   * (tên tác giả là chữ thật) bắt buộc: thẻ BookCard, thẻ nổi bật ở trang chủ, dòng giỏ hàng.
+   */
+  function coverInfo(root) {
+    root = root || document.body;
+    window.__a11y._cov = [];
+    window.__a11y._covOwner = [];
+    const rows = [];
+    for (const c of root.querySelectorAll(".book-cover-shadow")) {
+      if (!visible(c)) continue;
+      const owner = c.closest(OWNER_Q);
+      const img = c.querySelector("img");
+      let adjacent = "";
+      for (let a = c.parentElement; a && a !== document.documentElement; a = a.parentElement) {
+        const t = realText(a, c);
+        if (t.replace(/\s/g, "").length >= 20) { adjacent = t; break; }
+      }
+      const i = window.__a11y._cov.push(c) - 1;
+      window.__a11y._covOwner.push(owner);
+      const r = c.getBoundingClientRect();
+      const bPlace = owner && owner.matches("a.book-card-lift") ? "BookCard"
+        : owner && owner.matches('a.hover-lift[href^="/sach/"]') ? "thẻ nổi bật"
+        : location.pathname === "/gio-hang" ? "dòng giỏ hàng" : null;
+      rows.push({
+        i, role: c.getAttribute("role"), label: c.getAttribute("aria-label"), imgAlt: img ? img.getAttribute("alt") : null,
+        ariaHidden: !!c.closest('[aria-hidden="true"]'), ownerIdx: owner ? i : null, ownerHidden: owner ? !!owner.closest('[aria-hidden="true"]') : false,
+        href: owner ? owner.getAttribute("href") : null, selfText: (c.innerText || "").replace(/\s+/g, " ").trim().slice(0, 200),
+        adjacent: adjacent.slice(0, 400), bPlace, rect: { x: +r.x.toFixed(1), y: +(r.y + window.scrollY).toFixed(1), w: +r.width.toFixed(1), h: +r.height.toFixed(1) },
+      });
+    }
+    return { rows };
+  }
+
   // ───────────── bố cục và phần tử đang focus (FR-A.1) ─────────────
   /** Kích thước bố cục lúc CHƯA focus gì: dùng để chứng minh một thành phần ẩn không đẩy bố cục một pixel nào. */
   function layoutMetrics() {
@@ -406,12 +457,12 @@
   }
 
   window.__a11y = {
-    layoutMetrics, activeStyle,
+    layoutMetrics, activeStyle, coverInfo, realText,
     parseColor, ratio, over, hex, effective, visible, label, sel,
     measureText, measurePlaceholders, measureBoundaries, measureLinks, coverOwners, glueCandidates,
     preMain, resetTabStart, activeInfo, interactive, describe, measureSvg, measureCharts,
     page() { return { lang: document.documentElement.lang, h1: document.querySelectorAll("h1").length, main: document.querySelectorAll("main").length, title: document.title }; },
     noTransition() { const s = document.createElement("style"); s.textContent = "*{transition:none!important;animation:none!important}"; document.head.appendChild(s); },
-    _owners: [], _glue: [],
+    _owners: [], _glue: [], _cov: [], _covOwner: [],
   };
 })();
