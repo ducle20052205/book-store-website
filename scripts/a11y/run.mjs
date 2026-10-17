@@ -12,6 +12,7 @@ import { fileURLToPath } from "node:url";
 import { launch, sleep } from "./cdp.mjs";
 import { ADMIN_EMAIL, API_URL, BASE, SECRET_KEY, USER_EMAIL, assertLocal, baseline, psql } from "./common.mjs";
 import { runControls } from "./controls.mjs";
+import { cartSlot } from "./cartslot.mjs";
 import { chang2 } from "./chang2.mjs";
 import { compare } from "./compare.mjs";
 import { ctx, keyboardToggle, measureState } from "./measure.mjs";
@@ -223,4 +224,5 @@ else if (cmd === "report") printReport(process.argv[3]);
 else if (cmd === "keyboard") await keyboard();
 else if (cmd === "compare") compare(process.argv[3], process.argv[4]);
 else if (cmd === "chang2") chang2(process.argv.slice(3));
+else if (cmd === "cartslot") { await cartSlot(); process.exit(0); }
 else { console.log("Dùng: node scripts/a11y/run.mjs <control|tokens|survey|report <file>|compare <trước> <sau>|chang2 <trước1> <trước2> <sau1> <sau2>|keyboard>"); process.exit(2); }
